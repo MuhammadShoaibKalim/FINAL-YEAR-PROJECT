@@ -5,12 +5,19 @@ In today's fast-paced world, traditional lab test management is inefficient, lea
 
 ## 🚀 Features
  🔹 **User Authentication** (Login, Registration, Secure Access)
+ 
  🔹 **AI-based Test Recommendations**
+ 
  🔹 **Book Lab Tests & Packages**
+ 
  🔹 **Order Tracking & Status Updates**
+ 
  🔹 **Lab Management for Lab Admins**
+ 
  🔹 **Super Admin Dashboard for Platform Control**
+ 
  🔹 **Report Upload & Download**
+ 
  🔹 **Secure Payment Integration (Stripe payment Gateway)**
 
 ---
