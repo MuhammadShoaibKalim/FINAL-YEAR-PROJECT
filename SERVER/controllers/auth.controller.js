@@ -3,130 +3,293 @@ import User from "../models/auth.model.js";
 import { generateToken } from "../utils/auth.util.js";
 
 
-// User Registration
 export const userRegister = async (req, res) => {
   try {
     const { firstName, lastName, email, password, confirmPassword } = req.body;
 
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
-      return res.status(400).json({ message: "All fields are required" });
+      return res.status(400).json({ 
+        success: false,
+        message: "All fields are required",
+        data: null 
+      });
     }
-    
 
     if (password !== confirmPassword) {
-      return res.status(400).json({ message: "Password and confirm password do not match" });
+      return res.status(400).json({ 
+        success: false,
+        message: "Password and confirm password do not match",
+        data: null 
+      });
     }
 
-    const trimmedEmail = email.trim().toLowerCase();
-    const existingUser = await User.findOne({ email: trimmedEmail });
+    const sanitizedEmail = email;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(sanitizedEmail)) {
+      return res.status(400).json({ 
+        success: false,
+        message: "Invalid email format",
+        data: null 
+      });
+    }
 
+    const existingUser = await User.findOne({ email: sanitizedEmail });
     if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
+      return res.status(409).json({ 
+        success: false,
+        message: "User already exists",
+        data: null 
+      });
     }
-    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
     const newUser = new User({
-      firstName,
-      lastName,
-      email,
-      password:hashedPassword
+      firstName: firstName,
+      lastName: lastName,
+      email: sanitizedEmail,
+      password: hashedPassword
     });
+
     await newUser.save();
 
-    const token = generateToken(newUser._id, newUser.email)
-    await newUser.save();
+    const token = generateToken(newUser._id, newUser.email);
 
     res.cookie("token", token, {
-      withCredentials: true,
-      httpOnly: false,
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
     });
-    res
-      .status(201)
-      .json({ message: "User signed in successfully", success: true, newUser });
+
+    const userResponse = {
+      _id: newUser._id,
+      firstName: newUser.firstName,
+      lastName: newUser.lastName,
+      email: newUser.email,
+      createdAt: newUser.createdAt
+    };
+
+    return res.status(201).json({
+      success: true,
+      message: "User registered successfully",
+      data: userResponse
+    });
+
   } catch (error) {
-    res.status(500).json({ message: "Internal server error", error: error.message });
+    console.error("Registration error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message
+    });
   }
 };
 
-// User Login
+
 export const userLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ message: "Email and password are required" });
+      return res.status(400).json({
+        success: false,
+        message: "Email and password are required",
+        data: null
+      });
     }
 
-    const user = await User.findOne({ email: email.trim().toLowerCase() });
+    const sanitizedEmail = email;
+    const user = await User.findOne({ email: sanitizedEmail });
+
     if (!user) {
-      return res.status(401).json({ message: "Incorrect password or email" });
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials",
+        data: null
+      });
     }
-     
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
-if (!isPasswordValid) {
-  return res.json({ message: 'Incorrect password or email' });
-}
-const token = generateToken(user._id, user.email);
-res.cookie("token", token, { withCredentials: true, httpOnly: false });
-res.status(201).json({ message: "User logged in successfully", success: true, token
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials",
+        data: null
+      });
+    }
+
+    const token = generateToken(user._id, user.email);
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
     });
+
+    const userResponse = {
+      _id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email
+    };
+
+    return res.status(200).json({
+      success: true,
+      message: "Login successful",
+      data: userResponse,
+      token
+    });
+
   } catch (error) {
-    res.status(500).json({ message: "Internal server error", error: error.message });
+    console.error("Login error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message
+    });
   }
 };
 
 
-//  User Logout
 export const userLogout = (req, res) => {
   try {
-    res.status(200).cookie("accessToken", "", { maxAge: 0 }).json({ success: true, message: "User logged out successfully" });
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict"
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Logged out successfully",
+      data: null
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: `Internal server error: ${error.message}` });
+    console.error("Logout error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message
+    });
   }
 };
+
+
 export const getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
+    
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+        data: null
+      });
     }
-    res.status(200).json({ success: true, user });
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile retrieved successfully",
+      data: user
+    });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Get profile error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message
+    });
   }
 };
+
+
 export const updateUserProfile = async (req, res) => {
   try {
-    const { firstName, lastName, email, phoneNo, address, city, state, image } = req.body;
+    const updates = req.body;
 
-    const user = await User.findByIdAndUpdate(
+    if (updates.email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(updates.email)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid email format",
+        });
+      }
+    }
+
+    if (req.file) {
+      //  console.log("Uploaded file details:", req.file);
+       }
+
+    if (req.file && req.file.path) {
+         updates.image = req.file.path;
+        //  console.log("Image URL:", updates.image);
+     }
+
+
+
+    const updatedUser = await User.findByIdAndUpdate(
       req.user.id,
-      { firstName, lastName, email, phoneNo, address, city, state, image },
+      updates,
       { new: true, runValidators: true }
     ).select("-password");
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
     }
 
-    res.status(200).json({ success: true, message: "Profilesss updated successfully", user });
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      data: updatedUser,
+    });
+
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Update profile error:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+      error: error.message,
+    });
   }
 };
+
 
 
 export const deleteUserAccount = async (req, res) => {
   try {
     const user = await User.findByIdAndDelete(req.user.id);
+    
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+        data: null
+      });
     }
 
-    res.clearCookie("accessToken").status(200).json({ success: true, message: "Account deleted successfully" });
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure:true,
+      sameSite: "strict"
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Account deleted successfully",
+      data: null
+    });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Delete account error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message
+    });
   }
 };
 
