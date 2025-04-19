@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
+
 
 const UserSchema = new mongoose.Schema(
   {
@@ -54,9 +54,14 @@ const UserSchema = new mongoose.Schema(
     },
     image:{
       type: String,
-      default: null,
+      default: '',
       required:false
     },
+    image: {
+  type: String,
+  default: ''
+},
+
     role: {
       type: String,
       enum: ["User", "Lab Admin", "Super Admin"],
