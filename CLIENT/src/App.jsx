@@ -94,14 +94,7 @@ const App = () => {
           </Route>
 
           {/* Protected User Routes */}
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <UserLayout />
-              </ProtectedRoute>
-            }
-          >
+          <Route path="/" element={<ProtectedRoute>  <UserLayout /> </ProtectedRoute>}>
             <Route path="/ai-recommendations-test" element={<AIRecommendation />} />
             <Route path="/booking" element={<BookingForm />} />
             <Route path="/cart" element={<Cart />} />
@@ -122,18 +115,17 @@ const App = () => {
           </Route>
 
           {/* Lab Admin Routes */}
-          <Route path="/lab-admin" element={<LabAdminLayout />}>
-            <Route index element={<LabOverview />} />
-            <Route path="overview" element={<LabOverview />} />
-            <Route path="orders" element={<Orders />} />
-            <Route path="orders/:orderId" element={<OrderEdit />} />
-            <Route path="reports" element={<Reports />} />
-            <Route path="tests" element={<OfferedTest />} />
-            <Route path="messages" element={<Messages />} />
-            <Route path="settings" element={<LabSettings />} />
-            <Route path="profile" element={<LabProfile />} />
-          </Route>
-
+          <Route path="/labadmin/lab" element={<LabAdminLayout />}>
+          {/* <Route index element={<LabOverview />} /> */}
+           <Route path="profile" element={<LabProfile />} />
+           <Route path="overview" element={<LabOverview />} /> 
+           <Route path="orders" element={<Orders />} />
+           <Route path="orders/:orderId" element={<OrderEdit />} />
+           <Route path="reports" element={<Reports />} />
+           <Route path="tests" element={<OfferedTest />} />
+           <Route path="messages" element={<Messages />} />
+           <Route path="settings" element={<LabSettings />} />
+         </Route>
           {/* 404 Route */}
           <Route path="*" element={<NotFound />} />
 
