@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaUsers, FaFlask, FaSignOutAlt } from "react-icons/fa";
 import { GoSidebarExpand } from "react-icons/go";
 import { MdOutlineDashboard, MdOutlineMarkUnreadChatAlt } from "react-icons/md";
@@ -9,6 +9,7 @@ const SuperAdminSidebar = () => {
   const [isOpen, setIsOpen] = useState(() => {
     return localStorage.getItem("superSidebarState") === "open";
   });
+  const navigate = useNavigate();
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
@@ -20,7 +21,7 @@ const SuperAdminSidebar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
-    window.location.href = "/login"; // Redirect to login page
+    navigate("/login");
   };
 
   return (
