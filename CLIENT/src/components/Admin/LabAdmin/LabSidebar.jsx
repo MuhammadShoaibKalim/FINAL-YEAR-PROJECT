@@ -84,13 +84,13 @@ const LabSidebar = () => {
   };
 
   const links = [
-    { to: "/admin/lab/labprofile", Icon: FaHospitalUser, label: "Profile" },
-    { to: "/admin/lab/labOverview", Icon: MdOutlineDashboard, label: "Dashboard" },
-    { to: "/admin/lab/offered-tests", Icon: FaFlask, label: "Offered Tests" },
-    { to: "/admin/lab/orders", Icon: FaClipboardList, label: "Orders" },
-    { to: "/admin/lab/messages", Icon: FaEnvelope, label: "Messages" },
-    { to: "/admin/lab/settings", Icon: FaCog, label: "Settings" },
-    { to: "#", Icon: FaSignOutAlt, label: "Logout", onClick: handleLogout }, 
+    { to: "/labadmin/lab/profile", Icon: FaHospitalUser, label: "Profile" },
+  { to: "/labadmin/lab", Icon: MdOutlineDashboard, label: "Dashboard" },
+  { to: "/labadmin/lab/tests", Icon: FaFlask, label: "Offered Tests" },
+  { to: "/labadmin/lab/orders", Icon: FaClipboardList, label: "Orders" },
+  { to: "/labadmin/lab/messages", Icon: FaEnvelope, label: "Messages" },
+  { to: "/labadmin/lab/settings", Icon: FaCog, label: "Settings" },
+  { to: "#", Icon: FaSignOutAlt, label: "Logout", onClick: handleLogout }
   ];
 
   return <Sidebar links={links} title="Lab Admin" />;
