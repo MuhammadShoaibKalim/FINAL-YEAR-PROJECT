@@ -7,38 +7,45 @@ export const userRegister = async (req, res) => {
   try {
     const { firstName, lastName, email, password, confirmPassword } = req.body;
 
-    if (!firstName || !lastName || !email || !password || !confirmPassword) {
-      return res.status(400).json({ 
+   
+    const errors = {};
+    if (!firstName) errors.firstName = 'First name is required';
+    if (!lastName) errors.lastName = 'Last name is required';
+    if (!email) errors.email = 'Email is required';
+    if (!password) errors.password = 'Password is required';
+    if (!confirmPassword) errors.confirmPassword = 'Confirm password is required';
+
+    if (Object.keys(errors).length > 0) {
+      return res.status(400).json({
         success: false,
-        message: "All fields are required",
-        data: null 
+        message: "Validation failed",
+        errors
       });
     }
 
     if (password !== confirmPassword) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
         message: "Password and confirm password do not match",
-        data: null 
+        errors: { confirmPassword: "Passwords do not match" }
       });
     }
 
-    const sanitizedEmail = email;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(sanitizedEmail)) {
-      return res.status(400).json({ 
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
         success: false,
         message: "Invalid email format",
-        data: null 
+        errors: { email: "Please enter a valid email address" }
       });
     }
 
-    const existingUser = await User.findOne({ email: sanitizedEmail });
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(409).json({ 
+      return res.status(409).json({
         success: false,
         message: "User already exists",
-        data: null 
+        errors: { email: "This email is already registered" }
       });
     }
 
@@ -46,9 +53,9 @@ export const userRegister = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const newUser = new User({
-      firstName: firstName,
-      lastName: lastName,
-      email: sanitizedEmail,
+      firstName,
+      lastName,
+      email,
       password: hashedPassword
     });
 
@@ -87,6 +94,7 @@ export const userRegister = async (req, res) => {
 };
 
 
+
 export const userLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -119,7 +127,7 @@ export const userLogin = async (req, res) => {
       });
     }
 
-    const token = generateToken(user._id, user.email);
+    const token = generateToken(user._id, user.email, user.role);
 
     res.cookie("token", token, {
       httpOnly: true,
@@ -131,7 +139,8 @@ export const userLogin = async (req, res) => {
       _id: user._id,
       firstName: user.firstName,
       lastName: user.lastName,
-      email: user.email
+      email: user.email,
+      role:user.role
     };
 
     return res.status(200).json({
