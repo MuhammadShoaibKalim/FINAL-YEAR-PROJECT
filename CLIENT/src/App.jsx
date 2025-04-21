@@ -56,18 +56,14 @@ import Hero from "./pages/Home/Hero";
 
 const App = () => {
   const [loading, setLoading] = useState(true);
-  const { isAuthenticated, user } = useSelector((state) => state.Auth);
+  const { isAuthenticated } = useSelector((state) => state.Auth);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 2000);
+    const timer = setTimeout(() => setLoading(false), 1500);
     return () => clearTimeout(timer);
   }, []);
 
-  if (loading) {
-    return <Loader />;
-  }
+  if (loading) return <Loader />;
 
   return (
     <BrowserRouter>
@@ -75,67 +71,82 @@ const App = () => {
         <ScrollToTop />
         <Toaster position="top-right" />
         <Routes>
-          {/* Public Routes */}
+          {/* 🟢 Public Routes */}
           <Route path="/" element={<UserLayout />}>
             <Route index element={<Home />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/labs" element={<Labes />} />
-            <Route path="/labs/:labId" element={<LabDetails />} />
-            <Route path="/privacy-policy" element={<Privacy />} />
-            <Route path="/testimonials" element={<UserReview />} />
-            <Route path="/features" element={<Features />} />
-            <Route path="/why-us" element={<WhyUs />} />
-            <Route path="/faq" element={<FAQ />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/symptoms" element={<SymptomDetails />} />
-            <Route path="/symptoms/:symptomId" element={<SymptomDetails />} />
+            <Route path="about" element={<About />} />
+            <Route path="contact" element={<Contact />} />
+            <Route path="privacy-policy" element={<Privacy />} />
+            <Route path="testimonials" element={<UserReview />} />
+            <Route path="features" element={<Features />} />
+            <Route path="why-us" element={<WhyUs />} />
+            <Route path="faq" element={<FAQ />} />
+            <Route path="login" element={<Login />} />
+            <Route path="register" element={<Register />} />
+            <Route path="symptoms" element={<SymptomDetails />} />
+            <Route path="symptoms/:symptomId" element={<SymptomDetails />} />
+            <Route path="partners" element={<Partners />} />
+            <Route path="services" element={<Hero />} />
           </Route>
 
-          {/* Protected User Routes */}
-          <Route path="/" element={<ProtectedRoute>  <UserLayout /> </ProtectedRoute>}>
-            <Route path="/ai-recommendations-test" element={<AIRecommendation />} />
-            <Route path="/booking" element={<BookingForm />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/payment" element={<Payment />} />
-            <Route path="/payment/success" element={<Success />} />
-            <Route path="/payment/failure" element={<Failure />} />
-            <Route path="/profile" element={<UserProfile />} />
+          {/* 🟡 Protected User Routes */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <UserLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="ai-recommendations-test" element={<AIRecommendation />} />
+            <Route path="labs" element={<Labes />} />
+            <Route path="labs/:labId" element={<LabDetails />} />
+            <Route path="booking" element={<BookingForm />} />
+            <Route path="cart" element={<Cart />} />
+            <Route path="payment" element={<Payment />} />
+            <Route path="payment/success" element={<Success />} />
+            <Route path="payment/failure" element={<Failure />} />
+            <Route path="userprofile" element={<UserProfile />} />
           </Route>
 
-          {/* Super Admin Routes */}
-          <Route path="/admin/super" element={<SuperAdminLayout />}>
+          {/* 🔴 Super Admin Routes */}
+          <Route 
+            path="/admin/super" 
+            element={
+              <ProtectedRoute roles={['superadmin']}>
+                <SuperAdminLayout />
+              </ProtectedRoute>
+            }
+          >
             <Route index element={<Overview />} />
-            <Route path="overview" element={<Overview />} />
+            <Route path="dashboard" element={<Overview />} />
             <Route path="users" element={<Users />} />
             <Route path="labs" element={<Labs />} />
             <Route path="inbox" element={<Inbox />} />
             <Route path="settings" element={<Settings />} />
           </Route>
 
-          {/* Lab Admin Routes */}
-          <Route path="/labadmin/lab" element={<LabAdminLayout />}>
-          {/* <Route index element={<LabOverview />} /> */}
-           <Route path="profile" element={<LabProfile />} />
-           <Route path="overview" element={<LabOverview />} /> 
-           <Route path="orders" element={<Orders />} />
-           <Route path="orders/:orderId" element={<OrderEdit />} />
-           <Route path="reports" element={<Reports />} />
-           <Route path="tests" element={<OfferedTest />} />
-           <Route path="messages" element={<Messages />} />
-           <Route path="settings" element={<LabSettings />} />
-         </Route>
-          {/* 404 Route */}
+          {/* 🔵 Lab Admin Routes */}
+          <Route 
+            path="/labadmin/lab" 
+            element={
+              <ProtectedRoute roles={['labadmin']}>
+                <LabAdminLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="profile" element={<LabProfile />} />
+            <Route path="overview" element={<LabOverview />} />
+            <Route path="orders" element={<Orders />} />
+            <Route path="orders/:orderId" element={<OrderEdit />} />
+            <Route path="reports" element={<Reports />} />
+            <Route path="tests" element={<OfferedTest />} />
+            <Route path="messages" element={<Messages />} />
+            <Route path="settings" element={<LabSettings />} />
+          </Route>
+
+          {/* ⚠️ 404 Not Found */}
           <Route path="*" element={<NotFound />} />
-
-          {/* Parterns Routes */}
-          <Route path="/partners" element={<Partners/>}/>
-
-          {/* Mixed Routes */}
-          <Route path="/services" element={<Hero/>}/>
-
-
         </Routes>
       </CartProvider>
     </BrowserRouter>
@@ -143,6 +154,3 @@ const App = () => {
 };
 
 export default App;
-
-
-
