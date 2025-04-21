@@ -6,66 +6,85 @@ import bgImage from "../assets/HeroLab1.png";
 import { post } from '../Services/ApiEndpoints';
 import { toast } from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
-import { setUser, setLoading, setError, clearError } from '../redux/AuthSlice';
+import { SetUser } from '../redux/AuthSlice';
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
-  const dispatch = useDispatch();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
-  const { loading, error, isAuthenticated } = useSelector((state) => state.Auth);
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.Auth);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard');
+    if (user) {
+      const role = user.role?.toLowerCase()?.replace(/\s+/g, '');
+      console.log('User role:', role); 
+      
+      if (role === "superadmin") {
+        navigate("/admin/super");
+      } else if (role === "labadmin") {
+        navigate("/labadmin/lab/overview");
+      } else {
+        navigate("/userprofile");
+      }
     }
-    return () => {
-      dispatch(clearError());
-    };
-  }, [isAuthenticated, navigate, dispatch]);
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const { email, password } = formData;
 
     if (!email || !password) {
-      dispatch(setError("Both fields are required!"));
+      setError("Both fields are required!");
       return;
     }
 
-    dispatch(setLoading(true));
+    setLoading(true);
+    setError(null);
+
     try {
       const request = await post('/api/auth/login', { email, password });
-      const response = request.data;
+      console.log('Full API Response:', request); 
 
-      if (response.success) {
-        dispatch(setUser({
-          user: response.user,
-          token: response.token
-        }));
-        toast.success(response.message);
+      if (request.status === 200) {
+        const userData = request.data.data;
+        console.log('User Data from API:', userData);
 
-        // Navigate based on user role
-        if (response.user.role === "admin") {
-          navigate("/admin");
-        } else if (response.user.role === "superadmin") {
-          navigate("/superadmin/dashboard");
-        } else {
-          navigate("/dashboard");
+        if (!userData) {
+          console.error('No user data in response');
+          setError('Invalid response from server');
+          return;
         }
-      } else {
-        dispatch(setError(response.message || "Login failed. Please try again."));
+
+        console.log('User Role:', userData.role);
+        
+        dispatch(SetUser(userData));
+        toast.success(request.data.message || "Login successful!");
+
+        const role = userData.role?.toLowerCase()?.replace(/\s+/g, '');
+        console.log('Processed Role:', role);
+
+        if (role === "superadmin") {
+          navigate("/admin/super");
+        } else if (role === "labadmin") {
+          navigate("/labadmin/lab/overview");
+        } else {
+          navigate("/userprofile");
+        }
       }
-    } catch (error) {
-      console.error("Login Error:", error);
-      dispatch(setError(error?.response?.data?.message || "Login failed. Please try again."));
+    } catch (err) {
+      console.error('Login error:', err);
+      setError(err?.response?.data?.message || "Login failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    dispatch(setLoading(false));
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    dispatch(clearError());
+    setFormData(prev => ({ ...prev, [name]: value }));
+    setError(null);
   };
 
   return (
@@ -74,23 +93,25 @@ const Login = () => {
         {/* Left Side Image */}
         <div
           className="hidden md:block w-1/2 bg-cover bg-center"
-          style={{ backgroundImage: `url(${bgImage})`, backgroundSize: "cover", backgroundPosition: "center" }}
+          style={{ backgroundImage: `url(${bgImage})` }}
         ></div>
 
         {/* Right Side Form */}
         <div className="w-full md:w-1/2 p-8 flex flex-col justify-center space-y-4">
           <h2 className="text-4xl font-bold text-center text-text-primary">Welcome to LabCore</h2>
           <p className="text-center text-text-secondary text-sm mt-2">
-            {`Don't have an account?`}{' '}
+            Don't have an account?{' '}
             <Link to="/register" className="text-primary hover:underline">Sign up</Link>
           </p>
+
           {error && (
-            <div className="bg-error/10 border border-error text-error px-4 py-3 rounded relative" role="alert">
-              <span className="block sm:inline">{error}</span>
+            <div className="bg-error/10 border border-error text-error px-4 py-3 rounded relative">
+              <span>{error}</span>
             </div>
           )}
+
           <form className="space-y-6" onSubmit={handleSubmit}>
-            <div className="relative">
+            <div>
               <label className="block text-text-secondary text-sm mb-1">Email</label>
               <div className="flex items-center border rounded-md px-3 py-2 bg-bg-secondary border-border">
                 <FaEnvelope className="text-text-secondary" />
@@ -99,14 +120,14 @@ const Login = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  required
                   placeholder="Enter your email"
                   className="w-full bg-transparent ml-2 focus:outline-none text-text-primary placeholder-text-secondary"
+                  required
                 />
               </div>
             </div>
 
-            <div className="relative">
+            <div>
               <label className="block text-text-secondary text-sm mb-1">Password</label>
               <div className="flex items-center border rounded-md px-3 py-2 bg-bg-secondary border-border">
                 <FaLock className="text-text-secondary" />
@@ -115,9 +136,9 @@ const Login = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  required
                   placeholder="Enter your password"
                   className="w-full bg-transparent ml-2 focus:outline-none text-text-primary placeholder-text-secondary"
+                  required
                 />
               </div>
             </div>
@@ -131,8 +152,8 @@ const Login = () => {
 
             <button
               type="submit"
-              disabled={loading || !formData.email || !formData.password}
-              className={`w-full flex items-center justify-center gap-2 bg-primary text-text-white px-4 py-2 rounded-md hover:bg-primary-dark transition-colors ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={loading}
+              className={`w-full flex items-center justify-center gap-2 bg-primary text-white px-4 py-2 rounded-md transition-colors ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-primary-dark'}`}
             >
               {loading ? <ImSpinner2 className="animate-spin" /> : <FaSignInAlt />} Login
             </button>
