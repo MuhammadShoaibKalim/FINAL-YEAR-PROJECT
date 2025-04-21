@@ -1,45 +1,60 @@
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { get } from '../Services/ApiEndpoints.jsx';
+
+export const updateUser = createAsyncThunk('auth/updateUser', async () => {
+  const response = await get('/api/auth/checkuser');
+  return response.data.user;
+});
 
 const initialState = {
-  loading: false,
+  loading: null,
   error: null,
   user: null,
-  token: localStorage.getItem('token') || null,
-  isAuthenticated: !!localStorage.getItem('token')
-}
+  isAuthenticated: false,
+};
 
-const AuthSlice = createSlice({
-  name: 'authSlice',
+const authSlice = createSlice({
+  name: 'auth',
   initialState,
   reducers: {
-    setUser: (state, action) => {
-      state.user = action.payload.user;
-      state.token = action.payload.token;
+    SetUser: (state, action) => {
+      if (!action.payload) {
+        console.error('Attempting to set null user data');
+        return;
+      }
+
+      console.log('Setting user in Redux:', action.payload);
+      state.user = action.payload;
       state.isAuthenticated = true;
-      state.error = null;
-      localStorage.setItem('token', action.payload.token);
     },
-    setLoading: (state, action) => {
-      state.loading = action.payload;
-    },
-    setError: (state, action) => {
-      state.error = action.payload;
-      state.loading = false;
-    },
-    logout: (state) => {
+    Logout: (state) => {
       state.user = null;
-      state.token = null;
+      state.loading = null;
+      state.error = null;
       state.isAuthenticated = false;
-      state.loading = false;
-      state.error = null;
-      localStorage.removeItem('token');
     },
-    clearError: (state) => {
-      state.error = null;
-    }
-  }
-})
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(updateUser.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(updateUser.fulfilled, (state, action) => {
+        state.loading = false;
+        if (action.payload) {
+          console.log('Updating user from checkuser:', action.payload);
+          state.user = action.payload;
+          state.isAuthenticated = true;
+        }
+      })
+      .addCase(updateUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+        state.user = null;
+        state.isAuthenticated = false;
+      });
+  },
+});
 
-export const { setUser, logout, setLoading, setError, clearError } = AuthSlice.actions;
-
-export default AuthSlice.reducer;
+export const { SetUser, Logout } = authSlice.actions;
+export default authSlice.reducer;
