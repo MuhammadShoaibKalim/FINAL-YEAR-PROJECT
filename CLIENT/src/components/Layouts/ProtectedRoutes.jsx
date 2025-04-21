@@ -1,24 +1,26 @@
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { useEffect, useState } from 'react';
 
-const ProtectedRoute = ({ children, allowedRoles = [] }) => {
+const ProtectedRoute = ({ children, roles }) => {
   const { isAuthenticated, user } = useSelector((state) => state.Auth);
-  const location = useLocation();
+  const [isLoading, setIsLoading] = useState(true);
 
-  if (!isAuthenticated) {
-    // Redirect to login page but save the attempted url
-    return <Navigate to="/login" state={{ from: location }} replace />;
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return null;
   }
 
-  // If no specific roles are required, allow access
-  if (allowedRoles.length === 0) {
-    return children;
+  if (!isAuthenticated || !user) {
+    return <Navigate to="/login" replace />;
   }
 
-  // Check if user's role is allowed
-  if (!allowedRoles.includes(user.role)) {
-    // Redirect to dashboard if role is not allowed
-    return <Navigate to="/dashboard" replace />;
+  if (roles && !roles.includes(user.role)) {
+    return <Navigate to="/unauthorized" replace />;
   }
 
   return children;
