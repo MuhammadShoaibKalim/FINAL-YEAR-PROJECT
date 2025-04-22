@@ -3,7 +3,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from 'react-hot-toast';
 import { CartProvider } from "react-use-cart";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { SetUser } from './redux/AuthSlice';
+import { get } from "./Services/ApiEndpoints";
 
 import UserLayout from "./components/Layouts/UserLayout";
 import SuperAdminLayout from "./components/Admin/SuperAdmin/SuperAdminLayout";
@@ -53,10 +55,27 @@ import Failure from "./components/Payment/Failure";
 import Success from "./components/Payment/Success";
 import Partners from "./pages/Partners/Partners";
 import Hero from "./pages/Home/Hero";
+import PublicLayout from "./components/Layouts/PublicLayout";
+
 
 const App = () => {
   const [loading, setLoading] = useState(true);
-  const { isAuthenticated } = useSelector((state) => state.Auth);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const checkUser = async () => {
+      try {
+        const request = await get('/api/auth/checkuser');
+        if (request.status === 200) {
+          dispatch(SetUser(request.data.user));
+          localStorage.setItem('token', request.data.token);
+        }
+      } catch (error) {
+        console.error('Error checking user:', error);
+      }
+    };
+    checkUser();
+  }, [dispatch]);
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1500);
@@ -71,7 +90,13 @@ const App = () => {
         <ScrollToTop />
         <Toaster position="top-right" />
         <Routes>
-          {/* 🟢 Public Routes */}
+          {/* Public Auth Routes - Must be first */}
+          <Route element={<PublicLayout />}>
+            <Route path="register" element={<Register />} />
+            <Route path="login" element={<Login />} />
+          </Route>
+
+          {/* Public Routes */}
           <Route path="/" element={<UserLayout />}>
             <Route index element={<Home />} />
             <Route path="about" element={<About />} />
@@ -81,15 +106,13 @@ const App = () => {
             <Route path="features" element={<Features />} />
             <Route path="why-us" element={<WhyUs />} />
             <Route path="faq" element={<FAQ />} />
-            <Route path="login" element={<Login />} />
-            <Route path="register" element={<Register />} />
             <Route path="symptoms" element={<SymptomDetails />} />
             <Route path="symptoms/:symptomId" element={<SymptomDetails />} />
             <Route path="partners" element={<Partners />} />
             <Route path="services" element={<Hero />} />
           </Route>
 
-          {/* 🟡 Protected User Routes */}
+          {/* Protected User Routes */}
           <Route
             path="/"
             element={
@@ -109,7 +132,7 @@ const App = () => {
             <Route path="userprofile" element={<UserProfile />} />
           </Route>
 
-          {/* 🔴 Super Admin Routes */}
+          {/* Super Admin Routes */}
           <Route 
             path="/admin/super" 
             element={
@@ -119,14 +142,14 @@ const App = () => {
             }
           >
             <Route index element={<Overview />} />
-            <Route path="dashboard" element={<Overview />} />
+            <Route path="overview" element={<Overview />} />
             <Route path="users" element={<Users />} />
             <Route path="labs" element={<Labs />} />
             <Route path="inbox" element={<Inbox />} />
             <Route path="settings" element={<Settings />} />
           </Route>
 
-          {/* 🔵 Lab Admin Routes */}
+          {/* Lab Admin Routes */}
           <Route 
             path="/labadmin/lab" 
             element={
@@ -135,8 +158,9 @@ const App = () => {
               </ProtectedRoute>
             }
           >
-            <Route path="profile" element={<LabProfile />} />
+            <Route index element={<LabOverview />} />
             <Route path="overview" element={<LabOverview />} />
+            <Route path="profile" element={<LabProfile />} />
             <Route path="orders" element={<Orders />} />
             <Route path="orders/:orderId" element={<OrderEdit />} />
             <Route path="reports" element={<Reports />} />
@@ -145,7 +169,7 @@ const App = () => {
             <Route path="settings" element={<LabSettings />} />
           </Route>
 
-          {/* ⚠️ 404 Not Found */}
+          {/* 404 Not Found */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </CartProvider>
