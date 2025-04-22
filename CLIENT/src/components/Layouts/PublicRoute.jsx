@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
 const PublicRoute = () => {
-  const { isAuthenticated, user } = useSelector((state) => state.Auth);
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
