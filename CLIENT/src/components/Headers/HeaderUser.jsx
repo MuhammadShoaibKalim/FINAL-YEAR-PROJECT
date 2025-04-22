@@ -9,7 +9,7 @@ import logo from "../../assets/logo.png";
 const HeaderUser = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const user = useSelector((state) => state.Auth.user);
+  const user = useSelector((state) => state.auth.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
@@ -86,8 +86,17 @@ const HeaderUser = () => {
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                   className="flex items-center space-x-2 text-gray-600 hover:text-primary transition-colors duration-200"
                 >
-                  <FaUserCircle className="text-2xl" />
-                  <span className="text-sm font-medium">{user?.firstName || 'User'}</span>
+                 {user?.image ? (
+  <img
+    src={user.image}
+    alt="Profile"
+    className="w-8 h-8 rounded-full object-cover border border-gray-300"
+  />
+) : (
+  <FaUserCircle className="text-2xl text-gray-600" />
+)}
+<span className="text-sm font-medium">{user?.firstName || 'User'}</span>
+
                 </button>
 
                 {isProfileOpen && (
@@ -156,10 +165,18 @@ const HeaderUser = () => {
                 <div className="pt-4 pb-3 border-t border-gray-200">
                   <div className="px-3 py-2 border-b border-gray-100">
                     <div className="flex items-center space-x-2">
-                      <FaUserCircle className="text-xl text-gray-600" />
+                    {user?.image ? (
+  <img
+    src={user.image}
+    alt="Profile"
+    className="w-8 h-8 rounded-full object-cover border border-gray-300"
+  />
+) : (
+  <FaUserCircle className="text-xl text-gray-600" />
+)}
+
                       <div>
                         <p className="font-medium text-gray-900">{user?.firstName || 'User'}</p>
-                        <p className="text-sm text-gray-500">{user?.email || 'user@example.com'}</p>
                       </div>
                     </div>
                   </div>
@@ -188,10 +205,10 @@ const HeaderUser = () => {
                   </button>
                 </div>
               </div>
-            </div>
+      </div>
           )}
         </nav>
-      </header>
+    </header>
     </>
   );
 };
