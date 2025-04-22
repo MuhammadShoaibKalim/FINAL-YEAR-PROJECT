@@ -1,32 +1,34 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { FaSignOutAlt } from 'react-icons/fa';
-import { useDispatch } from 'react-redux';
-import { SetUser, Logout } from '../../redux/AuthSlice.js';
-import toast from 'react-hot-toast';
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { Logout } from "../../../redux/AuthSlice";
+import toast from "react-hot-toast";
 
 const HeaderSuperAdmin = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    dispatch(SetUser(null));
+  const handleLogout = () => {
+    localStorage.removeItem("authToken");
     dispatch(Logout());
-    toast.success('Logged out successfully');
-    navigate('/login');
+    toast.success("Logged out successfully");
+    navigate("/login", { replace: true });
   };
 
   return (
-    <header className="bg-gray-900 text-white p-4 flex justify-between items-center">
-      <Link to="/admin/super" className="text-xl font-bold">SuperAdmin</Link>
-      <div className="flex gap-4">
-        <Link to="/admin/super/overview">Dashboard</Link>
-        <Link to="/admin/super/users">Users</Link>
-        <Link to="/admin/super/labs">Labs</Link>
-        <Link to="/admin/super/settings">Settings</Link>
-        <button onClick={logout} className="text-red-400 flex items-center gap-1 hover:underline">
-          <FaSignOutAlt /> Logout
-        </button>
+    <header className="bg-white shadow-md">
+      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+        <div className="flex items-center">
+          <h1 className="text-xl font-bold text-primary">Super Admin Dashboard</h1>
+        </div>
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+          >
+            Logout
+          </button>
+        </div>
       </div>
     </header>
   );
