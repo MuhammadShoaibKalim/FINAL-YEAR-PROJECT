@@ -14,7 +14,9 @@ const Login = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { user } = useSelector((state) => state.Auth);
+  // const user = useSelector((state) => state.userAuth?.user);
+  const { user } = useSelector((state) => state.auth); // ✅ CORRECT
+
 
   useEffect(() => {
     if (user) {
