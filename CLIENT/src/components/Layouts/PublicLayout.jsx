@@ -4,7 +4,10 @@ import { Outlet, useNavigate } from 'react-router-dom';
 
 const PublicLayout = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useSelector((state) => state.Auth);
+  const {user} = useSelector((state) => state.auth.user);
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  
+
 
   useEffect(() => {
     if (isAuthenticated && user) {
