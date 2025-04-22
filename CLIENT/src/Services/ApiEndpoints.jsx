@@ -13,15 +13,16 @@ export const post = (url, data) => instance.post(url, data);
 export const put = (url, data) => instance.put(url, data);
 export const deleteUser = (url) => instance.delete(url);
 
-
 instance.interceptors.request.use(function (config) {
-    // Do something before request is sent
+    const token = localStorage.getItem('authToken');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
-  }, function (error) {
-    // Do something with request error
-    console.log('intercpert request',error)
+}, function (error) {
+    console.log('interceptor request error:', error);
     return Promise.reject(error);
-  });
+});
 
 // Add a response interceptor
 instance.interceptors.response.use(function (response) {
@@ -29,5 +30,9 @@ instance.interceptors.response.use(function (response) {
     return response;
   }, function (error) {
     console.log('intercpert reponse',error)
+    if (error.response?.status === 401) {
+        localStorage.removeItem('authToken');
+        window.location.href = '/login';
+    }
     return Promise.reject(error);
   });
