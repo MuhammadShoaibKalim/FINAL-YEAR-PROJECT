@@ -4,12 +4,16 @@ import { FaUsers, FaFlask, FaSignOutAlt } from "react-icons/fa";
 import { GoSidebarExpand } from "react-icons/go";
 import { MdOutlineDashboard, MdOutlineMarkUnreadChatAlt } from "react-icons/md";
 import { FiSettings } from "react-icons/fi";
+import { useDispatch } from "react-redux";
+import { Logout } from "../../../redux/AuthSlice";
+import toast from "react-hot-toast";
 
 const SuperAdminSidebar = () => {
   const [isOpen, setIsOpen] = useState(() => {
     return localStorage.getItem("superSidebarState") === "open";
   });
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
@@ -21,7 +25,9 @@ const SuperAdminSidebar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
-    navigate("/login");
+    dispatch(Logout());
+    toast.success("Logged out successfully");
+    navigate("/login", { replace: true });
   };
 
   return (
