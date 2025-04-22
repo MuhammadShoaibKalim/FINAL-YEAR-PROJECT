@@ -217,6 +217,8 @@ export const updateUserProfile = async (req, res) => {
   try {
     const updates = req.body;
 
+    
+
     if (updates.email) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(updates.email)) {
@@ -228,13 +230,22 @@ export const updateUserProfile = async (req, res) => {
     }
 
     if (req.file) {
-      //  console.log("Uploaded file details:", req.file);
+       console.log("Uploaded file details:", req.file);
        }
 
-    if (req.file && req.file.path) {
-         updates.image = req.file.path;
-        //  console.log("Image URL:", updates.image);
-     }
+    // if (req.file && req.file.path) {
+    //      updates.image = req.file.path;
+    //     //  console.log("Image URL:", updates.image);
+    //  }
+    // if (req.file) {
+    //   updates.image = `uploads/${req.file.filename}`;
+    //   console.log("Image URL:", updates.image);
+    // }
+    if (req.file && req.file.path) {    
+      updates.image = req.file.path; 
+    }
+    
+    
 
 
 
@@ -268,7 +279,6 @@ export const updateUserProfile = async (req, res) => {
 };
 
 
-
 export const deleteUserAccount = async (req, res) => {
   try {
     const user = await User.findByIdAndDelete(req.user.id);
@@ -299,6 +309,23 @@ export const deleteUserAccount = async (req, res) => {
       message: "Internal server error",
       error: error.message
     });
+  }
+};
+
+export const checkUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'User authenticated',
+      user,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };
 
