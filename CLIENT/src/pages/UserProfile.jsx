@@ -1,116 +1,180 @@
 import React, { useEffect, useState } from "react";
-import { FaUserCircle, FaShoppingCart, FaBox, FaCog, FaEnvelope } from "react-icons/fa";
-import { BsChatRightDotsFill } from "react-icons/bs";
-import Cart from "./Cart"; // ✅ Import Cart component
+import { FaUser, FaEdit, FaShoppingCart, FaBoxOpen } from "react-icons/fa";
+import Cart from "./Cart";
+import { useDispatch, useSelector } from "react-redux";
+import { updateUser } from "../redux/AuthSlice.js";
 
 const UserProfile = () => {
-  const [userData, setUserData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    role: "",
-  });
+  const dispatch = useDispatch();
+  const [loading, setLoading] = useState(true);
+  const user = useSelector((state) => state.auth?.user);
 
+  const [userData, setUserData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phoneNo: "",
+  });
+  const [file, setFile] = useState(null);
   const [selectedSection, setSelectedSection] = useState("profile");
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      const response = await fetch("/api/user/profile");
-      const data = await response.json();
+    dispatch(updateUser());
+    setLoading(false);
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (user) {
       setUserData({
-        name: data.name || "John Doe",
-        email: data.email || "john.doe@example.com",
-        phone: data.phone || "+123 456 7890",
-        role: data.role || "User",
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        email: user.email || "",
+        phoneNo: user.phoneNo || "",
       });
-    };
-    fetchUserData();
-  }, []);
+    }
+  }, [user]);
+
+
+  if (loading) {
+    return <div className="text-center py-10 text-gray-600 text-lg">Loading user profile...</div>;
+  }
+  
+
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+  
+    if (!user || !user._id) {
+      console.error("User not found in Redux state");
+      return alert("User not loaded yet. Please wait...");
+    }
+  
+    const formData = new FormData();
+    formData.append("firstName", userData.firstName);
+    formData.append("lastName", userData.lastName);
+    formData.append("phoneNo", userData.phoneNo);
+    if (file) {
+      formData.append("image", file);
+    }
+    
+
+  
+    try {
+      const response = await fetch(`/api/auth/profile/${user._id}`, {
+        method: "PUT",
+        body: formData,
+      });
+  
+      const result = await response.json();
+      if (result.success) {
+        alert("Profile updated successfully");
+        dispatch(updateUser());
+      } else {
+        alert(result.message || "Update failed");
+      }
+    } catch (err) {
+      console.error("Update error:", err);
+    }
+  };
+  
 
   const sections = [
-    { id: "profile", label: "Profile", icon: <FaUserCircle /> },
-    { id: "cart", label: "Cart", icon: <FaShoppingCart /> },
-    { id: "orders", label: "Orders", icon: <FaBox /> },
-    { id: "messages", label: "Messages", icon: <BsChatRightDotsFill /> },
-    { id: "queries", label: "My Queries", icon: <FaEnvelope /> },
-    { id: "settings", label: "Settings", icon: <FaCog /> },
+    { id: "profile", label: "My Profile", icon: <FaUser /> },
+    { id: "edit", label: "Update Profile", icon: <FaEdit /> },
+    { id: "cart", label: "My Cart", icon: <FaShoppingCart /> },
+    { id: "orders", label: "My Orders", icon: <FaBoxOpen /> },
   ];
 
   const renderSection = () => {
     switch (selectedSection) {
       case "profile":
         return (
-          <div>
-            <h2 className="text-lg font-semibold">User Information</h2>
-            <p><strong>Name:</strong> {userData.name}</p>
-            <p><strong>Email:</strong> {userData.email}</p>
-            <p><strong>Phone:</strong> {userData.phone}</p>
-            <p><strong>Role:</strong> {userData.role}</p>
+          <div className="space-y-2">
+            <h2 className="text-lg font-semibold">Personal Details</h2>
+            {user?.image && (<img src={user.image} alt="Profile" className="w-24 h-24 rounded-full object-cover"/>)}
+
+
+            <p><strong>Name:</strong> {user?.firstName} {user?.lastName}</p>
+            <p><strong>Email:</strong> {user?.email}</p>
+            <p><strong>Phone:</strong> {user?.phoneNo || 'N/A'}</p>
+            <p><strong>Role:</strong> {user?.role}</p>
           </div>
         );
+      case "edit":
+        return (
+          <form onSubmit={handleProfileUpdate} className="space-y-3">
+            <input
+              className="w-full border p-2"
+              value={userData.firstName}
+              onChange={(e) => setUserData({ ...userData, firstName: e.target.value })}
+              placeholder="First Name"
+            />
+            <input
+              className="w-full border p-2"
+              value={userData.lastName}
+              onChange={(e) => setUserData({ ...userData, lastName: e.target.value })}
+              placeholder="Last Name"
+            />
+            <input
+              className="w-full border p-2"
+              value={userData.phoneNo}
+              onChange={(e) => setUserData({ ...userData, phoneNo: e.target.value })}
+              placeholder="Phone Number"
+            />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setFile(e.target.files[0])}
+            />
+            {file && <img src={URL.createObjectURL(file)} alt="Preview" className="w-24 h-24 rounded-full" />}
+            <button className="bg-primary text-white px-4 py-2 rounded" type="submit">
+              Update Profile
+            </button>
+          </form>
+        );
       case "cart":
-        return <Cart />; // ✅ Reusing the Cart component
+        return <Cart />;
       case "orders":
         return (
           <div>
-            <h2 className="text-lg font-semibold">Order Details</h2>
-            <p>Latest Order: #12345 - Delivered</p>
-          </div>
-        );
-      case "settings":
-        return (
-          <div>
-            <h2 className="text-lg font-semibold">Profile Settings</h2>
-            <p>Change password, update profile details, and more.</p>
-          </div>
-        );
-      case "messages":
-        return (
-          <div>
-            <h2 className="text-lg font-semibold">Chat with Lab owner</h2>
-            <p>You can direct chat with the lab admin or owner if you have any queries or issues.</p>
-          </div>
-        );
-      case "queries":
-        return (
-          <div>
-            <h2 className="text-lg font-semibold">My Queries</h2>
-            <p>Contact our support team for assistance.</p>
+            <h2 className="text-lg font-semibold">My Orders</h2>
+            <p>You have 3 recent orders. Latest Order ID: #12345</p>
           </div>
         );
       default:
-        return <h2>Profile Section</h2>;
+        return <h2>Welcome</h2>;
     }
   };
 
   return (
-    <div className="flex flex-col md:flex-row justify-center mt-32 mb-4">
-      <div className="w-1/4"></div>
+    <div className="w-full min-h-screen bg-gray-100 pt-4">
+      <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-6 px-4">
+        <div className="md:max-w-6xl md:w-1/4 w-full max-w-xs">
+          <div className="bg-white rounded-xl shadow-md p-4">
+            {sections.map((section) => (
+              <button
+                key={section.id}
+                className={`w-full flex items-center gap-3 px-4 py-2 mb-2 rounded-lg transition-all duration-200 ${
+                  selectedSection === section.id
+                    ? "bg-primary text-white"
+                    : "hover:bg-gray-200 text-gray-700"
+                }`}
+                onClick={() => setSelectedSection(section.id)}
+              >
+                {section.icon} <span>{section.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
 
-      <div className="w-full md:w-1/5 bg-white p-4 shadow-md mb-4 md:mb-0">
-        <div className="space-y-2">
-          {sections.map((section) => (
-            <button
-              key={section.id}
-              className={`w-full flex items-center space-x-2 p-2 border-b border-black transition-all duration-200 ${
-                selectedSection === section.id ? "text-black" : "text-black hover:bg-primary hover:text-white"
-              }`}
-              onClick={() => setSelectedSection(section.id)}
-            >
-              {section.icon} <span>{section.label}</span>
-            </button>
-          ))}
+        <div className="md:w-3/4 w-full bg-white p-6 rounded-xl shadow-md">
+          <div className="mb-4">
+            <h1 className="text-2xl font-bold text-gray-800">
+              {sections.find((s) => s.id === selectedSection)?.label}
+            </h1>
+          </div>
+          <div>{renderSection()}</div>
         </div>
       </div>
-
-      <div className="w-full md:w-3/5 bg-white p-4 shadow-md">
-        <div className="flex items-center justify-center space-x-4">
-          <h1 className="text-xl font-bold">{selectedSection.toUpperCase()}</h1>
-        </div>
-        <div className="mt-4">{renderSection()}</div>
-      </div>
-
-      <div className="w-1/4"></div>
     </div>
   );
 };
