@@ -6,7 +6,7 @@ import HeaderGuest from "./HeaderGuest";
 import Topbar from "../Layouts/Topbar";
 
 const Header = () => {
-  const user = useSelector((state) => state.Auth?.user);
+  const user = useSelector((state) => state.auth);
   const role = user?.role?.toLowerCase()?.replace(/\s+/g, '');
 
   if (!user) return <HeaderGuest />;
