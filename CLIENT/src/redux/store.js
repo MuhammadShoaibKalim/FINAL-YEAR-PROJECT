@@ -6,14 +6,14 @@ import { persistStore, persistReducer } from "redux-persist";
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["Auth"], 
+  whitelist: ["auth"], 
 };
 
 const persistedAuthReducer = persistReducer(persistConfig, AuthReducer);
 
 export const store = configureStore({
   reducer: {
-    Auth: persistedAuthReducer,
+    auth: persistedAuthReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
