@@ -1,9 +1,20 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { get } from '../Services/ApiEndpoints.jsx';
 
-export const updateUser = createAsyncThunk('auth/updateUser', async () => {
-  const response = await get('/api/auth/checkuser');
-  return response.data.user;
+export const updateUser = createAsyncThunk('auth/updateUser', async (_, { rejectWithValue }) => {
+  try {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      return rejectWithValue('No token found');
+    }
+    const response = await get('/api/auth/checkuser');
+    return response.data.user;
+  } catch (error) {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('authToken');
+    }
+    return rejectWithValue(error.response?.data?.message || 'Failed to update user');
+  }
 });
 
 const initialState = {
