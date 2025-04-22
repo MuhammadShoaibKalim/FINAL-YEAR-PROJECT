@@ -7,7 +7,7 @@ export const updateUser = createAsyncThunk('auth/updateUser', async (_, { reject
     if (!token) {
       return rejectWithValue('No token found');
     }
-    const response = await get('/api/auth/checkuser');
+    const response = await get('/api/auth/getuser');
     return response.data.user;
   } catch (error) {
     if (error.response?.status === 401) {
