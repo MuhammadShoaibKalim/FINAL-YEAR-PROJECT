@@ -3,7 +3,8 @@ import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
 const ProtectedRoute = ({ children, roles }) => {
-  const { isAuthenticated, user } = useSelector((state) => state.Auth);
+  const { user, isAuthenticated } = useSelector((state) => state.auth); 
+
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -15,7 +16,7 @@ const ProtectedRoute = ({ children, roles }) => {
     return null;
   }
 
-  if (!isAuthenticated || !user) {
+  if ( !user) {
     return <Navigate to="/login" replace />;
   }
 
