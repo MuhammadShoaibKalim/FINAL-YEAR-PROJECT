@@ -91,10 +91,10 @@ const App = () => {
         <Toaster position="top-right" />
         <Routes>
           {/* Public Auth Routes - Must be first */}
-          <Route element={<PublicLayout />}>
+          {/* <Route element={<PublicLayout />}>
             <Route path="register" element={<Register />} />
             <Route path="login" element={<Login />} />
-          </Route>
+          </Route> */}
 
           {/* Public Routes */}
           <Route path="/" element={<UserLayout />}>
@@ -110,6 +110,8 @@ const App = () => {
             <Route path="symptoms/:symptomId" element={<SymptomDetails />} />
             <Route path="partners" element={<Partners />} />
             <Route path="services" element={<Hero />} />
+            <Route path="register" element={<Register />} />
+            <Route path="login" element={<Login />} />
           </Route>
 
           {/* Protected User Routes */}
