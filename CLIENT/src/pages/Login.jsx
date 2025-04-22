@@ -22,11 +22,11 @@ const Login = () => {
       console.log('User role:', role); 
       
       if (role === "superadmin") {
-        navigate("/admin/super");
+        navigate("/admin/super/overview", { replace: true });
       } else if (role === "labadmin") {
-        navigate("/labadmin/lab/overview");
+        navigate("/labadmin/lab/overview", { replace: true });
       } else {
-        navigate("/userprofile");
+        navigate("/userprofile", { replace: true });
       }
     }
   }, [user, navigate]);
@@ -57,20 +57,25 @@ const Login = () => {
           return;
         }
 
-        console.log('User Role:', userData.role);
-        
+        // Store the token
+        localStorage.setItem('authToken', request.data.token);
+        console.log('Token stored in localStorage');
+
+        // Set user in Redux
         dispatch(SetUser(userData));
+        console.log('User data set in Redux:', userData);
+
         toast.success(request.data.message || "Login successful!");
 
         const role = userData.role?.toLowerCase()?.replace(/\s+/g, '');
         console.log('Processed Role:', role);
 
         if (role === "superadmin") {
-          navigate("/admin/super");
+          navigate("/admin/super/overview", { replace: true });
         } else if (role === "labadmin") {
-          navigate("/labadmin/lab/overview");
+          navigate("/labadmin/lab/overview", { replace: true });
         } else {
-          navigate("/userprofile");
+          navigate("/userprofile", { replace: true });
         }
       }
     } catch (err) {
