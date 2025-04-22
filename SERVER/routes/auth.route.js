@@ -5,7 +5,8 @@ import {
     userLogout, 
     getUserProfile, 
     updateUserProfile, 
-    deleteUserAccount } from "../controllers/auth.controller.js";
+    deleteUserAccount, 
+    checkUser} from "../controllers/auth.controller.js";
 import { isAuthenticated } from "../middlewares/auth.middleware.js"; 
 import upload from '../middlewares/upload.middleware.js';
 
@@ -20,6 +21,7 @@ router.post("/logout", userLogout);
 // Protected Routes (Require Authentication)
 router.get("/profile", isAuthenticated, getUserProfile);
 router.put('/profile/:id', isAuthenticated, upload.single('image'), updateUserProfile);
+router.get("/getuser", isAuthenticated, checkUser);
 router.delete("/:id", isAuthenticated, deleteUserAccount);
 
 
