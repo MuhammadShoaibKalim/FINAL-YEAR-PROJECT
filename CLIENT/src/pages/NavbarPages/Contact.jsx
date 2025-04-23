@@ -15,12 +15,34 @@ const Contact = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate form submission
-    setTimeout(() => {
-      toast.success("Thank you for your message! We'll get back to you soon.");
-      setFormData({ name: "", email: "", subject: "", message: "" });
-      setIsSubmitting(false);
-    }, 1000);
+    try {
+      const res = await fetch("/api/query/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          subject: formData.subject,
+          message: formData.message,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        toast.success("Message sent successfully!");
+        setFormData({ name: "", email: "", subject: "", message: "" });
+      } else {
+        toast.error(data.message || "Failed to send message.");
+      }
+    } catch (err) {
+      toast.error("Something went wrong. Please try again.");
+    }
+
+    setIsSubmitting(false);
   };
 
   const handleChange = (e) => {
