@@ -55,7 +55,7 @@ export const loginSuperAdmin = async (req, res) => {
    const token = generateToken(user._id, user.email);
    res.cookie("token", token, {
     withCredentials:true,
-    httpOnly:false,
+    httpOnly:true,
    });
    res.status(200).json({
     message:"Super admin login Successfully",
@@ -138,7 +138,7 @@ export const superAdminOverview = async (req, res) => {
 
 export const createLabAdmin = async (req, res) => {
   try {
-    if (!req.user || req.user.role !== "Super Admin") {
+    if (!req.user || req.user.role !== "superadmin") {
       return res.status(403).json({ message: "Access denied. Only Super Admin can create Lab Admins." });
     }
 
@@ -180,6 +180,17 @@ export const createLabAdmin = async (req, res) => {
     res.status(500).json({ message: "Error creating Lab Admin", error: error.message });
   }
 };
+
+export const getAllLabAdmins = async (req, res) => {
+  try {
+    const labAdmins = await User.find({ role: "labadmin" }).select("firstName lastName email _id role");
+    console.log("Lab Admins being sent:", labAdmins);
+    res.status(200).json({ labAdmins });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch Lab Admins", error: error.message });
+  }
+};
+
 
 export const getInbox = async (req, res) => {
   try {
