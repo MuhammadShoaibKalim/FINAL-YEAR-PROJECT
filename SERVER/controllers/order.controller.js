@@ -1,14 +1,37 @@
 import Order from '../models/order.model.js';
+import Cart from "../models/cart.model.js";
+
 
 export const createOrder = async (req, res) => {
   try {
-    const order = new Order({ ...req.body, userId: req.user.id });
+    const { items } = req.body;
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ message: "No items provided for order" });
+    }
+
+    const order = new Order({
+      userId: req.user.id,
+      items: items.map(item => ({
+        testOrPackageId: item.testOrPackageId,
+        type: item.type,
+        name: item.name,
+        price: item.price,
+      })),
+      totalPrice: items.reduce((sum, item) => sum + item.price, 0),
+    });
+
     await order.save();
-    res.status(201).json({ message: "Order created", order });
+
+    await Cart.deleteMany({ userId: req.user.id });
+
+    res.status(201).json({ message: "Order placed successfully", order });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Order creation error:", error.message);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 export const getUserOrders = async (req, res) => {
   try {
