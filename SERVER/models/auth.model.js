@@ -64,8 +64,8 @@ const UserSchema = new mongoose.Schema(
 
     role: {
       type: String,
-      enum: ["User", "Lab Admin", "Super Admin"],
-      default: "User",
+      enum: ["superadmin", "labadmin", "user"],
+      default: "user",
     },
     labId: {
       type: mongoose.Schema.Types.ObjectId,
