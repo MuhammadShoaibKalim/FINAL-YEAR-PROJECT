@@ -40,8 +40,8 @@ const SuperAdminSidebar = () => {
       {/* Sidebar Menu */}
       <ul className="space-y-2 py-4 font-medium">
         <SidebarItem to="/admin/super/overview" icon={MdOutlineDashboard} label="Overview" isOpen={isOpen} />
-        <SidebarItem to="/admin/super/users" icon={FaUsers} label="Users" isOpen={isOpen} />
         <SidebarItem to="/admin/super/labs" icon={FaFlask} label="Labs" isOpen={isOpen} />
+        <SidebarItem to="/admin/super/users" icon={FaUsers} label="Users" isOpen={isOpen} />
         <SidebarItem to="/admin/super/inbox" icon={MdOutlineMarkUnreadChatAlt} label="Inbox" isOpen={isOpen} />
         <SidebarItem to="/admin/super/settings" icon={FiSettings} label="Settings" isOpen={isOpen} />
 
