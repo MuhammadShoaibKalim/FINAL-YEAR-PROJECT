@@ -13,10 +13,10 @@ export const addToCart = async (req, res) => {
     }
 
     // Optional: Prevent duplicates (uncomment if needed)
-    // const existing = await Cart.findOne({ userId, testOrPackageId });
-    // if (existing) {
-    //   return res.status(400).json({ success: false, message: "Item already in cart" });
-    // }
+    const existing = await Cart.findOne({ userId, testOrPackageId });
+    if (existing) {
+      return res.status(400).json({ success: false, message: "Item already in cart" });
+    }
 
     const newCartItem = new Cart({
       userId,
