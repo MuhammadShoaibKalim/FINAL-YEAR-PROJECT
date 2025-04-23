@@ -1,42 +1,91 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaTimes } from "react-icons/fa";
-import AddUserForm from "./AddUserForm";
+import AddLabAdminForm from "./AddUserForm";
 
 const Users = () => {
-  const initialUsers = [
-    {
-      id: "6509db920db2700b405d5099",
-      name: "Muneeb",
-      role: "Admin",
-      email: "realmuneeburrehman@gmail.com",
-      ownedLab: "654a06c7b6bb8409513aaa",
-      createdAt: "2024-01-15",
-    },
-    {
-      id: "654fa6500b505f50aba1fb",
-      name: "Test",
-      role: "Lab Admin",
-      email: "muneebbug@gmail.com",
-      ownedLab: "-",
-      createdAt: "2024-01-10",
-    },
-    {
-      id: "6557de4e6c6d436f450bde",
-      name: "Muneeb",
-      role: "User",
-      email: "muneebkimbob@gmail.com",
-      ownedLab: "-",
-      createdAt: "2024-01-05",
-    },
-  ];
-
-  const [users, setUsers] = useState(initialUsers);
+  const [users, setUsers] = useState([]);
+  const [labs, setLabs] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
 
-  const handleAddUser = (newUserData) => {
-    setUsers((prevUsers) => [...prevUsers, newUserData]);
-    setShowForm(false);
+  useEffect(() => {
+    const fetchLabAdmins = async () => {
+      try {
+        const res = await fetch("/api/superadmin/labadmins", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
+        });
+        const data = await res.json();
+    
+        const transformed = (data.labAdmins || []).map((admin) => ({
+          id: admin._id,
+          name: `${admin.firstName} ${admin.lastName}`,
+          email: admin.email,
+          role: admin.role,
+          ownedLab: labs.find((lab) => lab._id === admin.labId)?.name || "N/A",
+          createdAt: admin.createdAt?.split("T")[0] || "-",
+        }));
+    
+        setUsers(transformed);
+      } catch (error) {
+        console.error("Failed to fetch lab admins", error);
+      }
+    };
+    
+
+    const fetchLabs = async () => {
+      try {
+        const res = await fetch("/api/superadmin/labs", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
+        });
+        const data = await res.json();
+        setLabs(data.labs || []);
+      } catch (error) {
+        console.error("Failed to fetch labs", error);
+      }
+    };
+
+    fetchLabAdmins();
+    fetchLabs();
+  }, [ users, labs]);
+
+
+
+  const handleAddUser = async (newUserData) => {
+    try {
+      const res = await fetch("/api/superadmin/create-labadmin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+        body: JSON.stringify({
+          firstName: newUserData.firstName,
+          lastName: newUserData.lastName,
+          email: newUserData.email,
+          password: newUserData.password,
+          labId: newUserData.assignedLab,
+          role: newUserData.role,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setUsers((prev) => [...prev, {
+          id: data.labAdmin._id,
+          name: `${data.labAdmin.firstName} ${data.labAdmin.lastName}`,
+          email: data.labAdmin.email,
+          role: data.labAdmin.role,
+          ownedLab: data.labAdmin.labId,
+          createdAt: new Date().toISOString().split("T")[0],
+        }]);
+        setShowForm(false);
+      } else {
+        alert(data.message);
+      }
+    } catch (error) {
+      alert("Error creating lab admin");
+      console.error(error);
+    }
   };
 
   const handleUpdateUser = (updatedUserData) => {
@@ -61,7 +110,6 @@ const Users = () => {
     setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
   };
 
-  
   return (
     <div className="bg-white p-6 rounded-lg shadow-md mt-4 w-full max-w-8xl">
       {showForm ? (
@@ -73,24 +121,25 @@ const Users = () => {
           >
             <FaTimes size={20} />
           </button>
-          <AddUserForm
+          <AddLabAdminForm
             onSubmit={currentUser ? handleUpdateUser : handleAddUser}
             onCancel={handleCancelForm}
             user={currentUser}
+            labs={labs}
           />
         </div>
       ) : (
         <>
           <div className="bg-white p-4 shadow-md rounded-md flex justify-between items-center mb-4">
             <div>
-              <h2 className="text-2xl font-semibold">Users</h2>
-              <p className="text-gray-500">Manage all your existing users or add a new one</p>
+              <h2 className="text-2xl font-semibold">Lab Admins</h2>
+              <p className="text-gray-500">Manage or create Lab Admin accounts</p>
             </div>
             <button
               onClick={() => setShowForm(true)}
               className="bg-primary text-white px-4 py-2 rounded-md"
             >
-              Add New User
+              Add New Lab Admin
             </button>
           </div>
 
