@@ -1,63 +1,96 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaEye, FaTrashAlt, FaReply } from "react-icons/fa";
 
-const initialMessages = [
-  {
-    id: '654806c16b6b48095b3aaa',
-    subject: 'Issue with test result',
-    sender: 'John Doe',
-    email: 'john.doe@example.com',
-    phone: '123-456-7890',
-    message: 'I’m facing an issue with my test result, can you help?',
-    isRead: false,
-    response: '',
-  },
-  {
-    id: '554806c16b6b48095b3bbb',
-    subject: 'Inquiry about lab availability',
-    sender: 'Jane Smith',
-    email: 'jane.smith@example.com',
-    phone: '987-654-3210',
-    message: 'Is the lab available for booking next week?',
-    isRead: true,
-    response: 'Yes, the lab is available for booking next week.',
-  },
-];
-
-
 const AdminDashboard = () => {
-  const [messages, setMessages] = useState(initialMessages);
-  const [isAddingMessage, setIsAddingMessage] = useState(false);
+  const [messages, setMessages] = useState([]);
   const [editMessage, setEditMessage] = useState(null);
 
-  const addMessage = (newMessage) => {
-    setMessages([...messages, { ...newMessage, id: Date.now().toString(), isRead: false }]);
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const res = await fetch("/api/query/all", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        });
+        console.log("Fetching queries for Super Admin");
+
+        const data = await res.json();
+        if (data.success) {
+          setMessages(data.queries);
+        }
+      } catch (error) {
+        console.error("Failed to fetch messages:", error);
+      }
+    };
+
+    fetchMessages();
+  }, []);
+
+  const handleDeleteMessage = async (messageId) => {
+    try {
+      const res = await fetch(`/api/query/delete/${messageId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+      });
+      if (res.ok) {
+        setMessages(messages.filter((msg) => msg._id !== messageId));
+      }
+    } catch (error) {
+      console.error("Error deleting message:", error);
+    }
   };
 
-  const handleDeleteMessage = (messageId) => {
-    setMessages(messages.filter((message) => message.id !== messageId));
+  const handleReplyMessage = async (messageId, response) => {
+    try {
+      const res = await fetch(`/api/query/respond/${messageId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+        body: JSON.stringify({ response }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMessages(
+          messages.map((msg) =>
+            msg._id === messageId
+              ? { ...msg, response: data.query.response, status: "responded" }
+              : msg
+          )
+        );
+        setEditMessage(null);
+      }
+    } catch (error) {
+      console.error("Error replying to message:", error);
+    }
   };
 
-  const handleReplyMessage = (messageId, response) => {
-    setMessages(
-      messages.map((msg) =>
-        msg.id === messageId ? { ...msg, response, isRead: true } : msg
-      )
-    );
-  };
-
-  const handleViewMessage = (messageId) => {
-    setMessages(
-      messages.map((msg) =>
-        msg.id === messageId ? { ...msg, isRead: true } : msg
-      )
-    );
+  const handleViewMessage = async (messageId) => {
+    try {
+      const res = await fetch(`/api/query/view/${messageId}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+      });
+      if (res.ok) {
+        setMessages(
+          messages.map((msg) =>
+            msg._id === messageId ? { ...msg, status: "viewed" } : msg
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Error marking as viewed:", error);
+    }
   };
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md mt-4 w-full max-w-8xl">
-
-   
       <div className="bg-white shadow-lg rounded-lg p-6 mt-4">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-semibold">Super Admin Query</h2>
@@ -75,28 +108,35 @@ const AdminDashboard = () => {
               </tr>
             </thead>
             <tbody>
-              {messages.map((message) => (
-                <tr key={message.id} className={`border-b hover:bg-gray-100 ${message.isRead ? 'bg-green-100' : 'bg-gray-100'}`}>
-                  <td className="px-4 py-2">{message.sender}</td>
-                  <td className="px-4 py-2">{message.subject}</td>
-                  <td className="px-4 py-2 truncate">{message.message}</td>
-                  <td className="px-4 py-2 truncate">{message.response || "No response yet"}</td>
+              {messages.map((msg) => (
+                <tr
+                  key={msg._id}
+                  className={`border-b hover:bg-gray-100 ${
+                    msg.status === "responded" ? "bg-green-100" : ""
+                  }`}
+                >
+                  <td className="px-4 py-2">{msg.name}</td>
+                  <td className="px-4 py-2">{msg.subject}</td>
+                  <td className="px-4 py-2 truncate">{msg.message}</td>
+                  <td className="px-4 py-2 truncate">
+                    {msg.response || "No response yet"}
+                  </td>
                   <td className="px-4 py-2 flex gap-2">
                     <button
-                      className="text-gray-600 hover:text-blue-600"
-                      onClick={() => handleViewMessage(message.id)}
+                      className="hover:text-green-500"
+                      onClick={() => handleViewMessage(msg._id)}
                     >
-                      <FaEye color={message.isRead ? 'green' : 'gray'} />
+                      <FaEye className={msg.status !== "unviewed" ? "text-green-500" : "text-gray-500"} />
                     </button>
                     <button
                       className="text-red-500"
-                      onClick={() => handleDeleteMessage(message.id)}
+                      onClick={() => handleDeleteMessage(msg._id)}
                     >
                       <FaTrashAlt />
                     </button>
                     <button
                       className="text-blue-500"
-                      onClick={() => setEditMessage(message)}
+                      onClick={() => setEditMessage(msg)}
                     >
                       <FaReply />
                     </button>
@@ -110,15 +150,21 @@ const AdminDashboard = () => {
 
       {editMessage && (
         <div className="bg-white p-6 shadow-lg rounded-lg mt-4">
-          <h3 className="text-xl font-semibold mb-4">Reply to {editMessage.sender}</h3>
+          <h3 className="text-xl font-semibold mb-4">
+            Reply to {editMessage.name}
+          </h3>
           <textarea
-            defaultValue={editMessage.response}
+            value={editMessage.response || ""}
             className="w-full p-3 border border-gray-300 rounded-lg mb-4"
             placeholder="Type your reply here"
-            onChange={(e) => setEditMessage({ ...editMessage, response: e.target.value })}
+            onChange={(e) =>
+              setEditMessage({ ...editMessage, response: e.target.value })
+            }
           />
           <button
-            onClick={() => handleReplyMessage(editMessage.id, editMessage.response)}
+            onClick={() =>
+              handleReplyMessage(editMessage._id, editMessage.response)
+            }
             className="bg-primary text-white px-4 py-2 rounded-lg"
           >
             Send Reply
