@@ -1,46 +1,51 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import AddLabForm from './AddLabForm';
-
-const initialLabData = [
-  {
-    id: '654806c16b6b48095b3aaa',
-    name: 'CTI Lab',
-    address: '123 Science St, Cityville',
-    location: 'Building A',
-    image: 'https://via.placeholder.com/150',
-    isActive: true,
-  },
-  {
-    id: '554806c16b6b48095b3bbb',
-    name: 'Physics Lab',
-    address: '456 Innovation Rd, Tech City',
-    location: 'Building B',
-    image: 'https://via.placeholder.com/150',
-    isActive: false,
-  },
-  {
-    id: '554806c16b6b48095b3ccc',
-    name: 'Chemistry Lab',
-    address: '789 Discovery Ave, Labtown',
-    location: 'Building C',
-    image: 'https://via.placeholder.com/150',
-    isActive: true,
-  },
-];
+import toast from 'react-hot-toast';
 
 const Labs = () => {
-  const [labData, setLabData] = useState(initialLabData);
+  const [labData, setLabData] = useState([]);
   const [isAddingLab, setIsAddingLab] = useState(false);
   const [editLab, setEditLab] = useState(null);
 
-  const toggleAddLab = () => {
-    setIsAddingLab(!isAddingLab);
-    setEditLab(null);
-  };
+  useEffect(() => {
+    const fetchLabs = async () => {
+      try {
+        const res = await fetch("/api/labs", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        });
+        const data = await res.json();
+        if (data.success && Array.isArray(data.labs)) {
+          setLabData(data.labs);
+        }
+      } catch (error) {
+        console.error("Failed to fetch labs", error);
+      }
+    };
+    fetchLabs();
+  }, []);
 
-  const addLab = (newLab) => {
-    setLabData([...labData, { ...newLab, id: Date.now().toString() }]);
-    setIsAddingLab(false);
+  const addLab = async (formData) => {
+    try {
+      const res = await fetch("/api/labs/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success("Lab created successfully");
+        setLabData([...labData, data.lab]);
+      } else {
+        toast.error(data.message || "Failed to create lab");
+      }
+    } catch (err) {
+      toast.error("Server error while creating lab");
+    }
   };
 
   const editLabDetails = (updatedLab) => {
@@ -55,6 +60,11 @@ const Labs = () => {
   const deleteLab = (labId) => {
     const updatedLabData = labData.filter((lab) => lab.id !== labId);
     setLabData(updatedLabData);
+  };
+
+  const toggleAddLab = () => {
+    setIsAddingLab(!isAddingLab);
+    setEditLab(null);
   };
 
   return (
@@ -78,7 +88,7 @@ const Labs = () => {
 
       {(isAddingLab || editLab) ? (
         <div className="mt-6 p-4 bg-white shadow-lg rounded-lg">
-          <div className="flex justify-between items-center mb-4">
+          {/* <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-semibold">{editLab ? 'Edit Lab' : 'Add New Lab'}</h3>
             <button
               onClick={toggleAddLab}
@@ -86,7 +96,7 @@ const Labs = () => {
             >
               Close
             </button>
-          </div>
+          </div> */}
           <AddLabForm
             toggleAddLab={toggleAddLab}
             addLab={addLab}
@@ -98,7 +108,7 @@ const Labs = () => {
         <div className="bg-white shadow-lg rounded-lg p-6 mt-4">
           <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-3 gap-6">
             {labData.map((lab) => (
-              <div key={lab.id} className="bg-white shadow-md rounded-lg p-6">
+              <div key={lab._id} className="bg-white shadow-md rounded-lg p-6">
                 <img
                   src={lab.image}
                   alt={lab.name}
@@ -109,9 +119,7 @@ const Labs = () => {
                 <p className="text-gray-500 text-sm text-center md:text-left">{lab.location}</p>
                 <div className="flex flex-col md:flex-row justify-between items-center mt-4 space-y-2 md:space-y-0">
                   <button
-                    className={`text-sm px-4 py-2 rounded-lg w-full md:w-auto ${
-                      lab.isActive ? 'bg-primary text-white' : 'bg-gray-300 text-gray-700'
-                    }`}
+                    className={`text-sm px-4 py-2 rounded-lg w-full md:w-auto ${lab.isActive ? 'bg-primary text-white' : 'bg-gray-300 text-gray-700'}`}
                   >
                     {lab.isActive ? 'Active' : 'Inactive'}
                   </button>
@@ -127,7 +135,7 @@ const Labs = () => {
                     </button>
                     <button
                       className="bg-primary text-white px-3 py-1 rounded-lg"
-                      onClick={() => deleteLab(lab.id)}
+                      onClick={() => deleteLab(lab._id)}
                     >
                       Delete
                     </button>
