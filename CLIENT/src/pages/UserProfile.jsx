@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { FaUser, FaEdit, FaShoppingCart, FaBoxOpen } from "react-icons/fa";
-import Cart from "./Cart";
 import { useDispatch, useSelector } from "react-redux";
 import { updateUser } from "../redux/AuthSlice.js";
+import Cart from "../pages/Cart.jsx";
+import Orders from "../pages/Orders.jsx"
+
 
 const UserProfile = () => {
   const dispatch = useDispatch();
@@ -134,12 +136,7 @@ const UserProfile = () => {
       case "cart":
         return <Cart />;
       case "orders":
-        return (
-          <div>
-            <h2 className="text-lg font-semibold">My Orders</h2>
-            <p>You have 3 recent orders. Latest Order ID: #12345</p>
-          </div>
-        );
+        return <Orders />;
       default:
         return <h2>Welcome</h2>;
     }
