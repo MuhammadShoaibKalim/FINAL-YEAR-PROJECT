@@ -7,7 +7,7 @@ const AddLabAdminForm = ({ onSubmit, onCancel, user, labs }) => {
     lastName: "",
     email: "",
     password: "",
-    role: "Lab Admin",
+    role: "labadmin",
     assignedLab: ""
   });
 
@@ -19,8 +19,8 @@ const AddLabAdminForm = ({ onSubmit, onCancel, user, labs }) => {
         lastName: nameParts[1] || "",
         email: user.email,
         password: "",
-        role: user.role || "Lab Admin",
-        assignedLab: user.assignedLab || ""
+        role: user.role || "labadmin",
+        assignedLab: user.ownedLab || ""
       });
     }
   }, [user]);
@@ -70,7 +70,7 @@ const AddLabAdminForm = ({ onSubmit, onCancel, user, labs }) => {
             required
           />
         </div>
-        
+
         <div>
           <label className="block text-sm font-medium text-gray-700">Last Name</label>
           <input
@@ -130,7 +130,7 @@ const AddLabAdminForm = ({ onSubmit, onCancel, user, labs }) => {
           >
             <option value="">Select a Lab</option>
             {labs && labs.map((lab) => (
-              <option key={lab.id} value={lab.id}>{lab.name}</option>
+              <option key={lab._id} value={lab._id}>{lab.name}</option>
             ))}
           </select>
         </div>
