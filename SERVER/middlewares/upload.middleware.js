@@ -4,10 +4,13 @@ import cloudinary from '../config/cloudinary.js';
 
 const storage = new CloudinaryStorage({
   cloudinary,
-  params: {
-    folder: 'user_profiles',
-    allowed_formats: ['jpg', 'png', 'jpeg'],
-    transformation: [{ width: 300, height: 300, crop: 'limit' }],
+  params: async (req, file) => {
+    const folder = req.body.uploadFolder || 'default_folder';
+    return {
+      folder,
+      allowed_formats: ['jpg', 'png', 'jpeg'],
+      transformation: [{ width: 300, height: 300, crop: 'limit' }],
+    };
   },
 });
 
