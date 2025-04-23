@@ -3,9 +3,11 @@ import {
   createSuperAdmin, loginSuperAdmin, logoutSuperAdmin,
   getInbox, respondToInbox, getSettings, updateSettings,
   superAdminOverview,changePassword,
-  createLabAdmin
+  createLabAdmin,
+  getAllLabAdmins
 } from "../controllers/superAdmin.controller.js";
 import { isAuthenticated, isSuperAdmin } from "../middlewares/auth.middleware.js";
+import upload from "../middlewares/upload.middleware.js";
 
 const router = express.Router();
 
@@ -28,6 +30,8 @@ router.get("/overview", isAuthenticated, isSuperAdmin, superAdminOverview);
 
 //create lab admin
 router.post("/create-labadmin",isAuthenticated, isSuperAdmin, createLabAdmin);
+router.get("/labadmins", isAuthenticated, isSuperAdmin, getAllLabAdmins);
+
 
 // Inbox Routes
 router.get("/", isAuthenticated, isSuperAdmin,  getInbox);
@@ -35,7 +39,14 @@ router.post("/:id", isAuthenticated, isSuperAdmin, respondToInbox);
 
 // Super Admin Settings Routes
 router.get("/get-settings", isAuthenticated, isSuperAdmin,  getSettings);
-router.put("/update-settings", isAuthenticated, isSuperAdmin,  updateSettings);
+// router.put("/update-settings", isAuthenticated, isSuperAdmin,  updateSettings);
+router.put(
+  "/update-settings",
+  isAuthenticated,
+  isSuperAdmin,
+  upload.single("profileImage"), 
+  updateSettings
+);
 router.put("/password", isAuthenticated, isSuperAdmin, changePassword);
 
 export default router;
