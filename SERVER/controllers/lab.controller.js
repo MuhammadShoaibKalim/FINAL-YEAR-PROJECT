@@ -4,24 +4,37 @@ import User from "../models/auth.model.js";
 
 export const addLab = async (req, res) => {
   try {
-    if (req.user.role !== "Super Admin") {
+    if (req.user.role !== "superadmin") {
       return res.status(403).json({ message: "Access denied. Only Super Admin can create labs." });
     }
 
-    const { name, address, location, description, image } = req.body;
+    const {
+      name = "",
+      address = "",
+      location = "",
+      description = "",
+      assignedAdmin = ""
+    } = req.body;
 
-    if (!name || !address || !location || !description) {
+    const isActive = req.body.isActive === "true" || req.body.isActive === "on";
+
+    
+    if (!name.trim() || !address.trim() || !location.trim() || !description.trim() ) {
       return res.status(400).json({ message: "All fields are required." });
     }
+ 
+     const image = req.file ? req.file.path : "";
 
     const newLab = await Lab.create({
       name,
       address,
       location,
       description,
-      image: image || "",
-      isActive: true,
-      createdBy: new mongoose.Types.ObjectId(req.user._id),
+      // image: image || "",
+      isActive,
+      createdBy: req.user._id,
+      lastUpdatedBy: req.user._id,
+      labAdmin: assignedAdmin,
     });
 
     res.status(201).json({ message: "Lab created successfully", lab: newLab });
@@ -29,6 +42,7 @@ export const addLab = async (req, res) => {
     res.status(500).json({ message: "Error creating lab", error: error.message });
   }
 };
+
 
 
 // export const getAllLabs = async (req, res) => {
@@ -70,13 +84,14 @@ export const addLab = async (req, res) => {
 //     res.status(500).json({ message: "Error fetching lab", error: error.message });
 //   }
 // };
+
 export const getLab = async (req, res) => {
   try {
     if (!req.user) {
       return res.status(401).json({ message: "Unauthorized access" });
     }
 
-    if (req.user.role === "Super Admin") {
+    if (req.user.role === "superadmin") {
       // Super Admin can fetch all labs
       const labs = await Lab.find().populate("createdBy", "firstName lastName email");
       return res.status(200).json({ success: true, labs });
@@ -106,7 +121,7 @@ export const updateLab = async (req, res) => {
     if (!lab) return res.status(404).json({ message: "Lab not found" });
 
     // Check if the user is either Super Admin or the Lab Owner
-    if (req.user.role !== "Super Admin" && lab.createdBy.toString() !== req.user._id.toString()) {
+    if (req.user.role !== "superadmin" && lab.createdBy.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Access denied. Only the lab owner or Super Admin can update this lab." });
     }
 
@@ -127,7 +142,7 @@ export const deleteLab = async (req, res) => {
     if (!lab) return res.status(404).json({ message: "Lab not found" });
 
     // Check if the user is either Super Admin or the Lab Owner
-    if (req.user.role !== "Super Admin" && lab.createdBy.toString() !== req.user._id.toString()) {
+    if (req.user.role !== "superadmin" && lab.createdBy.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Access denied. Only the lab owner or Super Admin can delete this lab." });
     }
 
