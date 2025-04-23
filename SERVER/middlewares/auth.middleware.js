@@ -34,7 +34,7 @@ export const isAuthenticated = async (req, res, next) => {
 // Check if user is a Super Admin
 export const isSuperAdmin = (req, res, next) => {
   // console.log('User:', req.user);
-  if (!req.user || req.user.role !== "Super Admin") {
+  if (!req.user || req.user.role !== "superadmin") {
     return res.status(403).json({ message: "Access denied. Only Super Admins allowed." });
   }
   next(); 
@@ -60,7 +60,7 @@ export const isLabAdmin = async (req, res, next) => {
       return res.status(401).json({ message: "Unauthorized: User not found" });
     }
 
-    if (req.user.role !== "Lab Admin") {
+    if (req.user.role !== "labadmin") {
       return res.status(403).json({ message: "Access denied. Only Lab Admins allowed." });
     }
 
@@ -84,7 +84,7 @@ export const protect = async (req, res, next) => {
         return res.status(401).json({ message: "Unauthorized: User not found" });
       }
 
-      if (req.user.role !== "Super Admin" && req.user.role !== "Lab Admin") {
+      if (req.user.role !== "superadmin" && req.user.role !== "labadmin") {
         return res.status(403).json({ message: "Forbidden: Access Denied" });
       }
 
