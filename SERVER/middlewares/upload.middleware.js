@@ -8,7 +8,7 @@ const storage = new CloudinaryStorage({
     const folder = req.body.uploadFolder || 'default_folder';
     return {
       folder,
-      allowed_formats: ['jpg', 'png', 'jpeg'],
+      allowed_formats: ['jpg', 'png', 'jpeg', 'webp', 'gif', 'bmp'],
       transformation: [{ width: 300, height: 300, crop: 'limit' }],
     };
   },
