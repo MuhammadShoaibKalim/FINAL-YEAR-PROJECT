@@ -1,7 +1,8 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { Logout } from "../../../redux/AuthSlice";
+// import { Logout } from "../../redux/AuthSlice.jsx";
+import { Logout } from '../../redux/AuthSlice.js';
 import toast from "react-hot-toast";
 import { LogOut, LayoutDashboard } from "lucide-react"; 
 const HeaderSuperAdmin = () => {
