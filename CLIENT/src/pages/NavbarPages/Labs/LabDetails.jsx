@@ -4,7 +4,7 @@ import { FaArrowLeft, FaUsers } from "react-icons/fa";
 import { useCart } from "react-use-cart";
 import { labsData } from "./LabData";
 import toast, { Toaster } from "react-hot-toast";
-import Cart from "../../Cart";
+import Cart from "../../../components/UserAdmin/Cart";
 
 export default function LabDetails() {
   const { addItem, inCart, isEmpty, items } = useCart();
