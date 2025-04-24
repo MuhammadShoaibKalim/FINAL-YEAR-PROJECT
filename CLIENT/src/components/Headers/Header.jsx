@@ -1,6 +1,6 @@
 import { useSelector } from "react-redux";
 import HeaderUser from "./HeaderUser";
-import HeaderSuperAdmin from "../Admin/SuperAdmin/HeaderSuperAdmin";
+import HeaderSuperAdmin from "../SuperAdmin/HeaderSuperAdmin";
 import HeaderLabAdmin from "./HeaderLabAdmin";
 import HeaderGuest from "./HeaderGuest";
 import Topbar from "../Layouts/Topbar";
