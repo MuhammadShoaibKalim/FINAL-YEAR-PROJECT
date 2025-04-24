@@ -41,14 +41,14 @@ const labSchema = new mongoose.Schema({
     },
     createdBy: { 
         type: mongoose.Schema.Types.ObjectId, 
-        ref: "user" },
+        ref: "User" },
     lastUpdatedBy: { 
         type: mongoose.Schema.Types.ObjectId,
-        ref: "user"
+        ref: "User"
     },
     labAdmin: { 
         type: mongoose.Schema.Types.ObjectId,
-        ref: "user"
+        ref: "User"
     },
     tests: [{ type: mongoose.Schema.Types.ObjectId, ref: "Test" }], 
     packages: [{ type: mongoose.Schema.Types.ObjectId, ref: "Package" }], 
