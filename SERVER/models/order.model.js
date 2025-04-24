@@ -1,5 +1,20 @@
 import mongoose from "mongoose";
 
+// Cart Schema
+const CartSchema = new mongoose.Schema({
+    userId: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'User', required: true 
+    },
+    testOrPackageId: { type: mongoose.Schema.Types.ObjectId, refPath: 'type', required: true },
+    type: { type: String, enum: ['Test', 'Package'], required: true },
+    name: { type: String, required: true },
+    price: { type: Number, required: true },
+}, { timestamps: true });
+export const Cart = mongoose.model('Cart', CartSchema);
+
+
+// Order schema
 const OrderSchema = new mongoose.Schema(
   {
     userId: {
@@ -77,11 +92,61 @@ const OrderSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
 OrderSchema.pre("save", function (next) {
   this.totalPrice = this.subtotal + this.deliveryCharge;
   next();
 });
+export const Order = mongoose.model("Order", OrderSchema);
 
-const Order = mongoose.model("Order", OrderSchema);
-export default Order;
+
+// Result schema
+const ResultSchema = new mongoose.Schema(
+  {
+    orderId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Order",
+      required: true,
+    },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    testId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Test",
+      required: function () {
+        return !this.packageId;
+      },
+    },
+    packageId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Package",
+      required: function () {
+        return !this.testId;
+      },
+    },
+    resultFile: {
+      type: String, 
+      required: true,
+    },
+    remarks: {
+      type: String, 
+      trim: true,
+    },
+    status: {
+      type: String,
+      enum: ["Pending", "Completed"],
+      default: "Pending",
+    },
+    uploadedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "LabAdmin", 
+      required: true,
+    },
+  },
+  { timestamps: true }
+);
+export const Result = mongoose.model("Result", ResultSchema);
+
+
