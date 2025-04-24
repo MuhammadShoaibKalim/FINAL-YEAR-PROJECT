@@ -8,18 +8,18 @@ import { SetUser } from './redux/AuthSlice';
 import { get } from "./Services/ApiEndpoints";
 
 import UserLayout from "./components/Layouts/UserLayout";
-import SuperAdminLayout from "./components/Admin/SuperAdmin/SuperAdminLayout";
-import LabAdminLayout from "./components/Admin/LabAdmin/LabAdminLayout";
+import SuperAdminLayout from "./components/SuperAdmin/SuperAdminLayout";
+import LabAdminLayout from "./components/LabAdmin/LabAdminLayout";
 import ScrollToTop from "./components/Layouts/ScrollToTop";
 import ProtectedRoute from "./components/Layouts/ProtectedRoutes";
 import Loader from "./components/Layouts/Loader";
 
 // Super Admin Components
-import Users from "./components/Admin/SuperAdmin/Users";
-import Labs from "./components/Admin/SuperAdmin/Labs";
-import Overview from "./components/Admin/SuperAdmin/Overview";
-import Inbox from "./components/Admin/SuperAdmin/Inbox";
-import Settings from "./components/Admin/SuperAdmin/Settings";
+import Users from "./components/SuperAdmin/Users";
+import Labs from "./components/SuperAdmin/Labs";
+import Overview from "./components/SuperAdmin/Overview";
+import Inbox from "./components/SuperAdmin/Inbox";
+import Settings from "./components/SuperAdmin/Settings";
 
 // User components
 import Home from "./pages/NavbarPages/Home";
@@ -28,34 +28,34 @@ import WhyUs from "./pages/NavbarPages/WhyUs";
 import Privacy from "./pages/NavbarPages/Privacy";
 import Contact from "./pages/NavbarPages/Contact";
 import Features from "./pages/NavbarPages/Features";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+import Login from "./components/Auth/Login";
+import Register from "./components/Auth/Register";
 import NotFound from "./pages/NotFound";
 import SymptomDetails from "./pages/Symptoms/SymptomDetails";
 
 // Lab Admin Components
-import Orders from "./components/Admin/LabAdmin/Orders";
-import Reports from "./components/Admin/LabAdmin/ReportCard";
-import LabSettings from "./components/Admin/LabAdmin/Settings";
-import OfferedTest from "./components/Admin/LabAdmin/OfferedTest";
-import LabOverview from "./components/Admin/LabAdmin/LabOverview";
-import OrderEdit from "./components/Admin/LabAdmin/OrderEdit";
+import Orders from "./components/LabAdmin/Orders";
+import Reports from "./components/LabAdmin/ReportCard";
+import LabSettings from "./components/LabAdmin/Settings";
+import OfferedTest from "./components/LabAdmin/OfferedTest";
+import LabOverview from "./components/LabAdmin/LabOverview";
+import OrderEdit from "./components/LabAdmin/OrderEdit";
 import FAQ from "./pages/Home/FAQ";
 import AIRecommendation from "./components/Ai/AIRecommendation";
 import UserReview from "./pages/Home/UserRev";
-import UserProfile from "./pages/UserProfile";
-import Messages from "./components/Admin/LabAdmin/MessageLabAdmin";
-import LabProfile from "./components/Admin/LabAdmin/LabProfile";
+import UserProfile from "./components/UserAdmin/UserProfile";
+import Messages from "./components/LabAdmin/MessageLabAdmin";
+import LabProfile from "./components/LabAdmin/LabProfile";
 import Labes from "./pages/NavbarPages/Labs/Labs";
 import LabDetails from "./pages/NavbarPages/Labs/LabDetails";
 import BookingForm from "./pages/NavbarPages/Labs/BookingForm";
-import Cart from "./pages/Cart";
+import Cart from "./components/UserAdmin/Cart";
 import Payment from "./components/Payment/Payment";
 import Failure from "./components/Payment/Failure";
 import Success from "./components/Payment/Success";
 import Partners from "./pages/Partners/Partners";
 import Hero from "./pages/Home/Hero";
-import PublicLayout from "./components/Layouts/PublicLayout";
+import UserInbox from "./components/UserAdmin/UserInbox";
 
 
 const App = () => {
@@ -90,11 +90,7 @@ const App = () => {
         <ScrollToTop />
         <Toaster position="top-right" />
         <Routes>
-          {/* Public Auth Routes - Must be first */}
-          {/* <Route element={<PublicLayout />}>
-            <Route path="register" element={<Register />} />
-            <Route path="login" element={<Login />} />
-          </Route> */}
+
 
           {/* Public Routes */}
           <Route path="/" element={<UserLayout />}>
@@ -112,6 +108,7 @@ const App = () => {
             <Route path="services" element={<Hero />} />
             <Route path="register" element={<Register />} />
             <Route path="login" element={<Login />} />
+
           </Route>
 
           {/* Protected User Routes */}
@@ -132,6 +129,8 @@ const App = () => {
             <Route path="payment/success" element={<Success />} />
             <Route path="payment/failure" element={<Failure />} />
             <Route path="userprofile" element={<UserProfile />} />
+            <Route path="/user/inbox" element={<UserInbox />} />
+
           </Route>
 
           {/* Super Admin Routes */}
