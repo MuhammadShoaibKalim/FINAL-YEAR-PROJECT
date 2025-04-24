@@ -26,9 +26,14 @@ export const submitQuery = async (req, res) => {
 
 export const getAllQueries = async (req, res) => {
     try {
-      const queries = await Query.find().populate("userId", "firstName lastName email");
+      const queries = await Query.find().populate({
+        path: "userId",
+        select: "firstName lastName email ",
+      });
+      
       res.status(200).json({ success: true, queries });
     } catch (error) {
+      console.error("Error fetching queries:", error);
       res.status(500).json({ message: "Error fetching queries", error: error.message });
     }
 };
@@ -71,7 +76,8 @@ export const respondToQuery = async (req, res) => {
 
 export const getUserQueries = async (req, res) => {
     try {
-      const queries = await Query.find({ userId: req.params.userId }).populate("userId", "firstName lastName email");
+      const userId = req.user?.id || null;
+      const queries = await Query.find({ userId: userId }).populate("userId", "firstName lastName email");
       res.status(200).json({ success: true, queries });
     } catch (error) {
       res.status(500).json({ message: "Error fetching user queries", error: error.message });
