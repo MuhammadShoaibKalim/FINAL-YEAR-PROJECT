@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { FaSignOutAlt } from 'react-icons/fa';
 import { useDispatch } from 'react-redux';
-import { SetUser, Logout } from '../../redux/AuthSlice.js';
+import { SetUser, Logout } from '../../redux/AuthSlice';
 import toast from 'react-hot-toast';
 
 const HeaderLabAdmin = () => {
