@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
-import Test from "../models/test.model.js";
-import Package from "../models/package.model.js";
+import { Test, Package} from "../models/testpackage.model.js";
 import Lab from "../models/lab.model.js";
 
-// ====== TESTS ======
+
+// Test controller function 
 export const createTest = async (req, res) => {
   try {
     const { name, price, description, lab } = req.body;
@@ -91,7 +91,7 @@ export const getTestById = async (req, res) => {
 };
 
 
-// ====== PACKAGES ======
+// Packages controller function 
 export const createPackage = async (req, res) => {
   try {
     const { name, price, tests, lab } = req.body;
