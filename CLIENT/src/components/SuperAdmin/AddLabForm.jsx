@@ -11,12 +11,11 @@ const AddLabForm = ({ toggleAddLab, addLab, editLab, editLabDetails }) => {
     image: null,
     type: '',
   });
-  
 
   const [imagePreview, setImagePreview] = useState(null);
   const [labAdmins, setLabAdmins] = useState([]);
+  const [error, setError] = useState('');
 
- 
   useEffect(() => {
     const fetchAdmins = async () => {
       try {
@@ -29,6 +28,7 @@ const AddLabForm = ({ toggleAddLab, addLab, editLab, editLabDetails }) => {
         setLabAdmins(data.labAdmins || []);
       } catch (err) {
         console.error("Failed to fetch lab admins", err);
+        setError("Failed to fetch lab admins. Please try again.");
       }
     };
     fetchAdmins();
@@ -43,28 +43,40 @@ const AddLabForm = ({ toggleAddLab, addLab, editLab, editLabDetails }) => {
         description: editLab.description || '',
         isActive: editLab.isActive ?? true,
         assignedAdmin: editLab.labAdmin || '',
-        image: null,
+        type: editLab.type || '',
+        image: null,  // Set to null to prevent overwriting with old data
       });
-      setImagePreview(editLab.image || null);
+      setImagePreview(editLab.image || null);  // Set the image preview if available
     }
   }, [editLab]);
+  
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
-    if (type === "file") {
+    if (type === 'file') {
       const file = files[0];
-      setFormData(prev => ({ ...prev, image: file }));
+      if (file && !file.type.startsWith('image/')) {
+        setError("Please upload a valid image file.");
+        return;
+      }
+      setFormData((prev) => ({ ...prev, image: file }));
       setImagePreview(URL.createObjectURL(file));
+      setError('');  // Reset error message
     } else {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        [name]: type === "checkbox" ? checked : value,
+        [name]: type === 'checkbox' ? checked : value,
       }));
     }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+  
+    if (!formData.name || !formData.address || !formData.location || !formData.description || !formData.type || !formData.assignedAdmin) {
+      setError("Please fill all the required fields.");
+      return;
+    }
   
     const formToSend = new FormData();
     formToSend.append("name", formData.name);
@@ -74,7 +86,6 @@ const AddLabForm = ({ toggleAddLab, addLab, editLab, editLabDetails }) => {
     formToSend.append("isActive", formData.isActive ? "true" : "false");
     formToSend.append("assignedAdmin", formData.assignedAdmin);
     formToSend.append("type", formData.type);
-  
     formToSend.append("uploadFolder", "labs");
   
     if (formData.image) {
@@ -90,10 +101,12 @@ const AddLabForm = ({ toggleAddLab, addLab, editLab, editLabDetails }) => {
     toggleAddLab();
   };
   
+  
 
   return (
     <div className="rounded-lg p-6 mt-6">
       <h3 className="text-xl font-semibold mb-4">{editLab ? 'Edit Lab' : 'Add New Lab'}</h3>
+      {error && <p className="text-red-500">{error}</p>}
       <form onSubmit={handleSubmit} encType="multipart/form-data">
         {/* Lab Fields */}
         <div className="mb-4">
@@ -121,33 +134,34 @@ const AddLabForm = ({ toggleAddLab, addLab, editLab, editLabDetails }) => {
         </div>
 
         {/* Lab Type */}
-<div className="mb-4">
-  <label className="block text-sm font-medium">Lab Type</label>
-  <select
-    name="type"
-    value={formData.type || ""}
-    onChange={handleChange}
-    className="w-full px-3 py-2 border rounded-md"
-    required
-  >
-    <option value="">Select Type</option>
-    <option value="Lab">Lab</option>
-    <option value="Hospital">Hospital</option>
-  </select>
-</div>
+        <div className="mb-4">
+          <label className="block text-sm font-medium">Lab Type</label>
+          <select
+            name="type"
+            value={formData.type || ""}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border rounded-md"
+            required
+          >
+            <option value="">Select Type</option>
+            <option value="Lab">Lab</option>
+            <option value="Hospital">Hospital</option>
+          </select>
+        </div>
 
         {/* Lab Admin Dropdown */}
         <div className="mb-4">
           <label className="block text-sm font-medium">Assign Lab Admin</label>
           <select name="assignedAdmin" value={formData.assignedAdmin} onChange={handleChange}
-            className="w-full px-3 py-2 border rounded-md" required>
-            <option value="">Select Lab Admin</option>
-            {labAdmins.map((admin) => (
-              <option key={admin._id} value={admin._id}>
-                {admin.firstName} {admin.lastName} ({admin.email})
-              </option>
-            ))}
-          </select>
+  className="w-full px-3 py-2 border rounded-md" required>
+  <option value="">Select Lab Admin</option>
+  {labAdmins.map((admin) => (
+    <option key={admin._id} value={admin._id}>
+      {admin.firstName} {admin.lastName} ({admin.email})
+    </option>
+  ))}
+</select>
+
         </div>
 
         {/* Image Upload */}
