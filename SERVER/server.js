@@ -9,7 +9,7 @@ import {protect} from './middlewares/auth.middleware.js';
 import labRoutes from "./routes/lab.route.js";
 import userRoutes from "./routes/user.route.js";
 import queryRoutes from "./routes/query.route.js"
-import aiRoutes from "./routes/ai.route.js"
+import recommendationRoutes from "./routes/recommendation.route.js"
 import paymentRoutes from "./routes/payment.route.js"
 import testPackageRoutes from "./routes/testpackage.route.js"
 import cors from "cors";
@@ -37,7 +37,7 @@ app.use("/api/tests", testPackageRoutes );
 app.use("/api/packages", testPackageRoutes );
 app.use("/api/users", userRoutes)
 app.use("/api/query", queryRoutes);
-app.use("/api/ai", aiRoutes)
+app.use('/api/get-recommendation', recommendationRoutes)
 app.use("/api/cart", orderRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/payment", paymentRoutes);
