@@ -48,7 +48,9 @@ const labSchema = new mongoose.Schema({
     },
     labAdmin: { 
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User"
+        ref: "User",
+        unique:true,
+        sparse: true
     },
     tests: [{ type: mongoose.Schema.Types.ObjectId, ref: "Test" }], 
     packages: [{ type: mongoose.Schema.Types.ObjectId, ref: "Package" }], 
