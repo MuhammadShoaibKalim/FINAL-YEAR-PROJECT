@@ -61,54 +61,60 @@ const Users = () => {
     fetchData();
   }, []);
 
-  const handleAddUser = async (newUserData) => {
+  const handleAddUser = async (formData) => {
     try {
       const res = await fetch("/api/superadmin/create-user", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
-        body: JSON.stringify(newUserData),
+        body: formData,
       });
-
+  
+      const data = await res.json();
+  
       if (res.ok) {
+        toast.success("User created successfully!");
         fetchData();
         setShowForm(false);
       } else {
-        const data = await res.json();
-        alert(data.message);
+        alert(data.message || "Failed to create user.");
       }
     } catch (error) {
-      console.error(error);
-      alert("Error creating user");
+      console.error("Error creating user:", error);
+      alert("Unexpected error while creating user.");
     }
   };
-
-  const handleUpdateUser = async (updatedUserData) => {
+  
+  const handleUpdateUser = async (formData) => {
     try {
-      const res = await fetch(`/api/superadmin/update-user/${updatedUserData.id}`, {
+      const userId = formData.get("_id");  
+  
+      const res = await fetch(`/api/superadmin/update-user/${userId}`, {
         method: "PUT",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
-        body: JSON.stringify(updatedUserData),
+        body: formData, 
       });
-
+  
+      const data = await res.json();
+  
       if (res.ok) {
+        toast.success("User updated successfully!");
         fetchData();
         setShowForm(false);
         setCurrentUser(null);
       } else {
-        const data = await res.json();
-        alert(data.message);
+        toast.error("Something went wrong");
+        alert(data.message || "Failed to update user.");
       }
     } catch (error) {
       console.error(error);
       alert("Update failed");
     }
   };
+  
 
   const handleDelete = async (id) => {
     try {
