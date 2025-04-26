@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { toast } from "react-hot-toast";
+
 
 const AddLabAdminForm = ({ onSubmit, onCancel, user }) => {
   const [newUser, setNewUser] = useState({
@@ -6,8 +9,12 @@ const AddLabAdminForm = ({ onSubmit, onCancel, user }) => {
     lastName: "",
     email: "",
     password: "",
-    role: "labadmin",
+    role: "",
   });
+
+  const [profileImageFile, setProfileImageFile] = useState(null);
+  const [profileImagePreview, setProfileImagePreview] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -17,29 +24,55 @@ const AddLabAdminForm = ({ onSubmit, onCancel, user }) => {
         lastName: nameParts[1] || "",
         email: user.email,
         password: "",
-        role: user.role || "labadmin",
+        role: user.role || "",
       });
+      setProfileImagePreview(user.image || "");
     }
   }, [user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setNewUser((prevState) => ({
-      ...prevState,
+    setNewUser((prev) => ({
+      ...prev,
       [name]: value,
     }));
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setProfileImageFile(file);
+      setProfileImagePreview(URL.createObjectURL(file));
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    const userData = {
-      ...newUser,
-      id: user ? user.id : Date.now().toString(),
-      name: `${newUser.firstName} ${newUser.lastName}`.trim(),
-      createdAt: new Date().toISOString().split("T")[0],
-    };
-    onSubmit(userData);
+    const formData = new FormData();
+    
+    // Append form fields
+    Object.keys(newUser).forEach((key) => {
+      if (newUser[key]) {
+        formData.append(key, newUser[key]);
+      }
+    });
+
+    // Append file separately
+    if (profileImageFile) {
+      formData.append("profileImage", profileImageFile);
+    }
+
+    if (user) {
+      formData.append("_id", user.id); 
+    }
+    
+    
+
+    onSubmit(formData);
   };
+
+  const isFormValid =
+    newUser.firstName && newUser.lastName && newUser.email && newUser.password && newUser.role;
 
   return (
     <div className="relative bg-white p-6 shadow-md rounded-md mt-6 w-full max-w-lg mx-auto">
@@ -47,7 +80,30 @@ const AddLabAdminForm = ({ onSubmit, onCancel, user }) => {
         {user ? "Edit User" : "Add User"}
       </h3>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4" encType="multipart/form-data">
+        
+        {/* Profile Image Preview */}
+        <div className="flex flex-col items-center mb-4">
+          <img
+            src={profileImagePreview || "https://via.placeholder.com/150"}
+            alt="Profile Preview"
+            className="w-24 h-24 rounded-full object-cover border-2 border-primary"
+          />
+        </div>
+
+        {/* Choose File Button */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Profile Image</label>
+          <input
+            type="file"
+            name="profileImage"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="w-full mt-1"
+          />
+        </div>
+
+        {/* First Name */}
         <div>
           <label className="block text-sm font-medium text-gray-700">First Name</label>
           <input
@@ -60,6 +116,7 @@ const AddLabAdminForm = ({ onSubmit, onCancel, user }) => {
           />
         </div>
 
+        {/* Last Name */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Last Name</label>
           <input
@@ -72,6 +129,7 @@ const AddLabAdminForm = ({ onSubmit, onCancel, user }) => {
           />
         </div>
 
+        {/* Email */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Email</label>
           <input
@@ -84,18 +142,29 @@ const AddLabAdminForm = ({ onSubmit, onCancel, user }) => {
           />
         </div>
 
+        {/* Password with Eye Toggle */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Password</label>
-          <input
-            type="password"
-            name="password"
-            value={newUser.password}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            required={!user}
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              value={newUser.password}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md pr-10"
+              required={!user}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-2.5 text-gray-500"
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
+          </div>
         </div>
 
+        {/* Role */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Role</label>
           <select
@@ -103,13 +172,16 @@ const AddLabAdminForm = ({ onSubmit, onCancel, user }) => {
             value={newUser.role}
             onChange={handleChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            required
           >
+            <option value="">Select Role</option>
             <option value="labadmin">Lab Admin</option>
             <option value="user">User</option>
           </select>
         </div>
 
-        <div className="flex justify-end gap-4">
+        {/* Buttons */}
+        <div className="flex justify-end gap-4 mt-6">
           <button
             type="button"
             onClick={onCancel}
@@ -119,7 +191,10 @@ const AddLabAdminForm = ({ onSubmit, onCancel, user }) => {
           </button>
           <button
             type="submit"
-            className="bg-primary text-white px-4 py-2 rounded-md hover:bg-opacity-80"
+            disabled={!isFormValid}
+            className={`px-4 py-2 rounded-md ${
+              isFormValid ? "bg-primary text-white hover:bg-opacity-90" : "bg-gray-400 text-white"
+            }`}
           >
             {user ? "Save Changes" : "Add User"}
           </button>
