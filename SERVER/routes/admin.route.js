@@ -21,7 +21,8 @@ import {
   getAllUsers,
   deleteUser,
   updateUser,
-  getLabAdmins
+  getLabAdmins,
+  getLabForLabAdmin
 } from "../controllers/admin.controller.js";
 import { 
   isAuthenticated, 
@@ -45,9 +46,9 @@ router.post("/create-superadmin", (req, res, next) => {
 router.post("/login", loginSuperAdmin);
 router.post("/logout", logoutSuperAdmin);
 router.get("/overview", isAuthenticated, isSuperAdmin, superAdminOverview);
-router.post("/create-user", isAuthenticated, isSuperAdmin, createUser);
+router.post("/create-user", isAuthenticated, isSuperAdmin, upload.single('profileImage'), createUser);
 router.delete("/delete-user/:id", isAuthenticated, isSuperAdmin, deleteUser);
-router.put("/update-user/:id", isAuthenticated, isSuperAdmin, updateUser);
+router.put("/update-user/:id", isAuthenticated, isSuperAdmin,upload.single("profileImage"), updateUser);
 router.get("/users", isAuthenticated, isSuperAdmin, getAllUsers);
 router.get("/labadmins", isAuthenticated, isSuperAdmin, getLabAdmins);
 
@@ -63,8 +64,9 @@ router.post("/login", loginLabAdmin);
 router.post("/logout", logoutLabAdmin);
 router.get("/overview", isAuthenticated, isLabAdmin, getLabAdminOverview);
 router.get("/profile", isAuthenticated, isLabAdmin, getLabAdminProfile);
-router.put("/:id", isAuthenticated, isLabAdmin, updateLabAdminProfile);
-router.put("/lab", isAuthenticated, isLabAdmin, updateLabDetails);
+router.get("/lab", isAuthenticated, isLabAdmin, getLabForLabAdmin);
+router.put("/:id", isAuthenticated, isLabAdmin,upload.single("profileImage"),updateLabAdminProfile);
+router.put("/lab", isAuthenticated, isLabAdmin,upload.single("profileImage"), updateLabDetails);
 router.get("/inbox", isAuthenticated, isLabAdmin, getInboxMessages);
 router.post("/inbox/:id/respond", isAuthenticated, isLabAdmin, respondToInboxMessage);
 
