@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import AddLabAdminForm from "./AddUserForm";
+import toast from "react-hot-toast";
+
 
 const Users = () => {
   const [users, setUsers] = useState([]);
@@ -7,7 +9,6 @@ const Users = () => {
   const [showForm, setShowForm] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [currentUserId, setCurrentUserId] = useState("");
-
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -17,46 +18,46 @@ const Users = () => {
     }
   }, []);
 
+  const fetchData = async () => {
+    try {
+      const labRes = await fetch("/api/labs/all", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
+      });
+      const labData = await labRes.json();
+      const labsFetched = labData.labs || [];
+      setLabs(labsFetched);
+
+      const userRes = await fetch("/api/superadmin/users", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
+      });
+      const userData = await userRes.json();
+      const allUsers = userData.users || [];
+
+      const transformed = allUsers.map((user) => {
+        let ownedLab = "Only User";
+        if (user.role === "labadmin") {
+          ownedLab = labsFetched.find((lab) => lab.labAdmin?._id === user._id)?.name || "Unassigned";
+        } else if (user.role === "superadmin") {
+          ownedLab = "Platform Owner";
+        }
+
+        return {
+          id: user._id,
+          name: `${user.firstName} ${user.lastName}`,
+          email: user.email,
+          role: user.role,
+          ownedLab,
+          createdAt: user.createdAt?.split("T")[0] || "-",
+        };
+      });
+
+      setUsers(transformed);
+    } catch (error) {
+      console.error("Error fetching labs or users:", error);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const labRes = await fetch("/api/labs/all", {
-          headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
-        });
-        const labData = await labRes.json();
-        const labsFetched = labData.labs || [];
-        setLabs(labsFetched);
-
-        const userRes = await fetch("/api/superadmin/users", {
-          headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
-        });
-        const userData = await userRes.json();
-        const allUsers = userData.users || [];
-
-        const transformed = allUsers.map((user) => {
-          let ownedLab = "Only User";
-          if (user.role === "labadmin") {
-            ownedLab = labsFetched.find((lab) => lab._id === user.labId)?.name || "Unassigned";
-          } else if (user.role === "superadmin") {
-            ownedLab = "Platform Owner";
-          }
-
-          return {
-            id: user._id,
-            name: `${user.firstName} ${user.lastName}`,
-            email: user.email,
-            role: user.role,
-            ownedLab,
-            createdAt: user.createdAt?.split("T")[0] || "-",
-          };
-        });
-
-        setUsers(transformed);
-      } catch (error) {
-        console.error("Error fetching labs or users:", error);
-      }
-    };
-
     fetchData();
   }, []);
 
@@ -68,41 +69,19 @@ const Users = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
-        body: JSON.stringify({
-          firstName: newUserData.firstName,
-          lastName: newUserData.lastName,
-          email: newUserData.email,
-          password: newUserData.password,
-          role: newUserData.role,
-        }),
+        body: JSON.stringify(newUserData),
       });
 
-      const data = await res.json();
       if (res.ok) {
-        const addedUser = data.createdUser;
-
-        const ownedLab = addedUser.role === "labadmin"
-          ? labs.find((lab) => lab._id === addedUser.labId)?.name || "Unassigned"
-          : addedUser.role === "superadmin" ? "Platform Owner" : "Only User";
-
-        setUsers((prev) => [
-          ...prev,
-          {
-            id: addedUser._id,
-            name: `${addedUser.firstName} ${addedUser.lastName}`,
-            email: addedUser.email,
-            role: addedUser.role,
-            ownedLab,
-            createdAt: new Date().toISOString().split("T")[0],
-          },
-        ]);
+        fetchData();
         setShowForm(false);
       } else {
+        const data = await res.json();
         alert(data.message);
       }
     } catch (error) {
-      alert("Error creating user");
       console.error(error);
+      alert("Error creating user");
     }
   };
 
@@ -114,77 +93,60 @@ const Users = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
-        body: JSON.stringify({
-          firstName: updatedUserData.firstName,
-          lastName: updatedUserData.lastName,
-          email: updatedUserData.email,
-          password: updatedUserData.password || "", // important!
-          role: updatedUserData.role,
-        }),
+        body: JSON.stringify(updatedUserData),
       });
-  
-      const data = await res.json();
+
       if (res.ok) {
-        const updated = {
-          ...updatedUserData,
-          ownedLab:
-            updatedUserData.role === "labadmin"
-              ? labs.find((lab) => lab._id === updatedUserData.labId)?.name || "Unassigned"
-              : updatedUserData.role === "superadmin"
-              ? "Platform Owner"
-              : "Only User",
-        };
-  
-        setUsers((prevUsers) =>
-          prevUsers.map((user) => (user.id === updatedUserData.id ? updated : user))
-        );
-  
+        fetchData();
         setShowForm(false);
         setCurrentUser(null);
       } else {
+        const data = await res.json();
         alert(data.message);
       }
     } catch (error) {
-      console.error("Update failed:", error);
+      console.error(error);
       alert("Update failed");
     }
-  };
-  
-  
-
-  const handleCancelForm = () => {
-    setShowForm(false);
-    setCurrentUser(null);
-  };
-
-  const handleEdit = (user) => {
-    setCurrentUser(user);
-    setShowForm(true);
   };
 
   const handleDelete = async (id) => {
     try {
       const res = await fetch(`/api/superadmin/delete-user/${id}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-        },
+        headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
       });
-      const data = await res.json();
   
       if (res.ok) {
-        setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
+        toast.success("User deleted successfully");
+        fetchData(); // refresh users + labs correctly
       } else {
+        const data = await res.json();
         alert(data.message);
       }
-    } catch (err) {
-      console.error("Failed to delete user", err);
+    } catch (error) {
+      console.error(error);
       alert("Failed to delete user");
     }
   };
   
+
+  const handleEdit = (user) => {
+    setCurrentUser(user);
+    setShowForm(true);
+  };
+
+  const handleCancelForm = () => {
+    setShowForm(false);
+    setCurrentUser(null);
+  };
+
+  const trimText = (text, maxLength = 18) => {
+    return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
+  };
+
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md mt-4 w-full max-w-8xl">
+    <div className="bg-white p-6 rounded-lg shadow-lg mt-6 max-w-7xl mx-auto">
       {showForm ? (
         <AddLabAdminForm
           onSubmit={currentUser ? handleUpdateUser : handleAddUser}
@@ -194,69 +156,63 @@ const Users = () => {
         />
       ) : (
         <>
-          <div className="bg-white p-4 shadow-md rounded-md flex justify-between items-center mb-4">
+          <div className="flex justify-between items-center mb-6">
             <div>
-              <h2 className="text-2xl font-semibold">Users</h2>
-              <p className="text-gray-500">Manage all platform users</p>
+              <h2 className="text-2xl font-bold text-gray-800">Users</h2>
+              <p className="text-sm text-gray-500">Manage all platform users</p>
             </div>
             <button
               onClick={() => setShowForm(true)}
-              className="bg-primary text-white px-4 py-2 rounded-md"
+              className="bg-primary hover:bg-primary-dark text-white font-semibold px-6 py-2 rounded-lg"
             >
               Add New User
             </button>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white border border-gray-300">
-              <thead>
-                <tr className="bg-primary text-white">
-                  <th className="px-4 py-2">ID</th>
-                  <th className="px-4 py-2">Name</th>
-                  <th className="px-4 py-2">Role</th>
-                  <th className="px-4 py-2">Email</th>
-                  <th className="px-4 py-2">Owned Lab</th>
-                  <th className="px-4 py-2">Created At</th>
-                  <th className="px-4 py-2">Actions</th>
+          <div className="overflow-x-auto rounded-lg">
+            <table className="min-w-full table-auto border-collapse">
+              <thead className="bg-primary text-white">
+                <tr>
+                  <th className="px-6 py-3 text-left">ID</th>
+                  <th className="px-6 py-3 text-left">Name</th>
+                  <th className="px-6 py-3 text-left">Role</th>
+                  <th className="px-6 py-3 text-left">Email</th>
+                  <th className="px-6 py-3 text-left">Owned Lab</th>
+                  <th className="px-6 py-3 text-left">Created At</th>
+                  <th className="px-6 py-3 text-left">Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="bg-white text-gray-700">
                 {users.map((user) => (
                   <tr key={user.id} className="border-b hover:bg-gray-100">
-                    <td className="px-4 py-2 truncate">{user.id}</td>
-                    <td className="px-4 py-2">{user.name}</td>
-                    <td className="px-4 py-2">{user.role}</td>
-                    <td className="px-4 py-2 truncate">{user.email}</td>
-                    <td className="px-4 py-2 truncate">{user.ownedLab}</td>
-                    <td className="px-4 py-2">{user.createdAt}</td>
-                    <td className="px-4 py-2 flex gap-2">
-                    {user.id === currentUserId ? (
-  <span className="text-xs text-gray-400 italic">Protected</span>
-) : (
-  <td className="px-4 py-2 flex gap-2">
-  {user.id === currentUserId ? (
-    <span className="text-xs text-gray-400 italic">Protected</span>
+                    <td className="px-6 py-4">{trimText(user.id)}</td>
+                    <td className="px-6 py-4">{trimText(user.name)}</td>
+                    <td className="px-6 py-4 capitalize">{user.role}</td>
+                    <td className="px-6 py-4">{trimText(user.email)}</td>
+                    <td className="px-6 py-4">{trimText(user.ownedLab)}</td>
+                    <td className="px-6 py-4">{user.createdAt}</td>
+                    <td className="px-6 py-4 flex gap-2">
+  {user.role === "superadmin" ? (
+    <span className="text-xs italic text-gray-400">Platform Owner</span>
+  ) : user.id === currentUserId ? (
+    <span className="text-xs italic text-gray-400">Protected</span>
   ) : (
     <>
       <button
         onClick={() => handleEdit(user)}
-        className="bg-primary text-white px-3 py-1 rounded-md"
+        className="bg-primary text-white px-3 py-1 rounded-md hover:bg-primary-dark"
       >
         Edit
       </button>
       <button
         onClick={() => handleDelete(user.id)}
-        className="bg-red-500 text-white px-3 py-1 rounded-md"
+        className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600"
       >
         Delete
       </button>
     </>
   )}
 </td>
-
-)}
-
-                    </td>
                   </tr>
                 ))}
               </tbody>
