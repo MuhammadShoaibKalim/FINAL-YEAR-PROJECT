@@ -110,7 +110,7 @@ const Login = () => {
             </div>
           )}
 
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form className="space-y-6" onSubmit={handleSubmit} autoComplete="on">
             {/* Email */}
             <div>
               <label className="block text-text-secondary text-sm mb-1">Email</label>
@@ -124,6 +124,7 @@ const Login = () => {
                   placeholder="Enter your email"
                   className="w-full bg-transparent ml-2 focus:outline-none text-text-primary placeholder-text-secondary"
                   required
+                  autoComplete="email"
                 />
               </div>
             </div>
@@ -141,6 +142,7 @@ const Login = () => {
                   placeholder="Enter your password"
                   className="w-full bg-transparent ml-2 focus:outline-none text-text-primary placeholder-text-secondary"
                   required
+                  autoComplete="current-password"
                 />
                 <button
                   type="button"
