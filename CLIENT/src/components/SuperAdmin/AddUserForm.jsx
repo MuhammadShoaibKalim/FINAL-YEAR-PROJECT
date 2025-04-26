@@ -1,32 +1,26 @@
 import React, { useState, useEffect } from "react";
-import { FaTimes } from "react-icons/fa";
 
-const AddLabAdminForm = ({ onSubmit, onCancel, user, labs }) => {
+const AddLabAdminForm = ({ onSubmit, onCancel, user }) => {
   const [newUser, setNewUser] = useState({
     firstName: "",
     lastName: "",
     email: "",
     password: "",
     role: "labadmin",
-    assignedLab: ""
   });
 
   useEffect(() => {
     if (user) {
       const nameParts = user.name ? user.name.split(" ") : ["", ""];
-      const matchedLab = labs.find(lab => lab.name === user.ownedLab);
-  
       setNewUser({
         firstName: nameParts[0],
         lastName: nameParts[1] || "",
         email: user.email,
         password: "",
         role: user.role || "labadmin",
-        assignedLab: matchedLab?._id || ""
       });
     }
-  }, [user, labs]);
-  
+  }, [user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -40,29 +34,17 @@ const AddLabAdminForm = ({ onSubmit, onCancel, user, labs }) => {
     e.preventDefault();
     const userData = {
       ...newUser,
-      labId: newUser.assignedLab, 
-      name: `${newUser.firstName} ${newUser.lastName}`.trim(),
       id: user ? user.id : Date.now().toString(),
+      name: `${newUser.firstName} ${newUser.lastName}`.trim(),
       createdAt: new Date().toISOString().split("T")[0],
     };
-    delete userData.assignedLab; 
     onSubmit(userData);
   };
-  
-  
 
   return (
     <div className="relative bg-white p-6 shadow-md rounded-md mt-6 w-full max-w-lg mx-auto">
-      {/* <button
-        type="button"
-        onClick={onCancel}
-        className="absolute top-4 right-4 text-gray-600 hover:text-gray-900"
-      >
-        <FaTimes size={20} />
-      </button> */}
-
       <h3 className="text-xl font-semibold mb-4 text-gray-800">
-        {user ? "Edit Lab Admin" : "Add Lab Admin"}
+        {user ? "Edit User" : "Add User"}
       </h3>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -73,7 +55,7 @@ const AddLabAdminForm = ({ onSubmit, onCancel, user, labs }) => {
             name="firstName"
             value={newUser.firstName}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-primary"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
             required
           />
         </div>
@@ -85,7 +67,7 @@ const AddLabAdminForm = ({ onSubmit, onCancel, user, labs }) => {
             name="lastName"
             value={newUser.lastName}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-primary"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
             required
           />
         </div>
@@ -97,7 +79,7 @@ const AddLabAdminForm = ({ onSubmit, onCancel, user, labs }) => {
             name="email"
             value={newUser.email}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-primary"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
             required
           />
         </div>
@@ -109,7 +91,7 @@ const AddLabAdminForm = ({ onSubmit, onCancel, user, labs }) => {
             name="password"
             value={newUser.password}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-primary"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
             required={!user}
           />
         </div>
@@ -122,24 +104,8 @@ const AddLabAdminForm = ({ onSubmit, onCancel, user, labs }) => {
             onChange={handleChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-md"
           >
-           <option value="labadmin">Lab Admin</option>
-           <option value="user">User</option>
-
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Assign Lab</label>
-          <select
-            name="assignedLab"
-            value={newUser.assignedLab}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-          >
-            <option value="">Select a Lab</option>
-            {labs && labs.map((lab) => (
-              <option key={lab._id} value={lab._id}>{lab.name}</option>
-            ))}
+            <option value="labadmin">Lab Admin</option>
+            <option value="user">User</option>
           </select>
         </div>
 
@@ -155,7 +121,7 @@ const AddLabAdminForm = ({ onSubmit, onCancel, user, labs }) => {
             type="submit"
             className="bg-primary text-white px-4 py-2 rounded-md hover:bg-opacity-80"
           >
-            {user ? "Save Changes" : "Add Lab Admin"}
+            {user ? "Save Changes" : "Add User"}
           </button>
         </div>
       </form>
