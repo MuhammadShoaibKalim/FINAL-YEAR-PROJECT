@@ -1,12 +1,14 @@
 import bcrypt from "bcrypt";
 import User from "../models/user.model.js";
 import { generateToken } from "../utils/auth.util.js";
+import { sendEmail } from "../utils/sendEmail.util.js"; 
+import crypto from "crypto";
 
 export const userRegister = async (req, res) => {
   try {
     const { firstName, lastName, email, password, confirmPassword } = req.body;
 
-   
+    // 1. Basic validations
     const errors = {};
     if (!firstName) errors.firstName = 'First name is required';
     if (!lastName) errors.lastName = 'Last name is required';
@@ -22,14 +24,16 @@ export const userRegister = async (req, res) => {
       });
     }
 
+    // 2. Confirm Password check
     if (password !== confirmPassword) {
       return res.status(400).json({
         success: false,
-        message: "Password and confirm password do not match",
+        message: "Password and Confirm Password do not match",
         errors: { confirmPassword: "Passwords do not match" }
       });
     }
 
+    // 3. Email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({
@@ -39,6 +43,19 @@ export const userRegister = async (req, res) => {
       });
     }
 
+    // 4. Password strength validation
+    const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{6,}$/;
+    if (!strongPasswordRegex.test(password)) {
+      return res.status(400).json({
+        success: false,
+        message: "Weak password",
+        errors: {
+          password: "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character."
+        }
+      });
+    }
+
+    // 5. Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(409).json({
@@ -48,15 +65,17 @@ export const userRegister = async (req, res) => {
       });
     }
 
+    // 6. Hash password only after passing all checks
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // 7. Create new user
     const newUser = new User({
       firstName,
       lastName,
       email,
-      role:"user",
-      password: hashedPassword
+      password: hashedPassword,
+      role: "user",
     });
 
     await newUser.save();
@@ -74,7 +93,7 @@ export const userRegister = async (req, res) => {
       firstName: newUser.firstName,
       lastName: newUser.lastName,
       email: newUser.email,
-      createdAt: newUser.createdAt
+      createdAt: newUser.createdAt,
     };
 
     return res.status(201).json({
@@ -88,40 +107,117 @@ export const userRegister = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Internal server error",
-      error: error.message
+      error: error.message,
     });
   }
 };
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Please provide your email" });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found with this email" });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const hashedResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+    user.resetPasswordToken = hashedResetToken;
+    user.resetPasswordExpire = Date.now() + 30 * 60 * 1000; 
+    await user.save({ validateBeforeSave: false });
+
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+    
+
+    const message = `
+      <h1>Password Reset Request</h1>
+      <p>Please click the link below to reset your password:</p>
+      <a href="${resetUrl}" clicktracking="off">${resetUrl}</a>
+    `;
+
+    await sendEmail({
+      to: user.email,
+      subject: "Password Reset Request",
+      html: message,
+    });
+
+    res.status(200).json({ success: true, message: "Reset link sent to your email!" });
+
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    res.status(500).json({ message: "Server error, try again later!" });
+  }
+};
+export const resetPassword = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { password, confirmPassword } = req.body;
+
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpire: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired reset token." });
+    }
+
+    if (!password || !confirmPassword) {
+      return res.status(400).json({ message: "Please provide both password fields." });
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({ message: "Passwords do not match." });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(password, salt);
+
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+    await user.save();
+
+    res.status(200).json({ success: true, message: "Password reset successful!" });
+
+  } catch (error) {
+    console.error("Reset password error:", error);
+    res.status(500).json({ message: "Server error, try again later!" });
+  }
+};
+
+
+
 export const userLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    console.log("Login request email:", email);
+    console.log("Login request password:", password);
+
     if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "Email and password are required",
-        data: null
-      });
+      return res.status(400).json({ success: false, message: "Email and password are required", data: null });
     }
 
     const sanitizedEmail = email;
     const user = await User.findOne({ email: sanitizedEmail });
 
+    console.log("User found:", user ? "YES" : "NO");
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid credentials",
-        data: null
-      });
+      return res.status(401).json({ success: false, message: "Invalid credentials", data: null });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
+    console.log("Password valid:", isPasswordValid);
+
     if (!isPasswordValid) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid credentials",
-        data: null
-      });
+      return res.status(401).json({ success: false, message: "Invalid credentials", data: null });
     }
 
     const token = generateToken(user._id, user.email, user.role);
@@ -137,26 +233,18 @@ export const userLogin = async (req, res) => {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
-      role:user.role,
-      ownedLab:user.ownedLab
+      role: user.role,
+      ownedLab: user.ownedLab,
     };
 
-    return res.status(200).json({
-      success: true,
-      message: "Login successful",
-      data: userResponse,
-      token
-    });
+    return res.status(200).json({ success: true, message: "Login successful", data: userResponse, token });
 
   } catch (error) {
     console.error("Login error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-      error: error.message
-    });
+    return res.status(500).json({ success: false, message: "Internal server error", error: error.message });
   }
 };
+
 export const userLogout = (req, res) => {
   try {
     res.clearCookie("token", {
