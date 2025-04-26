@@ -139,6 +139,40 @@ export const superAdminOverview = async (req, res) => {
 };
 
 
+// export const createUser = async (req, res) => {
+//   try {
+//     if (!req.user || req.user.role !== "superadmin") {
+//       return res.status(403).json({ message: "Access denied. Only Super Admin can create users." });
+//     }
+
+//     const { firstName, lastName, email, password, role } = req.body;
+
+//     if (!firstName || !lastName || !email || !password || !role) {
+//       return res.status(400).json({ message: "All fields are required" });
+//     }
+
+//     const existingUser = await User.findOne({ email });
+//     if (existingUser) {
+//       return res.status(400).json({ message: "User with this email already exists." });
+//     }
+
+//     const newUser = await User.create({
+//       firstName,
+//       lastName,
+//       email,
+//       password,
+//       role,
+//     });
+
+//     res.status(201).json({
+//       success: true,
+//       message: "User created successfully",
+//       createdUser: newUser,
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: "Error creating user", error: error.message });
+//   }
+// };
 export const createUser = async (req, res) => {
   try {
     if (!req.user || req.user.role !== "superadmin") {
@@ -148,7 +182,7 @@ export const createUser = async (req, res) => {
     const { firstName, lastName, email, password, role } = req.body;
 
     if (!firstName || !lastName || !email || !password || !role) {
-      return res.status(400).json({ message: "All fields are required" });
+      return res.status(400).json({ message: "All fields are required." });
     }
 
     const existingUser = await User.findOne({ email });
@@ -156,12 +190,23 @@ export const createUser = async (req, res) => {
       return res.status(400).json({ message: "User with this email already exists." });
     }
 
+    //password encrypt
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    let image = "";
+    if (req.file) {
+      image = req.file.path;
+    }
+    
+
     const newUser = await User.create({
       firstName,
       lastName,
       email,
-      password,
+      password: hashedPassword,
       role,
+      image, 
     });
 
     res.status(201).json({
@@ -170,7 +215,41 @@ export const createUser = async (req, res) => {
       createdUser: newUser,
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Error creating user", error: error.message });
+  }
+};
+export const updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { firstName, lastName, email, password, role } = req.body;
+
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.firstName = firstName;
+    user.lastName = lastName;
+    user.email = email;
+    user.role = role;
+
+    if (password && password.trim() !== "") {
+      user.password = password;
+    }
+
+    if (req.file) {
+      user.image = req.file.path; // 👈 Save new uploaded image if exists
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "User updated successfully",
+      updatedUser: user,
+    });
+  } catch (error) {
+    console.error("Error updating user:", error);
+    res.status(500).json({ message: "Error updating user", error: error.message });
   }
 };
 export const deleteUser = async (req, res) => {
@@ -200,35 +279,35 @@ export const deleteUser = async (req, res) => {
     res.status(500).json({ message: "Error deleting user", error: error.message });
   }
 };
-export const updateUser = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { firstName, lastName, email, password, role } = req.body;
+// export const updateUser = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { firstName, lastName, email, password, role } = req.body;
 
-    const user = await User.findById(id);
-    if (!user) return res.status(404).json({ message: "User not found" });
+//     const user = await User.findById(id);
+//     if (!user) return res.status(404).json({ message: "User not found" });
 
-    user.firstName = firstName;
-    user.lastName = lastName;
-    user.email = email;
-    user.role = role;
+//     user.firstName = firstName;
+//     user.lastName = lastName;
+//     user.email = email;
+//     user.role = role;
 
-    if (password && password.trim() !== "") {
-      user.password = password;
-    }
+//     if (password && password.trim() !== "") {
+//       user.password = password;
+//     }
 
-    await user.save();
+//     await user.save();
 
-    res.status(200).json({
-      success: true,
-      message: "User updated successfully",
-      updatedUser: user,
-    });
-  } catch (error) {
-    console.error("Error updating user:", error);
-    res.status(500).json({ message: "Error updating user", error: error.message });
-  }
-};
+//     res.status(200).json({
+//       success: true,
+//       message: "User updated successfully",
+//       updatedUser: user,
+//     });
+//   } catch (error) {
+//     console.error("Error updating user:", error);
+//     res.status(500).json({ message: "Error updating user", error: error.message });
+//   }
+// };
 export const getLabAdmins = async (req, res) => {
   try {
     if (!req.user || req.user.role !== "superadmin") {
@@ -257,7 +336,6 @@ export const getAllUsers = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch Users", error: error.message });
   }
 };
-
 export const getInbox = async (req, res) => {
   try {
     const inboxMessages = await Inbox.find().sort({ createdAt: -1 });
@@ -326,14 +404,13 @@ export const changePassword = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Compare the entered current password with the stored hashed password
     const isPasswordCorrect = await bcrypt.compare(currentPassword.trim(), superAdmin.password);
 
     if (!isPasswordCorrect) {
       return res.status(401).json({ message: "Invalid current password" });
     }
 
-    // Hash the new password
+    // Hash the new 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
@@ -370,7 +447,6 @@ export const loginLabAdmin = async (req, res) => {
              return res.status(401).json({ message: "Invalid email or password" });
            }
 
-    // Generate a JWT token
     const token = generateToken(labAdmin); 
 
 
@@ -404,21 +480,20 @@ export const logoutLabAdmin = (req, res) => {
 };
 export const getLabAdminOverview = async (req, res) => {
   try {
-    const labAdminId = req.user.id; 
+    const labAdminId = req.user.id;
 
     console.log("Lab Admin ID:", labAdminId);
 
     const totalOrders = await Order.countDocuments({ labAdmin: labAdminId });
-
     const pendingOrders = await Order.countDocuments({ labAdmin: labAdminId, status: "pending" });
     const completedOrders = await Order.countDocuments({ labAdmin: labAdminId, status: "completed" });
 
     const totalTests = await Test.countDocuments({ 
-      $or: [{ labAdmin: labAdminId }, { createdBy: labAdminId }] 
+      $or: [{ labAdmin: labAdminId }, { createdBy: labAdminId }]
     });
 
     const totalPackages = await Package.countDocuments({ 
-      $or: [{ labAdmin: labAdminId }, { createdBy: labAdminId }] 
+      $or: [{ labAdmin: labAdminId }, { createdBy: labAdminId }]
     });
 
     const completionRate = totalOrders > 0 ? ((completedOrders / totalOrders) * 100).toFixed(1) : 0;
@@ -438,19 +513,24 @@ export const getLabAdminOverview = async (req, res) => {
 
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const formattedOrdersOverTime = ordersOverTime.map(order => ({
-      name: months[order._id - 1], 
+      name: months[order._id - 1],
       orders: order.orders
     }));
 
+    // 👉 Correct way to send
     res.status(200).json({
-      totalOrders,
-      pendingOrders,
-      completedOrders,
-      totalTests,  
-      totalPackages, 
-      completionRate,
-      ordersOverTime: formattedOrdersOverTime
+      success: true,
+      data: {
+        totalOrders,
+        pendingOrders,
+        completedOrders,
+        totalTests,
+        totalPackages,
+        completionRate,
+        ordersOverTime: formattedOrdersOverTime
+      }
     });
+    
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
@@ -469,40 +549,66 @@ try {
   res.status(500).json({ message: "Error fetching Lab Admin", error: error.message });
 }
 };
-export const updateLabAdminProfile = async (req, res) => {
-try {
-  const labAdminId = req.user.id;
-  let updates = { ...req.body };
+export const getLabForLabAdmin = async (req, res) => {
+  try {
+    const labAdminId = req.user.id; 
 
-  if (updates.password) {
-    return res.status(400).json({ message: "Password update is not allowed here." });
+    const lab = await Lab.findOne({ labAdmin: labAdminId }).populate("createdBy", "firstName lastName email");
+
+    if (!lab) {
+      return res.status(404).json({ success: false, message: "No lab assigned to this Lab Admin." });
+    }
+
+    res.status(200).json({ success: true, lab });
+
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error fetching lab for Lab Admin", error: error.message });
   }
-
-  const updatedLabAdmin = await User.findByIdAndUpdate(labAdminId, updates, { new: true }).select("-password");
-
-  if (!updatedLabAdmin) {
-    return res.status(404).json({ message: "Lab Admin not found" });
-  }
-
-  res.status(200).json({ success: true, message: "Profile updated", labAdmin: updatedLabAdmin });
-} catch (error) {
-  res.status(500).json({ message: "Error updating profile", error: error.message });
-}
 };
-export const updateLabDetails = async (req, res) => {
-try {
-  const labAdminId = req.user.id;
+export const updateLabAdminProfile = async (req, res) => {
+  try {
+    const labAdminId = req.user.id;
+    let updates = { ...req.body };
 
-  const updatedLab = await Lab.findOneAndUpdate({ labAdmin: labAdminId }, req.body, { new: true });
+    if (updates.password) {
+      return res.status(400).json({ success: false, message: "Password update not allowed here." });
+    }
 
-  if (!updatedLab) {
-    return res.status(404).json({ message: "Lab not found for this Lab Admin" });
+    if (req.file) {
+      updates.image = req.file.path;  // Cloudinary URL
+    }
+
+    const updatedLabAdmin = await User.findByIdAndUpdate(labAdminId, updates, { new: true }).select("-password");
+
+    if (!updatedLabAdmin) {
+      return res.status(404).json({ success: false, message: "Lab Admin not found" });
+    }
+
+    res.status(200).json({ success: true, message: "Profile updated", labAdmin: updatedLabAdmin });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error updating profile", error: error.message });
   }
+};
 
-  res.status(200).json({ success: true, message: "Lab details updated", lab: updatedLab });
-} catch (error) {
-  res.status(500).json({ message: "Error updating lab details", error: error.message });
-}
+export const updateLabDetails = async (req, res) => {
+  try {
+    const labAdminId = req.user.id;
+    const updates = { ...req.body };
+
+    if (req.file) {
+      updates.image = req.file.path; // Cloudinary URL
+    }
+
+    const updatedLab = await Lab.findOneAndUpdate({ labAdmin: labAdminId }, updates, { new: true });
+
+    if (!updatedLab) {
+      return res.status(404).json({ success: false, message: "Lab not found for this Lab Admin" });
+    }
+
+    res.status(200).json({ success: true, message: "Lab details updated", lab: updatedLab });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error updating Lab", error: error.message });
+  }
 };
 export const getInboxMessages = async (req, res) => {
 try {
