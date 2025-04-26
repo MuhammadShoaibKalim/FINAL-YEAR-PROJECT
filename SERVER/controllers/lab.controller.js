@@ -71,17 +71,14 @@ export const getLabById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Fetch lab details and populate 'createdBy'
     const lab = await Lab.findById(id).populate("createdBy", "firstName lastName email");
 
     if (!lab) {
       return res.status(404).json({ message: "Lab not found" });
     }
 
-    // Log user details for debugging
-    console.log("User Info:", req.user);
+    // console.log("User Info:", req.user);
     
-    // Ensure lab.createdBy exists before checking permissions
     if (!lab.createdBy || (req.user.role !== "Super Admin" && req.user._id.toString() !== lab.createdBy._id.toString())) {
       return res.status(403).json({ message: "Access denied. Only the lab owner or Super Admin can view this lab." });
     }
@@ -100,11 +97,9 @@ export const getLab = async (req, res) => {
     }
 
     if (req.user.role === "superadmin") {
-      // Super Admin can fetch all labs
       const labs = await Lab.find().populate("createdBy", "firstName lastName email").populate("labAdmin", "firstName lastName ");
       return res.status(200).json({ success: true, labs });
     } else if (req.user.role === "Lab Admin") {
-      // Lab Admin can fetch only their assigned lab
       const lab = await Lab.findOne({ createdBy: req.user._id }).populate("createdBy", "firstName lastName email");
       
       if (!lab) {
