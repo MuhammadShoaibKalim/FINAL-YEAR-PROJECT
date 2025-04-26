@@ -9,16 +9,6 @@ import {
   updateSettings,
   superAdminOverview, 
   changePassword,
-  createLabAdmin,
-  getAllLabAdmins
-} from "../controllers/admin.controller.js";
-import { 
-  isAuthenticated, 
-  isSuperAdmin, 
-  isLabAdmin 
-} from "../middlewares/auth.middleware.js";
-import upload from "../middlewares/upload.middleware.js";
-import {
   getLabAdminOverview,
   updateLabAdminProfile,
   getInboxMessages,
@@ -26,8 +16,19 @@ import {
   getLabAdminProfile,
   loginLabAdmin,
   logoutLabAdmin,
-  updateLabDetails
+  updateLabDetails,
+  createUser,
+  getAllUsers,
+  deleteUser,
+  updateUser
 } from "../controllers/admin.controller.js";
+import { 
+  isAuthenticated, 
+  isSuperAdmin, 
+  isLabAdmin 
+} from "../middlewares/auth.middleware.js";
+import upload from "../middlewares/upload.middleware.js";
+
 
 const router = express.Router();
 
@@ -39,12 +40,17 @@ router.post("/create-superadmin", (req, res, next) => {
     return res.status(403).json({ message: "Access denied. Invalid secret key." });
   }
   next();
-}, createSuperAdmin);
+},                   createSuperAdmin);
 router.post("/login", loginSuperAdmin);
 router.post("/logout", logoutSuperAdmin);
 router.get("/overview", isAuthenticated, isSuperAdmin, superAdminOverview);
-router.post("/create-labadmin", isAuthenticated, isSuperAdmin, createLabAdmin);
-router.get("/labadmins", isAuthenticated, isSuperAdmin, getAllLabAdmins);
+router.post("/create-user", isAuthenticated, isSuperAdmin, createUser);
+router.delete("/delete-user/:id", isAuthenticated, isSuperAdmin, deleteUser);
+router.put("/update-user/:id", isAuthenticated, isSuperAdmin, updateUser);
+router.get("/users", isAuthenticated, isSuperAdmin, getAllUsers);
+
+// router.get("/labadmins", isAuthenticated, isSuperAdmin, getAllLabAdmins);
+
 router.get("/", isAuthenticated, isSuperAdmin, getInbox);
 router.post("/:id", isAuthenticated, isSuperAdmin, respondToInbox);
 router.get("/get-settings", isAuthenticated, isSuperAdmin, getSettings);
