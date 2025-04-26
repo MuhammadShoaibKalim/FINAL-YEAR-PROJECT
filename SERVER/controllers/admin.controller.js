@@ -181,24 +181,22 @@ export const deleteUser = async (req, res) => {
 
     const { id } = req.params;
 
-    // Prevent Super Admin from deleting themselves 
     if (req.user._id.toString() === id) {
       return res.status(403).json({ message: "You cannot delete your own account." });
     }
-    
 
     const user = await User.findById(id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    // If labadmin: unlink from lab
     if (user.role === "labadmin" && user.labId) {
-      await Lab.findByIdAndUpdate(user.labId, { labAdmin: null });
+      await Lab.findOneAndDelete({ labAdmin: id });
     }
 
     await User.findByIdAndDelete(id);
 
-    res.status(200).json({ success: true, message: "User deleted successfully" });
+    res.status(200).json({ success: true, message: "User and his lab (if any) deleted successfully" });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Error deleting user", error: error.message });
   }
 };
@@ -231,6 +229,23 @@ export const updateUser = async (req, res) => {
     res.status(500).json({ message: "Error updating user", error: error.message });
   }
 };
+export const getLabAdmins = async (req, res) => {
+  try {
+    if (!req.user || req.user.role !== "superadmin") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const labAdmins = await User.find({ role: "labadmin" })
+      .select("firstName lastName email labId");  
+
+    res.status(200).json({ success: true, labAdmins });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch lab admins", error: error.message });
+  }
+};
+
+
+
 
 
 export const getAllUsers = async (req, res) => {
@@ -280,11 +295,22 @@ export const getSettings = async (req, res) => {
 export const updateSettings = async (req, res) => {
   try {
     const { firstName, lastName, email } = req.body;
+
+    const updateData = {
+      firstName,
+      lastName,
+      email,
+    };
+
+    if (req.file) {
+      updateData.profileImage = req.file.path;  
+    }
+
     const updatedUser = await User.findByIdAndUpdate(
       req.user.id,
-      { firstName, lastName, email },
+      updateData,
       { new: true }
-    ).select("-password"); 
+    ).select("-password");
 
     res.status(200).json({ message: "Profile updated successfully", user: updatedUser });
   } catch (error) {
