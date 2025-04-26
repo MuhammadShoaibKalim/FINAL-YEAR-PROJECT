@@ -20,7 +20,8 @@ import {
   createUser,
   getAllUsers,
   deleteUser,
-  updateUser
+  updateUser,
+  getLabAdmins
 } from "../controllers/admin.controller.js";
 import { 
   isAuthenticated, 
@@ -48,8 +49,7 @@ router.post("/create-user", isAuthenticated, isSuperAdmin, createUser);
 router.delete("/delete-user/:id", isAuthenticated, isSuperAdmin, deleteUser);
 router.put("/update-user/:id", isAuthenticated, isSuperAdmin, updateUser);
 router.get("/users", isAuthenticated, isSuperAdmin, getAllUsers);
-
-// router.get("/labadmins", isAuthenticated, isSuperAdmin, getAllLabAdmins);
+router.get("/labadmins", isAuthenticated, isSuperAdmin, getLabAdmins);
 
 router.get("/", isAuthenticated, isSuperAdmin, getInbox);
 router.post("/:id", isAuthenticated, isSuperAdmin, respondToInbox);
