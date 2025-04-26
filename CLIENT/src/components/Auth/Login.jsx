@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaSignInAlt, FaEnvelope, FaLock } from 'react-icons/fa';
+import { FaSignInAlt, FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { ImSpinner2 } from 'react-icons/im';
 import bgImage from "../../assets/HeroLab1.png";
 import { post } from '../../Services/ApiEndpoints';
@@ -10,19 +10,19 @@ import { SetUser } from '../../redux/AuthSlice';
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
+  const [rememberMe, setRememberMe] = useState(false);  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  // const user = useSelector((state) => state.userAuth?.user);
   const { user } = useSelector((state) => state.auth);
 
-
   useEffect(() => {
-    if (user) {
+    const pathname = window.location.pathname;
+
+    if (user && (pathname === "/login" || pathname === "/")) {
       const role = user.role?.toLowerCase()?.replace(/\s+/g, '');
-      console.log('User role:', role); 
-      
       if (role === "superadmin") {
         navigate("/admin/super/overview", { replace: true });
       } else if (role === "labadmin") {
@@ -47,32 +47,20 @@ const Login = () => {
 
     try {
       const request = await post('/api/auth/login', { email, password });
-      console.log('Full API Response:', request); 
-
       if (request.status === 200) {
         const userData = request.data.data;
-        console.log('User Data from API:', userData);
 
-        if (!userData) {
-          console.error('No user data in response');
-          setError('Invalid response from server');
-          return;
+        if (rememberMe) {
+          localStorage.setItem('authToken', request.data.token);
+        } else {
+          sessionStorage.setItem('authToken', request.data.token);
         }
 
-        // Store the token
-        localStorage.setItem('authToken', request.data.token);
         localStorage.setItem("userId", userData._id);
-        console.log('Token stored in localStorage');
-
-        // Set user in Redux
         dispatch(SetUser(userData));
-        console.log('User data set in Redux:', userData);
-
         toast.success(request.data.message || "Login successful!");
 
         const role = userData.role?.toLowerCase()?.replace(/\s+/g, '');
-        console.log('Processed Role:', role);
-
         if (role === "superadmin") {
           navigate("/admin/super/overview", { replace: true });
         } else if (role === "labadmin") {
@@ -95,6 +83,10 @@ const Login = () => {
     setError(null);
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-bg-primary p-6">
       <div className="w-full max-w-6xl bg-bg-primary rounded-lg shadow-primary flex overflow-hidden">
@@ -108,7 +100,7 @@ const Login = () => {
         <div className="w-full md:w-1/2 p-8 flex flex-col justify-center space-y-4">
           <h2 className="text-4xl font-bold text-center text-text-primary">Welcome to LabCore</h2>
           <p className="text-center text-text-secondary text-sm mt-2">
-            Dont have an account?{' '}
+            Don't have an account?{' '}
             <Link to="/register" className="text-primary hover:underline">Sign up</Link>
           </p>
 
@@ -119,6 +111,7 @@ const Login = () => {
           )}
 
           <form className="space-y-6" onSubmit={handleSubmit}>
+            {/* Email */}
             <div>
               <label className="block text-text-secondary text-sm mb-1">Email</label>
               <div className="flex items-center border rounded-md px-3 py-2 bg-bg-secondary border-border">
@@ -135,12 +128,13 @@ const Login = () => {
               </div>
             </div>
 
+            {/* Password */}
             <div>
               <label className="block text-text-secondary text-sm mb-1">Password</label>
               <div className="flex items-center border rounded-md px-3 py-2 bg-bg-secondary border-border">
                 <FaLock className="text-text-secondary" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
@@ -148,20 +142,36 @@ const Login = () => {
                   className="w-full bg-transparent ml-2 focus:outline-none text-text-primary placeholder-text-secondary"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={togglePasswordVisibility}
+                  className="text-text-secondary ml-2"
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </button>
               </div>
             </div>
 
+            {/* Remember me and Forgot Password */}
             <div className="flex justify-between items-center text-sm">
               <label className="flex items-center text-text-secondary">
-                <input type="checkbox" className="mr-2 accent-primary" /> Remember me
+                <input 
+                  type="checkbox" 
+                  checked={rememberMe} 
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="mr-2 accent-primary" 
+                /> Remember me
               </label>
-              <Link to="/forgot-password" className="text-primary hover:underline">Forgot password?</Link>
+              <Link to="/user/forgot-password" className="text-primary hover:underline">Forgot password?</Link>
             </div>
 
+            {/* Login Button */}
             <button
               type="submit"
               disabled={loading}
-              className={`w-full flex items-center justify-center gap-2 bg-primary text-white px-4 py-2 rounded-md transition-colors ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-primary-dark'}`}
+              className={`w-full flex items-center justify-center gap-2 bg-primary text-white px-4 py-2 rounded-md transition-colors ${
+                loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-primary-dark'
+              }`}
             >
               {loading ? <ImSpinner2 className="animate-spin" /> : <FaSignInAlt />} Login
             </button>
