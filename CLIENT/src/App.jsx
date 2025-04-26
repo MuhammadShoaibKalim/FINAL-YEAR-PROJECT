@@ -56,6 +56,8 @@ import Success from "./components/Payment/Success";
 import Partners from "./pages/Partners/Partners";
 import Hero from "./pages/Home/Hero";
 import UserInbox from "./components/UserAdmin/UserInbox";
+import ForgotPassword from "./components/Auth/ForgotPassword";
+import ResetPassword from "./components/Auth/ResetPassword";
 
 
 const App = () => {
@@ -108,6 +110,9 @@ const App = () => {
             <Route path="services" element={<Hero />} />
             <Route path="register" element={<Register />} />
             <Route path="login" element={<Login />} />
+            <Route path="/user/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
+
 
           </Route>
 
@@ -130,6 +135,8 @@ const App = () => {
             <Route path="payment/failure" element={<Failure />} />
             <Route path="userprofile" element={<UserProfile />} />
             <Route path="/user/inbox" element={<UserInbox />} />
+
+
 
           </Route>
 
