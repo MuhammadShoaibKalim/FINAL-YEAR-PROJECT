@@ -44,12 +44,12 @@ const AddLabForm = ({ toggleAddLab, addLab, editLab, editLabDetails }) => {
         isActive: editLab.isActive ?? true,
         assignedAdmin: editLab.labAdmin || '',
         type: editLab.type || '',
-        image: null,  // Set to null to prevent overwriting with old data
+        image: null, 
       });
-      setImagePreview(editLab.image || null);  // Set the image preview if available
+      setImagePreview(editLab.image || null); 
     }
   }, [editLab]);
-  
+
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
@@ -61,7 +61,7 @@ const AddLabForm = ({ toggleAddLab, addLab, editLab, editLabDetails }) => {
       }
       setFormData((prev) => ({ ...prev, image: file }));
       setImagePreview(URL.createObjectURL(file));
-      setError('');  // Reset error message
+      setError('');  
     } else {
       setFormData((prev) => ({
         ...prev,
@@ -72,12 +72,12 @@ const AddLabForm = ({ toggleAddLab, addLab, editLab, editLabDetails }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-  
+
     if (!formData.name || !formData.address || !formData.location || !formData.description || !formData.type || !formData.assignedAdmin) {
       setError("Please fill all the required fields.");
       return;
     }
-  
+
     const formToSend = new FormData();
     formToSend.append("name", formData.name);
     formToSend.append("address", formData.address);
@@ -87,21 +87,21 @@ const AddLabForm = ({ toggleAddLab, addLab, editLab, editLabDetails }) => {
     formToSend.append("assignedAdmin", formData.assignedAdmin);
     formToSend.append("type", formData.type);
     formToSend.append("uploadFolder", "labs");
-  
+
     if (formData.image) {
       formToSend.append("image", formData.image);
     }
-  
+
     if (editLab) {
       editLabDetails({ ...editLab, ...formData });
     } else {
       addLab(formToSend);
     }
-  
+
     toggleAddLab();
   };
-  
-  
+
+
 
   return (
     <div className="rounded-lg p-6 mt-6">
@@ -152,15 +152,27 @@ const AddLabForm = ({ toggleAddLab, addLab, editLab, editLabDetails }) => {
         {/* Lab Admin Dropdown */}
         <div className="mb-4">
           <label className="block text-sm font-medium">Assign Lab Admin</label>
-          <select name="assignedAdmin" value={formData.assignedAdmin} onChange={handleChange}
-  className="w-full px-3 py-2 border rounded-md" required>
-  <option value="">Select Lab Admin</option>
-  {labAdmins.map((admin) => (
-    <option key={admin._id} value={admin._id}>
-      {admin.firstName} {admin.lastName} ({admin.email})
-    </option>
-  ))}
-</select>
+          <select
+            name="assignedAdmin"
+            value={formData.assignedAdmin}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border rounded-md"
+            required
+          >
+            <option value="">Select Lab Admin</option>
+            {labAdmins.map((admin) => (
+              <option
+                key={admin._id}
+                value={admin._id}
+                disabled={admin.isAssigned}
+                className={admin.isAssigned ? "text-gray-400 italic" : ""}
+              >
+                {admin.firstName} {admin.lastName} ({admin.email})
+                {admin.labId ? " (Already Assigned)" : ""}
+              </option>
+            ))}
+          </select>
+
 
         </div>
 
