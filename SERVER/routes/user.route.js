@@ -6,15 +6,17 @@ import {
     getUserProfile, 
     updateUserProfile, 
     deleteUserAccount, 
-    checkUser} from "../controllers/user.controller.js";
+    checkUser,
+    resetPassword} from "../controllers/user.controller.js";
 import { isAuthenticated, isSuperAdmin } from "../middlewares/auth.middleware.js";
 import {
   getUsers, 
   updateUser,
   deleteUser,
 } from "../controllers/user.controller.js";
-import { createLabAdmin } from "../controllers/admin.controller.js";
+import { createUser } from "../controllers/admin.controller.js";
 import upload from '../middlewares/upload.middleware.js';
+import { forgotPassword } from "../controllers/user.controller.js";
 
 
 
@@ -30,13 +32,17 @@ router.get("/profile", isAuthenticated, getUserProfile);
 router.put('/profile/:id', isAuthenticated, upload.single('image'), updateUserProfile);
 router.get("/getuser", isAuthenticated, checkUser);
 router.delete("/:id", isAuthenticated, deleteUserAccount);
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password/:token', resetPassword);
+
+
 
 
 
 
 
 // Super Admin Creates Lab Admin(Users)
-router.post("/create-labadmin", isAuthenticated, isSuperAdmin, createLabAdmin);
+router.post("/create-labadmin", isAuthenticated, isSuperAdmin, createUser);
 router.get("/", isAuthenticated, isSuperAdmin, getUsers);
 router.put("/:id", isAuthenticated,isSuperAdmin, updateUser);
 router.delete("/:id", isAuthenticated,isSuperAdmin, deleteUser);
