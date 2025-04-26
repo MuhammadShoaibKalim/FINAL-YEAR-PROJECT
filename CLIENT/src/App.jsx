@@ -36,7 +36,7 @@ import SymptomDetails from "./pages/Symptoms/SymptomDetails";
 // Lab Admin Components
 import Orders from "./components/LabAdmin/Orders";
 import Reports from "./components/LabAdmin/ReportCard";
-import LabSettings from "./components/LabAdmin/Settings";
+// import LabSettings from "./components/LabAdmin/Settings";
 import OfferedTest from "./components/LabAdmin/OfferedTest";
 import LabOverview from "./components/LabAdmin/LabOverview";
 import OrderEdit from "./components/LabAdmin/OrderEdit";
@@ -45,7 +45,7 @@ import AIRecommendation from "./components/Ai/AIRecommendation";
 import UserReview from "./pages/Home/UserRev";
 import UserProfile from "./components/UserAdmin/UserProfile";
 import Messages from "./components/LabAdmin/MessageLabAdmin";
-import LabProfile from "./components/LabAdmin/LabProfile";
+import LabProfile from "./components/LabAdmin/LabAdminProfileSettings";
 import Labes from "./pages/NavbarPages/Labs/Labs";
 import LabDetails from "./pages/NavbarPages/Labs/LabDetails";
 import BookingForm from "./pages/NavbarPages/Labs/BookingForm";
@@ -58,6 +58,7 @@ import Hero from "./pages/Home/Hero";
 import UserInbox from "./components/UserAdmin/UserInbox";
 import ForgotPassword from "./components/Auth/ForgotPassword";
 import ResetPassword from "./components/Auth/ResetPassword";
+import LabAdminProfileSettings from "./components/LabAdmin/LabAdminProfileSettings";
 
 
 const App = () => {
@@ -174,7 +175,7 @@ const App = () => {
             <Route path="reports" element={<Reports />} />
             <Route path="tests" element={<OfferedTest />} />
             <Route path="messages" element={<Messages />} />
-            <Route path="settings" element={<LabSettings />} />
+            <Route path="settings" element={<LabAdminProfileSettings />} />
           </Route>
 
           {/* 404 Not Found */}
