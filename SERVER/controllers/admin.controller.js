@@ -137,16 +137,18 @@ export const superAdminOverview = async (req, res) => {
     res.status(500).json({ message: "Error fetching overview data", error: error.message });
   }
 };
-export const createLabAdmin = async (req, res) => {
+
+
+export const createUser = async (req, res) => {
   try {
     if (!req.user || req.user.role !== "superadmin") {
-      return res.status(403).json({ message: "Access denied. Only Super Admin can create Lab Admins." });
+      return res.status(403).json({ message: "Access denied. Only Super Admin can create users." });
     }
 
-    const { firstName, lastName, email, password, labId } = req.body;
+    const { firstName, lastName, email, password, role } = req.body;
 
-    if (!firstName || !lastName || !email || !password || !labId) {
-      return res.status(400).json({ message: "All fields are required." });
+    if (!firstName || !lastName || !email || !password || !role) {
+      return res.status(400).json({ message: "All fields are required" });
     }
 
     const existingUser = await User.findOne({ email });
@@ -154,42 +156,93 @@ export const createLabAdmin = async (req, res) => {
       return res.status(400).json({ message: "User with this email already exists." });
     }
 
-    const lab = await Lab.findById(labId);
-    if (!lab) {
-      return res.status(404).json({ message: "Lab not found" });
-    }
-
-    const labAdmin = await User.create({
+    const newUser = await User.create({
       firstName,
       lastName,
       email,
       password,
-      role: "Lab Admin",
-      labId: labId, 
+      role,
     });
-
-    // Update Lab to assign the Lab Admin
-    await Lab.findByIdAndUpdate(labId, { createdBy: labAdmin._id });
-    
 
     res.status(201).json({
       success: true,
-      message: "Lab Admin created and assigned to lab successfully",
-      labAdmin,
+      message: "User created successfully",
+      createdUser: newUser,
     });
   } catch (error) {
-    res.status(500).json({ message: "Error creating Lab Admin", error: error.message });
+    res.status(500).json({ message: "Error creating user", error: error.message });
   }
 };
-export const getAllLabAdmins = async (req, res) => {
+export const deleteUser = async (req, res) => {
   try {
-    const labAdmins = await User.find({ role: "labadmin" }).select("firstName lastName email _id role createdAt");
-    // console.log("Lab Admins being sent:", labAdmins);
-    res.status(200).json({ labAdmins });
+    if (!req.user || req.user.role !== "superadmin") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const { id } = req.params;
+
+    // Prevent Super Admin from deleting themselves 
+    if (req.user._id.toString() === id) {
+      return res.status(403).json({ message: "You cannot delete your own account." });
+    }
+    
+
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // If labadmin: unlink from lab
+    if (user.role === "labadmin" && user.labId) {
+      await Lab.findByIdAndUpdate(user.labId, { labAdmin: null });
+    }
+
+    await User.findByIdAndDelete(id);
+
+    res.status(200).json({ success: true, message: "User deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch Lab Admins", error: error.message });
+    res.status(500).json({ message: "Error deleting user", error: error.message });
   }
 };
+export const updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { firstName, lastName, email, password, role } = req.body;
+
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.firstName = firstName;
+    user.lastName = lastName;
+    user.email = email;
+    user.role = role;
+
+    if (password && password.trim() !== "") {
+      user.password = password;
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "User updated successfully",
+      updatedUser: user,
+    });
+  } catch (error) {
+    console.error("Error updating user:", error);
+    res.status(500).json({ message: "Error updating user", error: error.message });
+  }
+};
+
+
+export const getAllUsers = async (req, res) => {
+  try {
+    const allUsers = await User.find().select("firstName lastName email _id role createdAt labId");
+    res.status(200).json({ users: allUsers });
+    
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch Users", error: error.message });
+  }
+};
+
 export const getInbox = async (req, res) => {
   try {
     const inboxMessages = await Inbox.find().sort({ createdAt: -1 });
