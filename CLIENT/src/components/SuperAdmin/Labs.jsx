@@ -113,8 +113,8 @@ const Labs = () => {
       });
       const data = await res.json();
       if (res.ok) {
-        setLabData(labData.filter((lab) => lab._id !== labId));
         toast.success("Lab deleted successfully");
+        fetchLabs(); 
       } else {
         toast.error(data.message || "Failed to delete lab");
       }
@@ -123,6 +123,7 @@ const Labs = () => {
     }
   };
   
+  
 
   const toggleAddLab = () => {
     setIsAddingLab(!isAddingLab);
@@ -130,7 +131,7 @@ const Labs = () => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md mt-4 w-full max-w-6xl">
+    <div className="bg-white p-6 rounded-lg shadow-md mt-4 w-full max-w-7xl">
       <div className="bg-white shadow-lg rounded-lg p-6 mt-4">
         <div className="flex flex-col md:flex-row justify-between items-center">
           <h2 className="text-2xl font-semibold mb-4 md:mb-0">Labs</h2>
@@ -170,12 +171,8 @@ const Labs = () => {
                 <h3 className="text-xl font-semibold text-center md:text-left">{lab.name}</h3>
                 <p className="text-gray-600 mt-2 text-center md:text-left">{lab.address}</p>
                 <p className="text-gray-500 text-sm text-center md:text-left">{lab.location}</p>
-                {lab.labAdmin && (
-  <p className="text-sm text-gray-600 text-center md:text-left">
-    Assigned Admin: {lab.labAdmin.firstName} {lab.labAdmin.lastName}
-  </p>
-)}
-
+                {lab.labAdmin && (<p className="text-sm text-gray-600 text-center md:text-left"> 
+                Assigned Admin: {lab.labAdmin.firstName} {lab.labAdmin.lastName}</p>)}
                 <div className="flex flex-col md:flex-row justify-between items-center mt-4 space-y-2 md:space-y-0">
                   <button
                     className={`text-sm px-4 py-2 rounded-lg w-full md:w-auto ${lab.isActive ? 'bg-primary text-white' : 'bg-gray-300 text-gray-700'}`}
