@@ -91,7 +91,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md mt-4 w-full max-w-6xl">
+    <div className="bg-white p-6 rounded-lg shadow-md mt-4 w-full max-w-7xl">
       <div className="bg-white shadow-lg rounded-lg p-6 mt-4">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-semibold">Super Admin Query</h2>
