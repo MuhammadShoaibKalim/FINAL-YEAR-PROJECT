@@ -35,12 +35,28 @@ const Register = () => {
     if (!lastName) newErrors.lastName = 'Last name is required';
     if (!email) newErrors.email = 'Email is required';
     if (!password) newErrors.password = 'Password is required';
-    if (password.length < 6) newErrors.password = 'Password must be at least 6 characters';
-    if (password !== confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
+    else {
+      if (password.length < 6) {
+        newErrors.password = 'Password must be at least 6 characters';
+      } else {
+        const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/;
+        if (!strongPasswordRegex.test(password)) {
+          newErrors.password = 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.';
+        }
+      }
+    }
+  
+    if (!confirmPassword) {
+      newErrors.confirmPassword = 'Confirm password is required';
+    } else if (password !== confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
   
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+  
+  
   
   
 
@@ -63,7 +79,6 @@ const Register = () => {
       const errorMessage = err?.response?.data?.message || 'Registration failed. Please try again.';
       toast.error(errorMessage);
       
-      // Set form errors if they exist in the response
       if (err?.response?.data?.errors) {
         setErrors(err.response.data.errors);
       }
