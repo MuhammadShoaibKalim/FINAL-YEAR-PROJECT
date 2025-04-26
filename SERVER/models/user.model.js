@@ -42,6 +42,14 @@ const UserSchema = new mongoose.Schema(
       trim: true,
       match: [/^\S+@\S+\.\S+$/, "Please provide a valid email address"],
     },
+    resetPasswordToken: {
+      type:String,
+      default:null
+    },
+    resetPasswordExpire:{
+      type:Date,
+      default:null
+    },
     password: {
       type: String,
       required: true,
@@ -61,7 +69,6 @@ const UserSchema = new mongoose.Schema(
   type: String,
   default: ''
 },
-
     role: {
       type: String,
       enum: ["superadmin", "labadmin", "user"],
