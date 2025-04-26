@@ -89,7 +89,7 @@ const LabSidebar = () => {
   { to: "/labadmin/lab/tests", Icon: FaFlask, label: "Offered Tests" },
   { to: "/labadmin/lab/orders", Icon: FaClipboardList, label: "Orders" },
   { to: "/labadmin/lab/messages", Icon: FaEnvelope, label: "Messages" },
-  { to: "/labadmin/lab/settings", Icon: FaCog, label: "Settings" },
+  // { to: "/labadmin/lab/settings", Icon: FaCog, label: "Settings" },
   { to: "#", Icon: FaSignOutAlt, label: "Logout", onClick: handleLogout }
   ];
 
