@@ -44,7 +44,7 @@ import FAQ from "./pages/Home/FAQ";
 import AIRecommendation from "./components/Ai/AIRecommendation";
 import UserReview from "./pages/Home/UserRev";
 import UserProfile from "./components/UserAdmin/UserProfile";
-import Messages from "./components/LabAdmin/MessageLabAdmin";
+import Messages from "./components/LabAdmin/LabAdminInbox";
 import LabProfile from "./components/LabAdmin/LabAdminProfileSettings";
 import Labes from "./pages/NavbarPages/Labs/Labs";
 import LabDetails from "./pages/NavbarPages/Labs/LabDetails";
