@@ -1,11 +1,12 @@
+import Lab from "../models/lab.model.js";
 import Query from "../models/query.model.js";
 
 export const submitQuery = async (req, res) => {
   try {
-    const { name, email, subject, message } = req.body;
+    const { name, email, subject, message, receiverType, labId } = req.body;
 
-    if (!name || !email || !subject || !message) {
-      return res.status(400).json({ message: "All fields are required." });
+    if (!name || !email || !subject || !message || !receiverType) {
+      return res.status(400).json({ message: "All required fields are missing." });
     }
 
     const newQuery = await Query.create({
@@ -13,6 +14,8 @@ export const submitQuery = async (req, res) => {
       email,
       subject,
       message,
+      receiverType,
+      labId: receiverType === "labadmin" ? labId : undefined,
       userId: req.user?.id || null,
       status: "unviewed"
     });
@@ -20,6 +23,16 @@ export const submitQuery = async (req, res) => {
     res.status(201).json({ success: true, message: "Query submitted successfully", query: newQuery });
   } catch (error) {
     res.status(500).json({ message: "Error submitting query", error: error.message });
+  }
+};
+
+
+export const getAllLabs = async (req, res) => {
+  try {
+    const labs = await Lab.find({}, "name _id");
+    res.status(200).json({ success: true, labs });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching labs", error: error.message });
   }
 };
 
