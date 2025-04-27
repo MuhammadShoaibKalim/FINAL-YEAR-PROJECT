@@ -1,10 +1,10 @@
 import { Outlet } from "react-router-dom";
-import Sidebar from "./Sidebar";
+import SuperAdminSidebar from "./SuperAdminSidebar";
 
 const SuperAdminLayout = () => {
   return (
     <div className="flex">
-      <Sidebar />
+      <SuperAdminSidebar />
       <main className="flex-grow p-4">
       {/* className="flex-1 p-6 bg-white w-full" */}
         <Outlet /> 
