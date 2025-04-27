@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { FaPaperPlane, FaSpinner } from "react-icons/fa";
 
@@ -6,10 +6,29 @@ const Contact = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    receiverType: "support",
+    labId: "",
     subject: "",
     message: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [labs, setLabs] = useState([]);
+
+  useEffect(() => {
+    fetchLabs();
+  }, []);
+
+  const fetchLabs = async () => {
+    try {
+      const res = await fetch("/api/query/labs/all");
+      const data = await res.json();
+      if (res.ok) {
+        setLabs(data.labs);
+      }
+    } catch (error) {
+      console.error("Error fetching labs", error);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,20 +41,21 @@ const Contact = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          subject: formData.subject,
-          message: formData.message,
-          userId: localStorage.getItem("userId")
-        }),
+        body: JSON.stringify(formData),
       });
 
       const data = await res.json();
 
       if (res.ok) {
         toast.success("Message sent successfully!");
-        setFormData({ name: "", email: "", subject: "", message: "" });
+        setFormData({
+          name: "",
+          email: "",
+          receiverType: "support",
+          labId: "",
+          subject: "",
+          message: "",
+        });
       } else {
         toast.error(data.message || "Failed to send message.");
       }
@@ -179,6 +199,42 @@ const Contact = () => {
                       />
                     </div>
                   </div>
+                  <div>
+                <label htmlFor="receiverType" className="block text-sm text-text-secondary mb-2">Send To</label>
+                <select
+                  id="receiverType"
+                  name="receiverType"
+                  value={formData.receiverType}
+                  onChange={handleChange}
+                  // className="input"
+                  className="input w-full p-3 border border-border/50 rounded-lg bg-bg-secondary/50 text-text-primary placeholder-text-secondary/70 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all duration-200"
+                >
+                  <option value="support">Support Team</option>
+                  <option value="labadmin">Lab Admin</option>
+                </select>
+              </div>
+
+              {formData.receiverType === "labadmin" && (
+                <div>
+                  <label htmlFor="labId" className="block text-sm text-text-secondary mb-2">Select Lab</label>
+                  <select
+                    id="labId"
+                    name="labId"
+                    value={formData.labId}
+                    onChange={handleChange}
+                    required
+                    // className="input"
+                    className="input w-full p-3 border border-border/50 rounded-lg bg-bg-secondary/50 text-text-primary placeholder-text-secondary/70 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all duration-200"
+                  >
+                    <option value="">-- Select a Lab --</option>
+                    {labs.map((lab) => (
+                      <option key={lab._id} value={lab._id}>
+                        {lab.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
                   <div>
                     <label htmlFor="subject" className="block text-sm font-medium text-text-secondary mb-2">
