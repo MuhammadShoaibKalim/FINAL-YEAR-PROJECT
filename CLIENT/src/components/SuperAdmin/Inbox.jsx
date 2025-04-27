@@ -19,7 +19,11 @@ const AdminDashboard = () => {
         const data = await res.json();
         if (data.success) {
           setMessages(data.queries);
+        
+          const unread = data.queries.filter((msg) => msg.status === "unviewed").length;
+          setUnreadCount(unread);  
         }
+        
       } catch (error) {
         console.error("Failed to fetch messages:", error);
       }
