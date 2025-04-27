@@ -4,7 +4,7 @@ import { FaUsers, FaFlask, FaClipboardList, FaCog, FaEnvelope, FaHospitalUser, F
 import { MdOutlineDashboard, MdOutlineMarkUnreadChatAlt } from "react-icons/md";
 import { GoSidebarExpand } from "react-icons/go";
 
-const Sidebar = ({ links, title, onLogout }) => {
+const Sidebar = ({ links, title, unreadCount = 0 }) => {
   const [isOpen, setIsOpen] = useState(() => window.innerWidth > 768);
 
   useEffect(() => {
@@ -18,7 +18,7 @@ const Sidebar = ({ links, title, onLogout }) => {
   const toggleSidebar = () => setIsOpen(!isOpen);
 
   return (
-    <div className={`flex flex-col min-h-screen ${isOpen ? 'w-[240px]' : 'w-16'} transition-all duration-300 bg-primary text-white shadow-lg`}>
+    <div className={`flex flex-col min-h-screen ${isOpen ? "w-[240px]" : "w-16"} transition-all duration-300 bg-primary text-white shadow-lg`}>
       <div className="flex items-center justify-between px-4 h-16 border-b border-white">
         {isOpen && <h1 className="text-xl font-bold">{title}</h1>}
       </div>
@@ -29,28 +29,46 @@ const Sidebar = ({ links, title, onLogout }) => {
             {onClick ? (
               <button
                 onClick={onClick}
-                className="flex items-center space-x-3 px-4 py-2 text-white hover:bg-white hover:text-black transition-all duration-200 w-full text-left"
+                className="flex items-center space-x-3 px-4 py-2 hover:bg-white hover:text-black w-full text-left"
               >
                 <Icon className="text-xl" />
-                {isOpen && <span>{label}</span>}
+                {isOpen && (
+                  <span className="flex items-center gap-2">
+                    {label}
+                    {(label.includes('Message') || label.includes('Inbox')) && unreadCount > 0 && (
+                      <span className="ml-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </span>
+                )}
               </button>
             ) : (
               <Link
                 to={to}
-                className="flex items-center space-x-3 px-4 py-2 text-white hover:bg-white hover:text-black transition-all duration-200"
+                className="flex items-center space-x-3 px-4 py-2 hover:bg-white hover:text-black"
               >
                 <Icon className="text-xl" />
-                {isOpen && <span>{label}</span>}
+                {isOpen && (
+                  <span className="flex items-center gap-2">
+                    {label}
+                    {(label.includes('Message') || label.includes('Inbox')) && unreadCount > 0 && (
+                      <span className="ml-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </span>
+                )}
               </Link>
             )}
           </li>
         ))}
       </ul>
 
-      <div className="mt-auto border-t border-gray">
+      <div className="mt-auto border-t border-white">
         <button
           onClick={toggleSidebar}
-          className="flex items-center justify-start w-full py-4 hover:bg-primary/90 hover:text-white transition-all duration-200"
+          className="flex items-center justify-start w-full py-4 hover:bg-primary/90"
         >
           <GoSidebarExpand className="text-2xl ml-4" />
         </button>
@@ -59,10 +77,10 @@ const Sidebar = ({ links, title, onLogout }) => {
   );
 };
 
-export const SuperAdminSidebar = () => {
+export const SuperAdminSidebar = ({ unreadCount = 0 }) => {
   const handleLogout = () => {
     localStorage.removeItem("authToken");
-    window.location.href = "/login"; 
+    window.location.href = "/login";
   };
 
   const links = [
@@ -71,13 +89,13 @@ export const SuperAdminSidebar = () => {
     { to: "/admin/super/labs", Icon: FaFlask, label: "Labs" },
     { to: "/admin/super/inbox", Icon: MdOutlineMarkUnreadChatAlt, label: "Inbox" },
     { to: "/admin/super/settings", Icon: FaCog, label: "Settings" },
-    { to: "#", Icon: FaSignOutAlt, label: "Logout", onClick: handleLogout }, 
+    { to: "#", Icon: FaSignOutAlt, label: "Logout", onClick: handleLogout }
   ];
 
-  return <Sidebar links={links} title="Super Admin" />;
+  return <Sidebar links={links} title="Super Admin" unreadCount={unreadCount} />;
 };
 
-const LabSidebar = () => {
+const LabSidebar = ({ unreadCount = 0 }) => {
   const handleLogout = () => {
     localStorage.removeItem("authToken");
     window.location.href = "/login";
@@ -85,15 +103,14 @@ const LabSidebar = () => {
 
   const links = [
     { to: "/labadmin/lab/profile", Icon: FaHospitalUser, label: "Profile" },
-  { to: "/labadmin/lab", Icon: MdOutlineDashboard, label: "Dashboard" },
-  { to: "/labadmin/lab/tests", Icon: FaFlask, label: "Offered Tests" },
-  { to: "/labadmin/lab/orders", Icon: FaClipboardList, label: "Orders" },
-  { to: "/labadmin/lab/messages", Icon: FaEnvelope, label: "Messages" },
-  // { to: "/labadmin/lab/settings", Icon: FaCog, label: "Settings" },
-  { to: "#", Icon: FaSignOutAlt, label: "Logout", onClick: handleLogout }
+    { to: "/labadmin/lab", Icon: MdOutlineDashboard, label: "Dashboard" },
+    { to: "/labadmin/lab/tests", Icon: FaFlask, label: "Offered Tests" },
+    { to: "/labadmin/lab/orders", Icon: FaClipboardList, label: "Orders" },
+    { to: "/labadmin/lab/messages", Icon: FaEnvelope, label: "Messages" },
+    { to: "#", Icon: FaSignOutAlt, label: "Logout", onClick: handleLogout }
   ];
 
-  return <Sidebar links={links} title="Lab Admin" />;
+  return <Sidebar links={links} title="Lab Admin" unreadCount={unreadCount} />;
 };
 
 export default LabSidebar;
