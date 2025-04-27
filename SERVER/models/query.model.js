@@ -14,6 +14,16 @@ const querySchema = new mongoose.Schema({
     ref: "User",
     required: false, 
   },
+  receiverType: {
+    type: String,
+    enum: ["support", "labadmin"],
+    default: "support",
+  },
+  labId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Lab",
+    required: false, 
+  },
   subject: {
     type: String,
     required: true,
