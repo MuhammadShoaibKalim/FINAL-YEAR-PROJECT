@@ -5,6 +5,7 @@ import Lab from "../models/lab.model.js";
 import {Order} from "../models/order.model.js";
 import { Test, Package} from "../models/testpackage.model.js";
 import mongoose from "mongoose";
+import Query from "../models/query.model.js";
 
 
 
@@ -190,7 +191,6 @@ export const createUser = async (req, res) => {
       return res.status(400).json({ message: "User with this email already exists." });
     }
 
-    //password encrypt
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -233,11 +233,14 @@ export const updateUser = async (req, res) => {
     user.role = role;
 
     if (password && password.trim() !== "") {
-      user.password = password;
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+      user.password = hashedPassword;  
     }
+    
 
     if (req.file) {
-      user.image = req.file.path; // 👈 Save new uploaded image if exists
+      user.image = req.file.path; 
     }
 
     await user.save();
@@ -517,7 +520,6 @@ export const getLabAdminOverview = async (req, res) => {
       orders: order.orders
     }));
 
-    // 👉 Correct way to send
     res.status(200).json({
       success: true,
       data: {
@@ -610,32 +612,35 @@ export const updateLabDetails = async (req, res) => {
     res.status(500).json({ success: false, message: "Error updating Lab", error: error.message });
   }
 };
-export const getInboxMessages = async (req, res) => {
-try {
-  const inboxMessages = await Inbox.find({ labAdmin: req.user.id }).sort({ createdAt: -1 });
+export const getLabAdminInbox = async (req, res) => {
+  try {
+    const labAdminId = req.user.id;
+    const inboxMessages = await Query.find({ receiverType: "labadmin", labId: req.user.labId })
+      .populate("userId", "firstName lastName email")
+      .sort({ createdAt: -1 });
 
-  res.status(200).json({ success: true, inboxMessages });
-} catch (error) {
-  res.status(500).json({ message: "Error fetching messages", error: error.message });
-}
-};
-export const respondToInboxMessage = async (req, res) => {
-try {
-  const { id } = req.params;
-  const { response } = req.body;
-
-  const updatedInbox = await Inbox.findByIdAndUpdate(
-    id,
-    { response, status: "Responded", respondedAt: new Date() },
-    { new: true }
-  );
-
-  if (!updatedInbox) {
-    return res.status(404).json({ message: "Inbox message not found" });
+    res.status(200).json({ success: true, inboxMessages });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching inbox messages", error: error.message });
   }
-
-  res.status(200).json({ success: true, message: "Message responded successfully", inbox: updatedInbox });
-} catch (error) {
-  res.status(500).json({ message: "Error responding to message", error: error.message });
-}
 };
+
+export const respondToLabAdminInbox = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { response } = req.body;
+
+    const query = await Query.findByIdAndUpdate(
+      id,
+      { response, status: "responded" },
+      { new: true }
+    );
+
+    if (!query) return res.status(404).json({ message: "Message not found" });
+
+    res.status(200).json({ success: true, message: "Response sent successfully", query });
+  } catch (error) {
+    res.status(500).json({ message: "Error responding", error: error.message });
+  }
+};
+
