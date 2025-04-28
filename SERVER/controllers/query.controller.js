@@ -16,7 +16,7 @@ export const submitQuery = async (req, res) => {
       message,
       receiverType,
       labId: receiverType === "labadmin" ? labId : undefined,
-      userId: req.user?.id || null,
+      userId: req.user._id,
       status: "unviewed"
     });
 
@@ -25,8 +25,6 @@ export const submitQuery = async (req, res) => {
     res.status(500).json({ message: "Error submitting query", error: error.message });
   }
 };
-
-
 export const getAllLabs = async (req, res) => {
   try {
     const labs = await Lab.find({}, "name _id");
@@ -35,8 +33,6 @@ export const getAllLabs = async (req, res) => {
     res.status(500).json({ message: "Error fetching labs", error: error.message });
   }
 };
-
-
 export const getAllQueries = async (req, res) => {
     try {
       const queries = await Query.find().populate({
@@ -50,7 +46,6 @@ export const getAllQueries = async (req, res) => {
       res.status(500).json({ message: "Error fetching queries", error: error.message });
     }
 };
-
 export const markQueryAsViewed = async (req, res) => {
     try {
       const query = await Query.findByIdAndUpdate(req.params.id, { status: "viewed" }, { new: true });
@@ -60,7 +55,6 @@ export const markQueryAsViewed = async (req, res) => {
       res.status(500).json({ message: "Error updating query", error: error.message });
     }
 };
-
 export const deleteQuery = async (req, res) => {
     try {
       await Query.findByIdAndDelete(req.params.id);
@@ -69,30 +63,124 @@ export const deleteQuery = async (req, res) => {
       res.status(500).json({ message: "Error deleting query", error: error.message });
     }
 };
-
 export const respondToQuery = async (req, res) => {
-    try {
-      const { response } = req.body;
-      const query = await Query.findByIdAndUpdate(
-        req.params.id,
-        { response, status: "responded" },
-        { new: true }
-      );
+  try {
+    const { response } = req.body;
+    const query = await Query.findByIdAndUpdate(
+      req.params.id,
+      { response, status: "responded" },
+      { new: true }
+    ).select("name email subject message response status createdAt updatedAt");
 
-      if (!query) return res.status(404).json({ message: "Query not found" });
+    if (!query) return res.status(404).json({ message: "Query not found" });
 
-      res.status(200).json({ success: true, message: "Response sent successfully", query });
-    } catch (error) {
-      res.status(500).json({ message: "Error responding to query", error: error.message });
-    }
+    res.status(200).json({ success: true, message: "Response sent successfully", query });
+  } catch (error) {
+    res.status(500).json({ message: "Error responding to query", error: error.message });
+  }
 };
 
 export const getUserQueries = async (req, res) => {
-    try {
-      const userId = req.user?.id || null;
-      const queries = await Query.find({ userId: userId }).populate("userId", "firstName lastName email");
-      res.status(200).json({ success: true, queries });
-    } catch (error) {
-      res.status(500).json({ message: "Error fetching user queries", error: error.message });
+  try {
+    const userId = req.user._id;
+    const queries = await Query.find({ userId: userId })
+      .sort({ createdAt: -1 })
+      .select("name email subject message response status createdAt updatedAt")
+      .lean();
+
+    res.status(200).json({ success: true, queries });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching user queries", error: error.message });
+  }
+};
+export const getInboxMessages = async (req, res) => {
+  try {
+    const userId = req.user._id; 
+
+    const inboxMessages = await Query.find({ userId: userId })
+      .sort({ createdAt: -1 })
+      .select("name email subject message response status createdAt updatedAt")
+      .lean();
+
+    res.status(200).json({ success: true, inboxMessages });
+  } catch (error) {
+    console.error("Error fetching inbox messages:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch inbox messages." });
+  }
+};
+
+
+
+
+export const respondToMessage = async (req, res) => {
+  const { messageId } = req.params;
+  const { response } = req.body;
+  
+  try {
+    const query = await Query.findByIdAndUpdate(
+      messageId,
+      { response, status: "responded" },
+      { new: true }
+    );
+    if (!query) {
+      return res.status(404).json({ success: false, message: "Message not found" });
     }
+
+    res.status(200).json({ success: true, query });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+export const deleteMessage = async (req, res) => {
+  const { messageId } = req.params;
+  try {
+    const deleted = await Query.findByIdAndDelete(messageId);
+    if (!deleted) {
+      return res.status(404).json({ success: false, message: "Message not found" });
+    }
+
+    res.status(200).json({ success: true, message: "Message deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+export const markMessageViewed = async (req, res) => {
+  const { messageId } = req.params;
+
+  try {
+    const updated = await Query.findByIdAndUpdate(
+      messageId,
+      { status: "viewed" },
+      { new: true }
+    );
+    if (!updated) {
+      return res.status(404).json({ success: false, message: "Message not found" });
+    }
+
+    res.status(200).json({ success: true, updated });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+export const contactSuperAdmin = async (req, res) => {
+  const { name, email, subject, description, userId } = req.body;
+
+  if (!name || !email || !subject || !description) {
+    return res.status(400).json({ success: false, message: "Missing required fields" });
+  }
+
+  try {
+    const newQuery = new Query({
+      name,
+      email,
+      subject,
+      message: description,
+      userId: userId || null,
+    });
+
+    await newQuery.save();
+    res.status(201).json({ success: true, message: "Message sent to Super Admin" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
