@@ -1,202 +1,172 @@
-import React, { useState } from "react";
-import AddTest from "./AddTest";
+import { useState, useEffect } from "react";
 import AddCustomTest from "./AddCustomTest";
+import axios from "axios";
 
-const initialTests = [
-  {
-    id: "TEST-001",
-    name: "Serum Phosphorus (Ph)",
-    type: "Test",
-    price: "PKR 2,500.00",
-  },
-  {
-    id: "PROFILE-002",
-    name: "Complete Blood Count / Hemogram (CBC)",
-    type: "Profile",
-    price: "PKR 2,999.00",
-  },
-  {
-    id: "PACKAGE-003",
-    name: "Advanced Renal Package",
-    type: "Package",
-    price: "PKR 5,600.00",
-  },
-  {
-    id: "PACKAGE-004",
-    name: "Healthy 2023 Full Body Checkup",
-    type: "Package",
-    price: "PKR 15,000.00",
-  },
-];
-
-const OfferedTests = () => {
-  const [showAddTest, setShowAddTest] = useState(false);
+export default function OfferedTests() {
   const [showAddCustomTest, setShowAddCustomTest] = useState(false);
-  const [tests, setTests] = useState(initialTests);
-  const [editingTest, setEditingTest] = useState(null);
-  const [editForm, setEditForm] = useState({ name: "", type: "", price: "" });
+  const [tests, setTests] = useState([]);
+  const [editingTestId, setEditingTestId] = useState(null);
+  const [editForm, setEditForm] = useState({ name: "", price: "" });
 
-  // Generate a new unique ID based on type
-  const generateId = (type) => {
-    const prefix = type === "Test" ? "TEST" : "PACKAGE";
-    const existingCount = tests.filter((test) => test.type === type).length + 1;
-    return `${prefix}-${existingCount.toString().padStart(3, "0")}`;
+  const fetchTestsAndPackages = async () => {
+    try {
+      const { data: testData } = await axios.get("/api/tests/get-all-tests");
+      const { data: packageData } = await axios.get("/api/tests/get-all-packages");
+
+      const combined = [
+        ...testData.tests.map((t) => ({ ...t, type: "Test" })),
+        ...packageData.packages.map((p) => ({ ...p, type: "Package" })),
+      ];
+
+      setTests(combined);
+    } catch (error) {
+      console.error("Error fetching tests/packages", error);
+    }
   };
 
-  // Delete a test
-  const handleDelete = (id) => {
-    setTests((prevTests) => prevTests.filter((test) => test.id !== id));
-  };
+  useEffect(() => {
+    fetchTestsAndPackages();
+  }, []);
 
-  // Open edit modal and populate form
   const handleEdit = (test) => {
-    setEditingTest(test.id);
-    setEditForm({ name: test.name, type: test.type, price: test.price });
+    setEditingTestId(test._id);
+    setEditForm({ name: test.name, price: test.price });
   };
 
-  // Handle form changes
   const handleEditChange = (e) => {
     const { name, value } = e.target;
-
-    setEditForm((prev) => {
-      let updatedForm = { ...prev, [name]: value };
-
-      if (name === "type") {
-        updatedForm.id = generateId(value);
-        updatedForm.name = value === "Test" ? "New Test Name" : "New Package Name";
-        updatedForm.price = value === "Test" ? "PKR 1,500.00" : "PKR 5,000.00";
-      }
-
-      return updatedForm;
-    });
+    setEditForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Save edited test
-  const handleSaveEdit = () => {
-    setTests((prevTests) =>
-      prevTests.map((test) =>
-        test.id === editingTest ? { ...test, ...editForm } : test
-      )
-    );
-    setEditingTest(null);
+  const handleSaveEdit = async (test) => {
+    try {
+      if (test.type === "Test") {
+        await axios.put(`/api/tests/update-test/${test._id}`, {
+          name: editForm.name,
+          price: editForm.price,
+        });
+      } else {
+        await axios.put(`/api/tests/update-package/${test._id}`, {
+          name: editForm.name,
+          price: editForm.price,
+        });
+      }
+      fetchTestsAndPackages();
+      setEditingTestId(null);
+    } catch (error) {
+      console.error("Error updating", error);
+      alert("Update failed");
+    }
+  };
+
+  const handleDelete = async (test) => {
+    try {
+      if (test.type === "Test") {
+        await axios.delete(`/api/tests/delete-test/${test._id}`);
+      } else {
+        await axios.delete(`/api/tests/delete-package/${test._id}`);
+      }
+      fetchTestsAndPackages();
+    } catch (error) {
+      console.error("Error deleting", error);
+      alert("Delete failed");
+    }
   };
 
   return (
     <>
-      {/* Add Test Modal */}
-      {showAddTest && <AddTest onClose={() => setShowAddTest(false)} />}
-      
-      {/* Add Custom Test Form */}
       {showAddCustomTest ? (
         <AddCustomTest onClose={() => setShowAddCustomTest(false)} />
       ) : (
-        <>
-          {/* Container */}
-          <div className="flex flex-col bg-white shadow-lg rounded-lg p-6 mt-12 w-full max-w-8xl">
-            {/* Header Section */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 space-y-2 md:space-y-0">
-              <div>
-                <h2 className="text-2xl font-semibold">Offered Tests</h2>
-                <p className="text-black">Manage all your existing offered tests or add a new one</p>
-              </div>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => setShowAddTest(true)}
-                  className="bg-primary text-white md:px-6 px-6 py-2 rounded transition"
-                >
-                  Add Test
-                </button>
-                <button
-                  onClick={() => setShowAddCustomTest(true)}
-                  className="bg-primary text-white px-4 py-2 rounded transition"
-                >
-                  Add Custom Test
-                </button>
-              </div>
+        <div className="flex flex-col bg-white shadow-lg rounded-lg p-6 mt-12 w-full max-w-8xl">
+          
+          {/* Header */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-text-dark">Offered Tests & Packages</h2>
+              <p className="text-text-secondary">Manage your lab's tests and packages</p>
             </div>
+            <button
+              onClick={() => setShowAddCustomTest(true)}
+              className="bg-primary hover:bg-primary-hover text-white px-6 py-2 rounded-md"
+            >
+              Add New Test/Package
+            </button>
           </div>
 
-          {/* Tests Grid */}
-          <div className="bg-white p-2 shadow-lg rounded-lg mt-2 md:mb-36">
+          {/* Table */}
+          <div className="bg-white p-4 shadow-md rounded-lg">
             {/* Grid Header */}
-            <div className="hidden md:grid grid-cols-5 py-3 px-6 text-white font-semibold text-lg border-b-2 bg-primary">
-              <span>ID</span>
+            <div className="hidden md:grid grid-cols-6 bg-primary text-white font-semibold text-lg rounded-t-md py-3 px-6">
               <span>Name</span>
               <span>Type</span>
               <span>Price</span>
+              <span>Rating</span>
+              <span>Booked</span>
               <span>Actions</span>
             </div>
 
-            {/* Test List */}
-            {tests.map((test) => (
+            {/* Grid Data */}
+            {tests.map((item) => (
               <div
-                key={test.id}
-                className="grid grid-cols-1 md:grid-cols-5 gap-2 md:gap-0 py-3 px-4 text-sm items-center border-b transition-colors duration-200"
+                key={item._id}
+                className="grid grid-cols-1 md:grid-cols-6 gap-2 md:gap-0 py-4 px-6 border-b items-center text-sm"
               >
-                {/* ID */}
-                <span className="truncate">{test.id}</span>
-
                 {/* Name */}
-                {editingTest === test.id ? (
+                {editingTestId === item._id ? (
                   <input
                     type="text"
                     name="name"
                     value={editForm.name}
                     onChange={handleEditChange}
-                    className="border p-1 rounded w-32"
+                    className="border p-2 rounded"
                   />
                 ) : (
-                  <span className="truncate">{test.name}</span>
+                  <span>{item.name}</span>
                 )}
 
-                {/* Type (Dropdown) */}
-                {editingTest === test.id ? (
-                  <select
-                    name="type"
-                    value={editForm.type}
-                    onChange={handleEditChange}
-                    className="border p-1 rounded w-24"
-                  >
-                    <option value="Test">Test</option>
-                    <option value="Package">Package</option>
-                  </select>
-                ) : (
-                  <span>{test.type}</span>
-                )}
+                {/* Type */}
+                <span>{item.type}</span>
 
                 {/* Price */}
-                {editingTest === test.id ? (
+                {editingTestId === item._id ? (
                   <input
-                    type="text"
+                    type="number"
                     name="price"
                     value={editForm.price}
                     onChange={handleEditChange}
-                    className="border p-1 rounded w-24"
+                    className="border p-2 rounded"
                   />
                 ) : (
-                  <span>{test.price}</span>
+                  <span>PKR {item.price}</span>
                 )}
 
-                {/* Action Buttons */}
-                <div className="flex space-x-2 mt-2 md:mt-0">
-                  {editingTest === test.id ? (
+                {/* Rating */}
+                <span>{item.rating || "0.0"} ⭐</span>
+
+                {/* Booked Count */}
+                <span>{item.bookedCount || "0"}</span>
+
+                {/* Actions */}
+                <div className="flex space-x-2">
+                  {editingTestId === item._id ? (
                     <button
-                      className="bg-green-500 text-white px-3 py-1 rounded transition"
-                      onClick={handleSaveEdit}
+                      onClick={() => handleSaveEdit(item)}
+                      className="bg-green-500 text-white px-3 py-1 rounded"
                     >
                       Save
                     </button>
                   ) : (
                     <button
-                      className="bg-primary text-white px-3 py-1 rounded transition"
-                      onClick={() => handleEdit(test)}
+                      onClick={() => handleEdit(item)}
+                      className="bg-primary text-white px-3 py-1 rounded"
                     >
                       Edit
                     </button>
                   )}
                   <button
-                    className="bg-red-500 text-white px-3 py-1 rounded transition"
-                    onClick={() => handleDelete(test.id)}
+                    onClick={() => handleDelete(item)}
+                    className="bg-red-500 text-white px-3 py-1 rounded"
                   >
                     Delete
                   </button>
@@ -204,10 +174,8 @@ const OfferedTests = () => {
               </div>
             ))}
           </div>
-        </>
+        </div>
       )}
     </>
   );
-};
-
-export default OfferedTests;
+}
