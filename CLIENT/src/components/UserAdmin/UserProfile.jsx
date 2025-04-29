@@ -47,7 +47,7 @@ const UserProfile = () => {
     e.preventDefault();
   
     if (!user || !user._id) {
-      console.error("User not found in Redux state");
+      console.error("User not found");
       return alert("User not loaded yet. Please wait...");
     }
   
@@ -58,26 +58,30 @@ const UserProfile = () => {
     if (file) {
       formData.append("image", file);
     }
-    
-
   
     try {
       const response = await fetch(`/api/auth/profile/${user._id}`, {
         method: "PUT",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('authToken') || sessionStorage.getItem('authToken')}`,
+        },
         body: formData,
       });
   
       const result = await response.json();
       if (result.success) {
         alert("Profile updated successfully");
-        dispatch(updateUser());
+        // dispatch(updateUser());  
+        window.location.reload(); 
       } else {
         alert(result.message || "Update failed");
       }
     } catch (err) {
       console.error("Update error:", err);
+      alert("An error occurred");
     }
   };
+  
   
 
   const sections = [
