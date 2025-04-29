@@ -65,21 +65,42 @@ const App = () => {
   const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
 
+  // useEffect(() => {
+  //   const checkUser = async () => {
+  //     try {
+  //       const request = await get('/api/auth/checkuser');
+  //       if (request.status === 200) {
+  //         dispatch(SetUser(request.data.user));
+  //         localStorage.setItem('token', request.data.token);
+  //       }
+  //     } catch (error) {
+  //       console.error('Error checking user:', error);
+  //     }
+  //   };
+  //   checkUser();
+  // }, [dispatch]);
   useEffect(() => {
     const checkUser = async () => {
       try {
-        const request = await get('/api/auth/checkuser');
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        if (!token) {
+          console.log('No token found');
+          return;
+        }
+  
+        const request = await get('/api/auth/getuser');
         if (request.status === 200) {
           dispatch(SetUser(request.data.user));
-          localStorage.setItem('token', request.data.token);
         }
       } catch (error) {
         console.error('Error checking user:', error);
+        dispatch(Logout());
       }
     };
+  
     checkUser();
   }, [dispatch]);
-
+  
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1500);
     return () => clearTimeout(timer);
@@ -94,6 +115,11 @@ const App = () => {
         <Toaster position="top-right" />
         <Routes>
 
+          {/* User Login?register */}
+             <Route path="register" element={<Register />} />
+            <Route path="login" element={<Login />} />
+            <Route path="/user/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
 
           {/* Public Routes */}
           <Route path="/" element={<UserLayout />}>
@@ -109,12 +135,6 @@ const App = () => {
             <Route path="symptoms/:symptomId" element={<SymptomDetails />} />
             <Route path="partners" element={<Partners />} />
             <Route path="services" element={<Hero />} />
-            <Route path="register" element={<Register />} />
-            <Route path="login" element={<Login />} />
-            <Route path="/user/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password/:token" element={<ResetPassword />} />
-
-
           </Route>
 
           {/* Protected User Routes */}
@@ -136,9 +156,6 @@ const App = () => {
             <Route path="payment/failure" element={<Failure />} />
             <Route path="userprofile" element={<UserProfile />} />
             <Route path="/user/inbox" element={<UserInbox />} />
-
-
-
           </Route>
 
           {/* Super Admin Routes */}
