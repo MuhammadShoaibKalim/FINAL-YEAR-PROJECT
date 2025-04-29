@@ -89,6 +89,8 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-bg-primary p-6">
+    {/* //<div className="flex justify-center bg-bg-primary py-10 px-4 min-h-[600px]"> */}
+
       <div className="w-full max-w-6xl bg-bg-primary rounded-lg shadow-primary flex overflow-hidden">
         {/* Left Side Image */}
         <div
