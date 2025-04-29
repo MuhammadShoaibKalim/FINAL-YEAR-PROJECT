@@ -64,6 +64,7 @@ router.put("/password", isAuthenticated, isSuperAdmin, changePassword);
 // Lab Admin Routes
 router.post("/login", loginLabAdmin);
 router.post("/logout", logoutLabAdmin);
+// router.get("/overview", isAuthenticated, isLabAdmin, getLabAdminOverview);
 router.get("/overview", isAuthenticated, isLabAdmin, getLabAdminOverview);
 router.get("/profile", isAuthenticated, isLabAdmin, getLabAdminProfile);
 router.get("/lab", isAuthenticated, isLabAdmin, getLabForLabAdmin);
