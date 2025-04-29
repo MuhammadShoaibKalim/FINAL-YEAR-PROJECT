@@ -5,12 +5,12 @@ import { FaClipboardList, FaClock, FaCheckCircle, FaVials } from "react-icons/fa
 
 const LabOverview = () => {
   const [overview, setOverview] = useState({
-    totalOrders: 0,
-    pendingOrders: 0,
-    completedOrders: 0,
-    totalTests: 0,
-    totalPackages: 0,
-    completionRate: 0,
+    totalOrders: " ",
+    pendingOrders: " ",
+    completedOrders: " ",
+    totalTests: " ",
+    totalPackages: " ",
+    completionRate: " ",
     ordersOverTime: [],
   });
   const [loading, setLoading] = useState(true);
@@ -51,12 +51,20 @@ const LabOverview = () => {
       </p>
 
       {/* Statistics Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard title="Total Orders" value={overview.totalOrders || 0} icon={<FaClipboardList size={28} />} />
         <StatCard title="Pending Orders" value={overview.pendingOrders || 0} icon={<FaClock size={28} />} />
         <StatCard title="Completed Orders" value={overview.completedOrders || 0} icon={<FaCheckCircle size={28} />} />
         <StatCard title="Tests Offered" value={(overview.totalTests || 0) + (overview.totalPackages || 0)} icon={<FaVials size={28} />} />
-      </div>
+      </div> */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+  <StatCard title="Total Orders" value={overview.totalOrders || 0} icon={<FaClipboardList size={28} />} />
+  <StatCard title="Pending Orders" value={overview.pendingOrders || 0} icon={<FaClock size={28} />} />
+  <StatCard title="Completed Orders" value={overview.completedOrders || 0} icon={<FaCheckCircle size={28} />} />
+  <StatCard title="Total Lab Tests" value={overview.totalTests || 0} icon={<FaVials size={28} />} />
+  <StatCard title="Total Packages" value={overview.totalPackages || 0} icon={<FaClipboardList size={28} />} />
+</div>
+
 
       {/* Completion Rate */}
       <div className="mt-6 bg-gray-100 p-4 rounded-lg shadow-md">
