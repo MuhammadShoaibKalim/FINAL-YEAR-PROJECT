@@ -93,8 +93,10 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-bg-primary p-8">
-      <div className="w-full max-w-5xl bg-bg-primary rounded-lg shadow-primary flex overflow-hidden">
+    // <div className="min-h-screen flex items-center justify-center bg-bg-primary p-8">
+<div className="flex justify-center bg-bg-primary py-16 px-4 min-h-[700px]">
+
+   <div className="w-full max-w-5xl bg-bg-primary rounded-lg shadow-primary flex overflow-hidden">
         {/* Left Side Image */}
         <div
           className="hidden md:block w-1/2 bg-cover bg-center ml-12 mt-12"
