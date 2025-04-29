@@ -430,28 +430,68 @@ export const changePassword = async (req, res) => {
 
 
 // Lab admin controller functions
+// export const loginLabAdmin = async (req, res) => {
+//   try {
+//     const { email, password } = req.body;
+
+//     const labAdmin = await User.findOne({ email, role: "Lab Admin" });
+//     if (!labAdmin) {
+//       return res.status(404).json({ message: "Lab Admin not found" });
+//     }
+
+//      if (password) {
+//              const salt = await bcrypt.genSalt(10);
+//              labAdmin.password = await bcrypt.hash(password, salt);
+//            }
+           
+//            const isPasswordCorrect = await bcrypt.compare(password.trim(), labAdmin.password);
+//            // console.log(" Password :",isPasswordCorrect);
+//            if (!isPasswordCorrect) {
+//              return res.status(401).json({ message: "Invalid email or password" });
+//            }
+
+//     const token = generateToken(labAdmin); 
+
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Login successful",
+//       labAdmin: {
+//         id: labAdmin._id,
+//         email: labAdmin.email,
+//         firstName: labAdmin.firstName,
+//         lastName: labAdmin.lastName,
+//         role: labAdmin.role,
+//       },
+//       token,
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: "Error logging in Lab Admin", error: error.message });
+//   }
+// };
 export const loginLabAdmin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const labAdmin = await User.findOne({ email, role: "Lab Admin" });
+    // const labAdmin = await User.findOne({ email, role: "Lab Admin" });
+    const labAdmin = await User.findOne({ email, role: "Lab Admin" }).select("+labId");
+
     if (!labAdmin) {
       return res.status(404).json({ message: "Lab Admin not found" });
     }
 
-     if (password) {
-             const salt = await bcrypt.genSalt(10);
-             labAdmin.password = await bcrypt.hash(password, salt);
-           }
-           
-           const isPasswordCorrect = await bcrypt.compare(password.trim(), labAdmin.password);
-           // console.log(" Password :",isPasswordCorrect);
-           if (!isPasswordCorrect) {
-             return res.status(401).json({ message: "Invalid email or password" });
-           }
+    const isPasswordCorrect = await bcrypt.compare(password.trim(), labAdmin.password);
+    if (!isPasswordCorrect) {
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
 
-    const token = generateToken(labAdmin); 
-
+    // 🛠 IMPORTANT: include lab in token payload
+    const token = generateToken({
+      _id: labAdmin._id,
+      email: labAdmin.email,
+      role: labAdmin.role,
+      lab: labAdmin.labId,  
+    });
 
     res.status(200).json({
       success: true,
@@ -469,6 +509,7 @@ export const loginLabAdmin = async (req, res) => {
     res.status(500).json({ message: "Error logging in Lab Admin", error: error.message });
   }
 };
+
 export const logoutLabAdmin = (req, res) => {
   try {
     res.clearCookie("token", { httpOnly: true, secure: true, sameSite: "None" });
@@ -483,42 +524,23 @@ export const logoutLabAdmin = (req, res) => {
 };
 export const getLabAdminOverview = async (req, res) => {
   try {
-    const labAdminId = req.user.id;
+    const labId = req.user.lab; 
 
-    console.log("Lab Admin ID:", labAdminId);
+    // const totalTests = await Test.countDocuments({ lab: labId });
+    const totalTests = await Test.countDocuments({ lab: new mongoose.Types.ObjectId(labId) });
+    const totalPackages = await Package.countDocuments({ lab: labId });
 
-    const totalOrders = await Order.countDocuments({ labAdmin: labAdminId });
-    const pendingOrders = await Order.countDocuments({ labAdmin: labAdminId, status: "pending" });
-    const completedOrders = await Order.countDocuments({ labAdmin: labAdminId, status: "completed" });
+    const totalOrders = await Order.countDocuments({ lab: labId });
+    const pendingOrders = await Order.countDocuments({ lab: labId, status: "pending" });
+    const completedOrders = await Order.countDocuments({ lab: labId, status: "completed" });
 
-    const totalTests = await Test.countDocuments({ 
-      $or: [{ labAdmin: labAdminId }, { createdBy: labAdminId }]
-    });
-
-    const totalPackages = await Package.countDocuments({ 
-      $or: [{ labAdmin: labAdminId }, { createdBy: labAdminId }]
-    });
-
-    const completionRate = totalOrders > 0 ? ((completedOrders / totalOrders) * 100).toFixed(1) : 0;
+    const completionRate = totalOrders === 0 ? 0 : Math.round((completedOrders / totalOrders) * 100);
 
     const ordersOverTime = await Order.aggregate([
-      {
-        $match: { labAdmin: new mongoose.Types.ObjectId(labAdminId) }
-      },
-      {
-        $group: {
-          _id: { $month: "$createdAt" },
-          orders: { $sum: 1 }
-        }
-      },
-      { $sort: { _id: 1 } }
+      { $match: { lab: labId } },
+      { $group: { _id: { $dateToString: { format: "%d-%m-%Y", date: "$createdAt" } }, orders: { $sum: 1 } } },
+      { $sort: { "_id": 1 } }
     ]);
-
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const formattedOrdersOverTime = ordersOverTime.map(order => ({
-      name: months[order._id - 1],
-      orders: order.orders
-    }));
 
     res.status(200).json({
       success: true,
@@ -526,15 +548,15 @@ export const getLabAdminOverview = async (req, res) => {
         totalOrders,
         pendingOrders,
         completedOrders,
+        completionRate,
         totalTests,
         totalPackages,
-        completionRate,
-        ordersOverTime: formattedOrdersOverTime
+        ordersOverTime: ordersOverTime.map((o) => ({ name: o._id, orders: o.orders })),
       }
     });
-    
   } catch (error) {
-    res.status(500).json({ message: "Server Error", error: error.message });
+    console.error(error);
+    res.status(500).json({ success: false, message: "Error fetching lab overview" });
   }
 };
 export const getLabAdminProfile = async (req, res) => {
