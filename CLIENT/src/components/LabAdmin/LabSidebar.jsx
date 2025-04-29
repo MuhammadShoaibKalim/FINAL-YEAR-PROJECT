@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaUsers, FaFlask, FaClipboardList, FaCog, FaEnvelope, FaHospitalUser, FaSignOutAlt } from "react-icons/fa";
 import { MdOutlineDashboard, MdOutlineMarkUnreadChatAlt } from "react-icons/md";
 import { GoSidebarExpand } from "react-icons/go";
+import { useDispatch } from "react-redux";
+import { logoutUser } from "../../redux/AuthSlice"; // Adjust path if needed
 
 const Sidebar = ({ links, title, unreadCount = 0 }) => {
   const [isOpen, setIsOpen] = useState(() => window.innerWidth > 768);
@@ -78,9 +80,14 @@ const Sidebar = ({ links, title, unreadCount = 0 }) => {
 };
 
 export const SuperAdminSidebar = ({ unreadCount = 0 }) => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const handleLogout = () => {
+    dispatch(logoutUser());
     localStorage.removeItem("authToken");
-    window.location.href = "/login";
+    sessionStorage.removeItem("authToken");
+    navigate("/login");
   };
 
   const links = [
@@ -96,9 +103,14 @@ export const SuperAdminSidebar = ({ unreadCount = 0 }) => {
 };
 
 const LabSidebar = ({ unreadCount = 0 }) => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const handleLogout = () => {
+    dispatch(logoutUser());
     localStorage.removeItem("authToken");
-    window.location.href = "/login";
+    sessionStorage.removeItem("authToken");
+    navigate("/login");
   };
 
   const links = [
