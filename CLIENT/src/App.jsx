@@ -36,7 +36,6 @@ import SymptomDetails from "./pages/Symptoms/SymptomDetails";
 // Lab Admin Components
 import Orders from "./components/LabAdmin/Orders";
 import Reports from "./components/LabAdmin/ReportCard";
-// import LabSettings from "./components/LabAdmin/Settings";
 import OfferedTest from "./components/LabAdmin/OfferedTest";
 import LabOverview from "./components/LabAdmin/LabOverview";
 import OrderEdit from "./components/LabAdmin/OrderEdit";
@@ -46,9 +45,11 @@ import UserReview from "./pages/Home/UserRev";
 import UserProfile from "./components/UserAdmin/UserProfile";
 import Messages from "./components/LabAdmin/LabAdminInbox";
 import LabProfile from "./components/LabAdmin/LabAdminProfileSettings";
-import Labes from "./pages/NavbarPages/Labs/Labs";
-import LabDetails from "./pages/NavbarPages/Labs/LabDetails";
-import BookingForm from "./pages/NavbarPages/Labs/BookingForm";
+import Labes from "./pages/Labs/Labs";
+import LabDetails from "./pages/Labs/LabDetails";
+import TestPackages from "./pages/Labs/TestPackages";
+// import LabSettings from "./components/LabAdmin/Settings";
+import BookingForm from "./pages/Labs/BookingForm";
 import Cart from "./components/UserAdmin/Cart";
 import Payment from "./components/Payment/Payment";
 import Failure from "./components/Payment/Failure";
@@ -148,9 +149,15 @@ const App = () => {
           >
             <Route path="ai-recommendations-test" element={<AIRecommendation />} />
             <Route path="labs" element={<Labes />} />
-            <Route path="labs/:labId" element={<LabDetails />} />
+            <Route path="/labs/:id/details" element={<LabDetails />} />
+            <Route path="/labs/:id/testpackage" element={<TestPackages />} />
+
+
+
+
+            {/* 
             <Route path="booking" element={<BookingForm />} />
-            <Route path="cart" element={<Cart />} />
+            <Route path="cart" element={<Cart />} /> */}
             <Route path="payment" element={<Payment />} />
             <Route path="payment/success" element={<Success />} />
             <Route path="payment/failure" element={<Failure />} />
