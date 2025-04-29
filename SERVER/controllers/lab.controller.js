@@ -1,6 +1,9 @@
 import Lab from "../models/lab.model.js";
 import mongoose from "mongoose";
 import User from "../models/user.model.js";
+import { Test, Package } from "../models/testpackage.model.js";
+import {Order} from "../models/order.model.js"; 
+
 
 export const addLab = async (req, res) => {
   try {
@@ -180,7 +183,6 @@ await lab.save();
     res.status(500).json({ message: "Error updating lab", error: error.message });
   }
 };
-
 export const deleteLab = async (req, res) => {
   try {
     const { id } = req.params;
@@ -210,6 +212,31 @@ export const deleteLab = async (req, res) => {
     res.status(500).json({ message: "Error deleting lab", error: error.message });
   }
 };
+
+
+export const getPublicLabs = async (req, res) => {
+  try {
+    const labs = await Lab.find({ isActive: true }).select("name address location description image rating");
+    res.status(200).json({ success: true, labs });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching labs", error: error.message });
+  }
+};
+export const getPublicLabById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const lab = await Lab.findById(id).select("name address location description image rating");
+
+    if (!lab) {
+      return res.status(404).json({ success: false, message: "Lab not found" });
+    }
+
+    res.status(200).json({ success: true, lab });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error fetching lab", error: error.message });
+  }
+};
+
 
 
 
