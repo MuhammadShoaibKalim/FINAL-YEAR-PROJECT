@@ -1,123 +1,134 @@
 import mongoose from "mongoose";
-import { Test, Package} from "../models/testpackage.model.js";
+import { Test, Package } from "../models/testpackage.model.js";
 import Lab from "../models/lab.model.js";
 
+// ------------------ TEST CONTROLLERS ------------------
 
-// Test controller function 
+// Create Test
 export const createTest = async (req, res) => {
   try {
-    const { name, price, description, lab } = req.body;
-    if (!name || !price || !lab) return res.status(400).json({ error: "Name, price, and lab are required." });
+    const { name, description, price, discount } = req.body;
 
-    const test = new Test({
+    if (!name || !price) {
+      return res.status(400).json({ error: "Name and price are required." });
+    }
+
+    const lab = req.user.labId; 
+
+    const newTest = await Test.create({
       name,
-      price,
       description,
-      rating: 0,
-      feedback: [],
-      bookingCount: 0,
+      price,
+      discount,
+      lab,
       createdBy: req.user._id,
-      labAdmin: req.user._id,
-      lab: new mongoose.Types.ObjectId(lab),
-
     });
 
-    console.log("Saving Test:", test);
-    await test.save();
+    await Lab.findByIdAndUpdate(lab, { $push: { tests: newTest._id } });
 
-    await Lab.findByIdAndUpdate(lab, { $push: { tests: test._id } });
-
-    res.status(201).json({ success: true, message: "Test created successfully", test });
+    res.status(201).json({ success: true, test: newTest });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
+
+// Update Test
 export const updateTest = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, price, description } = req.body;
+    const { name, description, price, discount } = req.body;
 
     const updatedTest = await Test.findByIdAndUpdate(
-      id, { name, price, description }, { new: true }
+      id,
+      { name, description, price, discount },
+      { new: true }
     );
 
-    if (!updatedTest) return res.status(404).json({ error: "Test not found" });
+    if (!updatedTest) return res.status(404).json({ error: "Test not found." });
 
-    res.status(200).json({ success: true, message: "Test updated successfully", test: updatedTest });
+    res.status(200).json({ success: true, message: "Test updated successfully.", test: updatedTest });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
+// Delete Test
 export const deleteTest = async (req, res) => {
   try {
     const { id } = req.params;
 
     const deletedTest = await Test.findByIdAndDelete(id);
-    if (!deletedTest) return res.status(404).json({ message: "Test not found" });
+    if (!deletedTest) return res.status(404).json({ error: "Test not found." });
 
     await Lab.updateMany({}, { $pull: { tests: id } });
 
-    res.status(200).json({ success: true, message: "Test deleted successfully" });
+    res.status(200).json({ success: true, message: "Test deleted successfully." });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
+// Get All Tests
 export const getAllTests = async (req, res) => {
   try {
-    const tests = await Test.find()
-      .populate("createdBy", "name email")
-      .populate("lab", "name location");
+    // const tests = await Test.find()
+    //   .populate("createdBy", "name email")
+    //   .populate("lab", "name location");
+    const tests = await Test.find().select("name price discount lab bookedCount rating");
 
-    res.status(200).json({ success: true, tests, message: "All tests fetched successfully" });
+
+    res.status(200).json({ success: true, tests });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 export const getTestById = async (req, res) => {
   try {
     const { id } = req.params;
+
     const test = await Test.findById(id)
       .populate("createdBy", "name email")
       .populate("lab", "name location");
 
-    if (!test) {
-      return res.status(404).json({ error: "Test not found" });
-    }
+    if (!test) return res.status(404).json({ error: "Test not found." });
 
-    res.status(200).json({ test, message: "Test fetched successfully" });
+    res.status(200).json({ success: true, test });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
+// ------------------ PACKAGE CONTROLLERS 
 
-// Packages controller function 
+// Create Package
+
+
 export const createPackage = async (req, res) => {
   try {
-    const { name, price, tests, lab } = req.body;
-    if (!name || !price || !tests || !lab) return res.status(400).json({ error: "Name, price, tests, and lab are required." });
+    const { name, description, price, tests, discount } = req.body;
 
-    const testIds = tests.map(testId => new mongoose.Types.ObjectId(testId));
+    if (!name || !price || !tests) {
+      return res.status(400).json({ error: "Name, price, and tests are required." });
+    }
 
-    const packageItem = new Package({
+    const lab = req.user.labId || req.user.lab; 
+
+
+    const newPackage = await Package.create({
       name,
+      description,
       price,
-      tests: testIds,
-      rating: 0,
-      feedback: [],
-      bookingCount: 0,
+      tests,
+      discount,
+      lab,
       createdBy: req.user._id,
-      labAdmin: req.user._id,
-      lab: new mongoose.Types.ObjectId(lab),
-
     });
 
-    console.log("Saving package:", packageItem);
-    await packageItem.save();
+    await Lab.findByIdAndUpdate(lab, { $push: { packages: newPackage._id } });
 
-    await Lab.findByIdAndUpdate(lab, { $push: { packages: packageItem._id } });
-
-    res.status(201).json({ success: true, message: "Package created successfully", package: packageItem });
+    res.status(201).json({ success: true, package: newPackage });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -125,15 +136,17 @@ export const createPackage = async (req, res) => {
 export const updatePackage = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, price, tests } = req.body;
+    const { name, price, tests, description, discount } = req.body;
 
     const updatedPackage = await Package.findByIdAndUpdate(
-      id, { name, price, tests }, { new: true }
+      id,
+      { name, price, tests, description, discount },
+      { new: true }
     );
 
-    if (!updatedPackage) return res.status(404).json({ error: "Package not found" });
+    if (!updatedPackage) return res.status(404).json({ error: "Package not found." });
 
-    res.status(200).json({ success: true, message: "Package updated successfully", package: updatedPackage });
+    res.status(200).json({ success: true, message: "Package updated successfully.", package: updatedPackage });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -142,45 +155,44 @@ export const deletePackage = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const packageItem = await Package.findByIdAndDelete(id);
-    if (!packageItem) return res.status(404).json({ error: "Package not found" });
+    const deletedPackage = await Package.findByIdAndDelete(id);
+    if (!deletedPackage) return res.status(404).json({ error: "Package not found." });
 
-    // Remove from labs
     await Lab.updateMany({}, { $pull: { packages: id } });
 
-    res.status(200).json({ success: true, message: "Package deleted successfully" });
+    res.status(200).json({ success: true, message: "Package deleted successfully." });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 export const getAllPackages = async (req, res) => {
   try {
-    const packages = await Package.find()
-      .populate("tests", "name price")
-      .populate("createdBy", "name email")
-      .populate("lab", "name location");
+    // const packages = await Package.find()
+    //   .populate("tests", "name price")
+    //   .populate("createdBy", "name email")
+    //   .populate("lab", "name location");
+    const packages = await Package.find().select("name price discount lab bookedCount rating description");
 
-    res.status(200).json({ success: true, packages, message: "All packages fetched successfully" });
+
+    res.status(200).json({ success: true, packages });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 export const getPackageById = async (req, res) => {
   try {
     const { id } = req.params;
+
     const packageItem = await Package.findById(id)
       .populate("tests", "name price")
       .populate("createdBy", "name email")
       .populate("lab", "name location");
 
-    if (!packageItem) {
-      return res.status(404).json({ error: "Package not found" });
-    }
+    if (!packageItem) return res.status(404).json({ error: "Package not found." });
 
-    res.status(200).json({ package: packageItem, message: "Package fetched successfully" });
+    res.status(200).json({ success: true, package: packageItem });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
-
-
