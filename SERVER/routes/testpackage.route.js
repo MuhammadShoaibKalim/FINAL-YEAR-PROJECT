@@ -1,15 +1,21 @@
 import express from "express";
 import { 
-  createTest, updateTest, deleteTest, getAllTests,
-  createPackage, updatePackage, deletePackage, getAllPackages, 
-  getPackageById,
-  getTestById
+  createTest,
+  updateTest,
+  deleteTest,
+  getAllTests,
+  getTestById,
+  createPackage,
+  updatePackage,
+  deletePackage,
+  getAllPackages,
+  getPackageById
 } from "../controllers/testpackage.controller.js";
-import { isLabAdmin, isAuthenticated } from "../middlewares/auth.middleware.js";
-
+import { isAuthenticated, isLabAdmin } from "../middlewares/auth.middleware.js";
 const router = express.Router();
 
-// Test Routes
+// Test Routes -------------------
+
 router.post("/add-test", isAuthenticated, isLabAdmin, createTest);
 router.put("/update-test/:id", isAuthenticated, isLabAdmin, updateTest);
 router.delete("/delete-test/:id", isAuthenticated, isLabAdmin, deleteTest);
@@ -17,7 +23,9 @@ router.get("/get-all-tests", isAuthenticated, getAllTests);
 router.get("/get-test/:id", isAuthenticated, getTestById);
 
 
-// Package Routes
+//Package Routes -------------------
+
+
 router.post("/add-package", isAuthenticated, isLabAdmin, createPackage);
 router.put("/update-package/:id", isAuthenticated, isLabAdmin, updatePackage);
 router.delete("/delete-package/:id", isAuthenticated, isLabAdmin, deletePackage);
