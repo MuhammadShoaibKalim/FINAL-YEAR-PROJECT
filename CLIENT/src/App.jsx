@@ -192,7 +192,7 @@ const App = () => {
             }
           >
             <Route index element={<LabOverview />} />
-            <Route path="overview" element={<LabOverview />} />
+            <Route path="labdashboard" element={<LabOverview />} />
             <Route path="profile" element={<LabProfile />} />
             <Route path="orders" element={<Orders />} />
             <Route path="orders/:orderId" element={<OrderEdit />} />
