@@ -9,7 +9,7 @@ import {
   updateSettings,
   superAdminOverview, 
   changePassword,
-  getLabAdminOverview,
+  // getLabAdminOverview,
   updateLabAdminProfile,
   // getInboxMessages,
   // respondToInboxMessage,
@@ -24,7 +24,8 @@ import {
   getLabAdmins,
   getLabForLabAdmin,
   getLabAdminInbox,
-  respondToLabAdminInbox
+  respondToLabAdminInbox,
+  getLabDashboardOverview
 } from "../controllers/admin.controller.js";
 import { 
   isAuthenticated, 
@@ -65,7 +66,8 @@ router.put("/password", isAuthenticated, isSuperAdmin, changePassword);
 router.post("/login", loginLabAdmin);
 router.post("/logout", logoutLabAdmin);
 // router.get("/overview", isAuthenticated, isLabAdmin, getLabAdminOverview);
-router.get("/overview", isAuthenticated, isLabAdmin, getLabAdminOverview);
+// router.get("/overview", isAuthenticated, isLabAdmin, getLabAdminOverview);getLabDashboardOverview
+router.get("/labdashboard", isAuthenticated, isLabAdmin, getLabDashboardOverview);
 router.get("/profile", isAuthenticated, isLabAdmin, getLabAdminProfile);
 router.get("/lab", isAuthenticated, isLabAdmin, getLabForLabAdmin);
 router.put("/:id", isAuthenticated, isLabAdmin,upload.single("profileImage"),updateLabAdminProfile);
