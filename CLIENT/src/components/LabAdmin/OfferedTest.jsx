@@ -80,7 +80,6 @@ export default function OfferedTests() {
       ) : (
         <div className="flex flex-col bg-white shadow-lg rounded-lg p-6 mt-12 w-full max-w-8xl">
           
-          {/* Header */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
             <div>
               <h2 className="text-2xl font-bold text-text-dark">Offered Tests & Packages</h2>
@@ -94,9 +93,7 @@ export default function OfferedTests() {
             </button>
           </div>
 
-          {/* Table */}
           <div className="bg-white p-4 shadow-md rounded-lg">
-            {/* Grid Header */}
             <div className="hidden md:grid grid-cols-6 bg-primary text-white font-semibold text-lg rounded-t-md py-3 px-6">
               <span>Name</span>
               <span>Type</span>
@@ -106,13 +103,11 @@ export default function OfferedTests() {
               <span>Actions</span>
             </div>
 
-            {/* Grid Data */}
             {tests.map((item) => (
               <div
                 key={item._id}
                 className="grid grid-cols-1 md:grid-cols-6 gap-2 md:gap-0 py-4 px-6 border-b items-center text-sm"
               >
-                {/* Name */}
                 {editingTestId === item._id ? (
                   <input
                     type="text"
@@ -125,10 +120,8 @@ export default function OfferedTests() {
                   <span>{item.name}</span>
                 )}
 
-                {/* Type */}
                 <span>{item.type}</span>
 
-                {/* Price */}
                 {editingTestId === item._id ? (
                   <input
                     type="number"
@@ -141,13 +134,10 @@ export default function OfferedTests() {
                   <span>PKR {item.price}</span>
                 )}
 
-                {/* Rating */}
                 <span>{item.rating || "0.0"} ⭐</span>
 
-                {/* Booked Count */}
                 <span>{item.bookedCount || "0"}</span>
 
-                {/* Actions */}
                 <div className="flex space-x-2">
                   {editingTestId === item._id ? (
                     <button
