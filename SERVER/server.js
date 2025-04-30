@@ -4,7 +4,8 @@ import dotenv from "dotenv";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import orderRoutes from "./routes/order.route.js";
-import adminRoutes from "./routes/admin.route.js";
+import labAdminRoutes from "./routes/admin.route.js";
+import superAdminRoutes from "./routes/admin.route.js";
 import {protect} from './middlewares/auth.middleware.js';
 import labRoutes from "./routes/lab.route.js";
 import userRoutes from "./routes/user.route.js";
@@ -30,8 +31,8 @@ app.use('/uploads', express.static('uploads'));
 
 //Routes
 app.use("/api/auth", userRoutes);  
-app.use("/api/superadmin", adminRoutes);
-app.use("/api/labadmin", adminRoutes);
+app.use("/api/superadmin", superAdminRoutes);
+app.use("/api/labadmin", labAdminRoutes);
 app.use("/api/labs",  labRoutes);
 app.use("/api/tests", testPackageRoutes );
 app.use("/api/packages", testPackageRoutes );
