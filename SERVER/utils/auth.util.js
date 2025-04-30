@@ -9,10 +9,11 @@ export const generateToken = (user) => {
     role: user.role,
     email: user.email,
   };
-
+  
   if (user.role === "labadmin" && user.labId) {
     payload.lab = user.labId; 
   }
+  
 
   try {
     return jwt.sign(payload, process.env.SECRET_KEY, { expiresIn: "7d" });
