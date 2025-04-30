@@ -2,9 +2,8 @@ import mongoose from "mongoose";
 import { Test, Package } from "../models/testpackage.model.js";
 import Lab from "../models/lab.model.js";
 
-// ------------------ TEST CONTROLLERS ------------------
+// ------------------ TEST CONTROLLERS 
 
-// Create Test
 export const createTest = async (req, res) => {
   try {
     const { name, description, price, discount } = req.body;
@@ -31,9 +30,6 @@ export const createTest = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
-
-// Update Test
 export const updateTest = async (req, res) => {
   try {
     const { id } = req.params;
@@ -52,8 +48,6 @@ export const updateTest = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
-// Delete Test
 export const deleteTest = async (req, res) => {
   try {
     const { id } = req.params;
@@ -68,26 +62,20 @@ export const deleteTest = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
-// Get All Tests
 export const getAllTests = async (req, res) => {
   try {
     // const tests = await Test.find()
     //   .populate("createdBy", "name email")
     //   .populate("lab", "name location");
     const tests = await Test.find().select("name price discount lab bookedCount rating");
-
-
     res.status(200).json({ success: true, tests });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
-
 export const getTestById = async (req, res) => {
   try {
     const { id } = req.params;
-
     const test = await Test.findById(id)
       .populate("createdBy", "name email")
       .populate("lab", "name location");
@@ -101,9 +89,6 @@ export const getTestById = async (req, res) => {
 };
 
 // ------------------ PACKAGE CONTROLLERS 
-
-// Create Package
-
 
 export const createPackage = async (req, res) => {
   try {
@@ -179,7 +164,6 @@ export const getAllPackages = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
 export const getPackageById = async (req, res) => {
   try {
     const { id } = req.params;
