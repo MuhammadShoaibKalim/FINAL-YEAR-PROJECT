@@ -9,6 +9,7 @@ import Query from "../models/query.model.js";
 
 
 
+
 // Super admin controller functions
 export const createSuperAdmin = async (req, res) => {
   try {
@@ -89,12 +90,10 @@ export const logoutSuperAdmin = (req, res) => {
 };
 export const superAdminOverview = async (req, res) => {
   try {
-    // Fetch total counts
     const totalUsers = await User.countDocuments();
     const totalLabs = await Lab.countDocuments();
     const totalOrders = await Order.countDocuments();
 
-    // Fetch top 5 labs with the most orders
     const labsWithMostOrders = await Order.aggregate([
       { $group: { _id: "$labId", totalOrders: { $sum: 1 } } },
       { $sort: { totalOrders: -1 } },
@@ -111,16 +110,14 @@ export const superAdminOverview = async (req, res) => {
       { $project: { _id: 0, name: "$labDetails.name", Orders: "$totalOrders" } },
     ]);
 
-    // Fetch most used/booked tests
     const mostUsedTests = await Order.aggregate([
-      { $unwind: "$tests" }, // Decomposing array of tests
+      { $unwind: "$tests" },
       { $group: { _id: "$tests.testName", value: { $sum: 1 } } },
       { $sort: { value: -1 } },
       { $limit: 5 },
       { $project: { name: "$_id", value: 1, _id: 0 } },
     ]);
 
-    // Order status breakdown
     const orderStatus = await Order.aggregate([
       { $group: { _id: "$status", value: { $sum: 1 } } },
       { $project: { name: "$_id", value: 1, _id: 0 } },
@@ -429,6 +426,7 @@ export const changePassword = async (req, res) => {
 
 
 
+// Lab Admin controller function
 // Lab admin controller functions
 // export const loginLabAdmin = async (req, res) => {
 //   try {
@@ -469,12 +467,13 @@ export const changePassword = async (req, res) => {
 //     res.status(500).json({ message: "Error logging in Lab Admin", error: error.message });
 //   }
 // };
+
 export const loginLabAdmin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     // const labAdmin = await User.findOne({ email, role: "Lab Admin" });
-    const labAdmin = await User.findOne({ email, role: "Lab Admin" }).select("+labId");
+    const labAdmin = await User.findOne({ email, role: "labadmin" }).select("+labId");
 
     if (!labAdmin) {
       return res.status(404).json({ message: "Lab Admin not found" });
@@ -509,7 +508,6 @@ export const loginLabAdmin = async (req, res) => {
     res.status(500).json({ message: "Error logging in Lab Admin", error: error.message });
   }
 };
-
 export const logoutLabAdmin = (req, res) => {
   try {
     res.clearCookie("token", { httpOnly: true, secure: true, sameSite: "None" });
@@ -522,25 +520,42 @@ export const logoutLabAdmin = (req, res) => {
     res.status(500).json({ message: "Error logging out Lab Admin", error: error.message });
   }
 };
-export const getLabAdminOverview = async (req, res) => {
+export const getLabDashboardOverview = async (req, res) => {
   try {
-    const labId = req.user.lab; 
+    const labId = req.user.labId || req.user.lab;
+    if (!labId) return res.status(400).json({ success: false, message: "Lab ID not found in token." });
+    console.log(labId);
 
-    // const totalTests = await Test.countDocuments({ lab: labId });
-    const totalTests = await Test.countDocuments({ lab: new mongoose.Types.ObjectId(labId) });
+    const totalTests = await Test.countDocuments({ lab: labId });
     const totalPackages = await Package.countDocuments({ lab: labId });
 
     const totalOrders = await Order.countDocuments({ lab: labId });
     const pendingOrders = await Order.countDocuments({ lab: labId, status: "pending" });
     const completedOrders = await Order.countDocuments({ lab: labId, status: "completed" });
 
-    const completionRate = totalOrders === 0 ? 0 : Math.round((completedOrders / totalOrders) * 100);
+    const completionRate = totalOrders > 0 ? Math.round((completedOrders / totalOrders) * 100) : 0;
 
     const ordersOverTime = await Order.aggregate([
-      { $match: { lab: labId } },
-      { $group: { _id: { $dateToString: { format: "%d-%m-%Y", date: "$createdAt" } }, orders: { $sum: 1 } } },
-      { $sort: { "_id": 1 } }
+      { $match: { lab: new mongoose.Types.ObjectId(labId) } },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%d-%m-%Y", date: "$createdAt" } },
+          orders: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
     ]);
+
+    const testAndPackages = await Promise.all([
+      Test.find({ lab: labId }).select("_id name price rating bookedCount"),
+      Package.find({ lab: labId }).select("_id name price rating bookedCount"),
+    ]);
+    
+    const all = [
+      ...testAndPackages[0].map((item) => ({ ...item._doc, type: "Test" })),
+      ...testAndPackages[1].map((item) => ({ ...item._doc, type: "Package" })),
+    ];
+    
 
     res.status(200).json({
       success: true,
@@ -548,15 +563,17 @@ export const getLabAdminOverview = async (req, res) => {
         totalOrders,
         pendingOrders,
         completedOrders,
-        completionRate,
         totalTests,
         totalPackages,
+        completionRate,
         ordersOverTime: ordersOverTime.map((o) => ({ name: o._id, orders: o.orders })),
-      }
+        testPackages: all,
+
+      },
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: "Error fetching lab overview" });
+    console.error("Error in LabDashboard API:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
 export const getLabAdminProfile = async (req, res) => {
@@ -613,7 +630,6 @@ export const updateLabAdminProfile = async (req, res) => {
     res.status(500).json({ success: false, message: "Error updating profile", error: error.message });
   }
 };
-
 export const updateLabDetails = async (req, res) => {
   try {
     const labAdminId = req.user.id;
@@ -646,7 +662,6 @@ export const getLabAdminInbox = async (req, res) => {
     res.status(500).json({ message: "Error fetching inbox messages", error: error.message });
   }
 };
-
 export const respondToLabAdminInbox = async (req, res) => {
   try {
     const { id } = req.params;
