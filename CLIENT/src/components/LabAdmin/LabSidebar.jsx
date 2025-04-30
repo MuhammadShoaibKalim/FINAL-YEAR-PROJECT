@@ -115,7 +115,7 @@ const LabSidebar = ({ unreadCount = 0 }) => {
 
   const links = [
     { to: "/labadmin/lab/profile", Icon: FaHospitalUser, label: "Profile" },
-    { to: "/labadmin/lab", Icon: MdOutlineDashboard, label: "Dashboard" },
+    { to: "/labadmin/lab/labdashboard", Icon: MdOutlineDashboard, label: "Dashboard" },
     { to: "/labadmin/lab/tests", Icon: FaFlask, label: "Offered Tests" },
     { to: "/labadmin/lab/orders", Icon: FaClipboardList, label: "Orders" },
     { to: "/labadmin/lab/messages", Icon: FaEnvelope, label: "Messages" },
