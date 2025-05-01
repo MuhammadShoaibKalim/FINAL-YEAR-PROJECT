@@ -1,9 +1,9 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-  items: [],
-  totalQuantity: 0,
-  totalAmount: 0,
+  items: [],             
+  totalQuantity: 0,      
+  totalAmount: 0,       
 };
 
 const cartSlice = createSlice({
@@ -11,44 +11,46 @@ const cartSlice = createSlice({
   initialState,
   reducers: {
     addItem: (state, action) => {
-      const existingItem = state.items.find(item => item.id === action.payload.id);
-      
+      const item = action.payload;
+      const existingItem = state.items.find(i => i._id === item._id);
+
       if (existingItem) {
         existingItem.quantity += 1;
-        existingItem.totalPrice = existingItem.price * existingItem.quantity;
+        existingItem.totalPrice = existingItem.quantity * existingItem.price;
       } else {
         state.items.push({
-          ...action.payload,
+          ...item,
           quantity: 1,
-          totalPrice: action.payload.price
+          totalPrice: item.price,
         });
       }
 
-      // Update totals
       state.totalQuantity += 1;
-      state.totalAmount += action.payload.price;
+      state.totalAmount += item.price;
     },
 
     removeItem: (state, action) => {
-      const existingItem = state.items.find(item => item.id === action.payload);
-      
+      const id = action.payload;
+      const existingItem = state.items.find(i => i._id === id);
+      if (!existingItem) return;
+
       if (existingItem.quantity === 1) {
-        state.items = state.items.filter(item => item.id !== action.payload);
+        state.items = state.items.filter(i => i._id !== id);
       } else {
         existingItem.quantity -= 1;
-        existingItem.totalPrice = existingItem.price * existingItem.quantity;
+        existingItem.totalPrice = existingItem.quantity * existingItem.price;
       }
 
-      // Update totals
       state.totalQuantity -= 1;
       state.totalAmount -= existingItem.price;
     },
 
     deleteItem: (state, action) => {
-      const existingItem = state.items.find(item => item.id === action.payload);
-      state.items = state.items.filter(item => item.id !== action.payload);
-      
-      // Update totals
+      const id = action.payload;
+      const existingItem = state.items.find(i => i._id === id);
+      if (!existingItem) return;
+
+      state.items = state.items.filter(i => i._id !== id);
       state.totalQuantity -= existingItem.quantity;
       state.totalAmount -= existingItem.totalPrice;
     },
@@ -60,19 +62,26 @@ const cartSlice = createSlice({
     },
 
     updateQuantity: (state, action) => {
-      const { id, quantity } = action.payload;
-      const existingItem = state.items.find(item => item.id === id);
-      
-      if (existingItem) {
-        const oldQuantity = existingItem.quantity;
-        existingItem.quantity = quantity;
-        existingItem.totalPrice = existingItem.price * quantity;
-        state.totalQuantity += quantity - oldQuantity;
-        state.totalAmount += existingItem.price * (quantity - oldQuantity);
-      }
-    }
-  }
+      const { _id, quantity } = action.payload;
+      const existingItem = state.items.find(i => i._id === _id);
+      if (!existingItem) return;
+
+      const diff = quantity - existingItem.quantity;
+      existingItem.quantity = quantity;
+      existingItem.totalPrice = existingItem.price * quantity;
+
+      state.totalQuantity += diff;
+      state.totalAmount += existingItem.price * diff;
+    },
+  },
 });
 
-export const { addItem, removeItem, deleteItem, clearCart, updateQuantity } = cartSlice.actions;
-export default cartSlice.reducer; 
+export const {
+  addItem,
+  removeItem,
+  deleteItem,
+  clearCart,
+  updateQuantity,
+} = cartSlice.actions;
+
+export default cartSlice.reducer;
