@@ -48,8 +48,9 @@ import LabProfile from "./components/LabAdmin/LabAdminProfileSettings";
 import Labes from "./pages/Labs/Labs";
 import LabDetails from "./pages/Labs/LabDetails";
 import TestPackages from "./pages/Labs/TestPackages";
+import PlaceOrder from "./pages/Labs/PlaceOrders";
+import ConfirmBookingDetails from "./pages/Labs/ConfirmBookingDetails";
 // import LabSettings from "./components/LabAdmin/Settings";
-import BookingForm from "./pages/Labs/BookingForm";
 import Cart from "./components/UserAdmin/Cart";
 import Payment from "./components/Payment/Payment";
 import Failure from "./components/Payment/Failure";
@@ -136,27 +137,23 @@ const App = () => {
             <Route path="symptoms/:symptomId" element={<SymptomDetails />} />
             <Route path="partners" element={<Partners />} />
             <Route path="services" element={<Hero />} />
+
           </Route>
 
           {/* Protected User Routes */}
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <UserLayout />
-              </ProtectedRoute>
-            }
-          >
+          <Route path="/" element={<ProtectedRoute><UserLayout /> </ProtectedRoute>}>
             <Route path="ai-recommendations-test" element={<AIRecommendation />} />
             <Route path="labs" element={<Labes />} />
             <Route path="/labs/:id/details" element={<LabDetails />} />
             <Route path="/labs/:id/testpackage" element={<TestPackages />} />
+            <Route path="place-order" element={<PlaceOrder />} />
+            <Route path="confirm-booking" element={<ConfirmBookingDetails />} />
+
 
 
 
 
             {/* 
-            <Route path="booking" element={<BookingForm />} />
             <Route path="cart" element={<Cart />} /> */}
             <Route path="payment" element={<Payment />} />
             <Route path="payment/success" element={<Success />} />
@@ -194,7 +191,6 @@ const App = () => {
             <Route index element={<LabOverview />} />
             <Route path="labdashboard" element={<LabOverview />} />
             <Route path="profile" element={<LabProfile />} />
-            <Route path="orders" element={<Orders />} />
             <Route path="orders/:orderId" element={<OrderEdit />} />
             <Route path="reports" element={<Reports />} />
             <Route path="tests" element={<OfferedTest />} />
