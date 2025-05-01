@@ -3,33 +3,68 @@ import User from '../models/user.model.js';
 
 export const createOrder = async (req, res) => {
   try {
-    const { items } = req.body;
+    const {
+      name,
+      email,
+      phoneNumber,
+      gender,
+      age,
+      address,
+      state,
+      country,
+      collectionMethod,
+      bookingDetails,
+    } = req.body;
 
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ message: "No items provided for order" });
-    }
+    const deliveryCharge = collectionMethod === "Home Collection" ? 100 : 0;
+    const cartItems = await Cart.find({ userId: req.user.id });
 
-    const order = new Order({
-      userId: req.user.id,
-      items: items.map(item => ({
-        testOrPackageId: item.testOrPackageId,
-        type: item.type,
-        name: item.name,
-        price: item.price,
-      })),
-      totalPrice: items.reduce((sum, item) => sum + item.price, 0),
+    if (!cartItems.length) return res.status(400).json({ message: "Cart is empty" });
+
+    const grouped = {};
+    cartItems.forEach(item => {
+      const labKey = item.labId.toString();
+      if (!grouped[labKey]) grouped[labKey] = [];
+      grouped[labKey].push(item);
     });
 
-    await order.save();
+    const orders = [];
+    for (const labId in grouped) {
+      const items = grouped[labId];
+      const subtotal = items.reduce((sum, item) => sum + item.price, 0);
+
+      for (const item of items) {
+        const newOrder = await Order.create({
+          userId: req.user.id,
+          labId,
+          testOrPackageId: item.testOrPackageId,
+          type: item.type,
+          name,
+          email,
+          phoneNumber,
+          gender,
+          age,
+          address,
+          state,
+          country,
+          collectionMethod,
+          bookingDetails,
+          subtotal,
+          deliveryCharge,
+        });
+        orders.push(newOrder);
+      }
+    }
 
     await Cart.deleteMany({ userId: req.user.id });
 
-    res.status(201).json({ message: "Order placed successfully", order });
-  } catch (error) {
-    console.error("Order creation error:", error.message);
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(201).json({ message: "Order placed successfully", orders });
+  } catch (err) {
+    console.error("Order creation error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };
+
 export const getUserOrders = async (req, res) => {
   try {
     const orders = await Order.find({ userId: req.user.id });
@@ -98,15 +133,9 @@ export const cancelOrder = async (req, res) => {
 // Add item to cart
 export const addToCart = async (req, res) => {
   try {
-    const { testOrPackageId, type, name, price } = req.body;
+    const { testOrPackageId, type, name, price, labId } = req.body;
     const userId = req.user.id;
 
-    const userExists = await User.findById(userId);
-    if (!userExists) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
-
-    // Optional: Prevent duplicates (uncomment if needed)
     const existing = await Cart.findOne({ userId, testOrPackageId });
     if (existing) {
       return res.status(400).json({ success: false, message: "Item already in cart" });
@@ -114,22 +143,18 @@ export const addToCart = async (req, res) => {
 
     const newCartItem = new Cart({
       userId,
+      labId,
       testOrPackageId,
       type,
       name,
-      price,
+      price
     });
 
     await newCartItem.save();
-
-    res.status(201).json({
-      success: true,
-      message: "Item added to cart successfully",
-      cartItem: newCartItem,
-    });
+    res.status(201).json({ success: true, cartItem: newCartItem });
   } catch (error) {
     console.error("Add to cart error:", error.message);
-    res.status(500).json({ success: false, message: "Internal server error", error: error.message });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
