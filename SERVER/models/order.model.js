@@ -2,17 +2,31 @@ import mongoose from "mongoose";
 
 // Cart Schema
 const CartSchema = new mongoose.Schema({
-    userId: { 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: 'User', required: true 
-    },
-    testOrPackageId: { type: mongoose.Schema.Types.ObjectId, refPath: 'type', required: true },
-    type: { type: String, enum: ['Test', 'Package'], required: true },
-    name: { type: String, required: true },
-    price: { type: Number, required: true },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  labId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Lab',
+    required: true
+  },
+  testOrPackageId: {
+    type: mongoose.Schema.Types.ObjectId,
+    refPath: 'type',
+    required: true
+  },
+  type: {
+    type: String,
+    enum: ['Test', 'Package'],
+    required: true
+  },
+  name: { type: String, required: true },
+  price: { type: Number, required: true },
 }, { timestamps: true });
-export const Cart = mongoose.model('Cart', CartSchema);
 
+export const Cart = mongoose.model("Cart", CartSchema);
 
 // Order schema
 const OrderSchema = new mongoose.Schema(
