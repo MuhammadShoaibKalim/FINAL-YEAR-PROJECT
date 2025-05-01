@@ -21,6 +21,7 @@ export const createTest = async (req, res) => {
       discount,
       lab,
       createdBy: req.user._id,
+      lab: req.user.assignedLab,
     });
 
     await Lab.findByIdAndUpdate(lab, { $push: { tests: newTest._id } });
@@ -109,6 +110,7 @@ export const createPackage = async (req, res) => {
       discount,
       lab,
       createdBy: req.user._id,
+      lab: req.user.assignedLab,
     });
 
     await Lab.findByIdAndUpdate(lab, { $push: { packages: newPackage._id } });
