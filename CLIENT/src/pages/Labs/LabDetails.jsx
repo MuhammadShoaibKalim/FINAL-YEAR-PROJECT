@@ -34,7 +34,6 @@ export default function LabDetails() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 mt-20">
 
-      {/* Back to Labs Button */}
       <div className="mb-10">
         <button
           onClick={() => navigate(-1)}
@@ -45,51 +44,43 @@ export default function LabDetails() {
         </button>
       </div>
 
-      {/* Lab Profile Card */}
       <div className="flex flex-col md:flex-row bg-bg-primary rounded-4xl shadow-primary p-10 border border-border-light mb-12 items-center md:items-start gap-12">
         
-        {/* Left Side: Lab Image */}
         <div className="w-full md:w-1/3 flex justify-center">
           <div className="w-72 h-72 rounded-4xl overflow-hidden border-4 border-primary shadow-lg">
             <img
               src={lab.image}
               alt={lab.name}
-              className="w-full h-full object-cover object-center" // Added object-center + cover
+              className="w-full h-full object-cover object-center" 
             />
           </div>
         </div>
 
-        {/* Right Side: Lab Info */}
         <div className="flex-1 relative">
-          {/* Title and Rating */}
           <div className="flex justify-between items-start">
             <h1 className="text-4xl md:text-5xl font-bold text-text-dark">
               {lab.name}
             </h1>
 
-            {/* Rating Badge */}
             <div className="flex items-center gap-2 bg-warning text-text-dark px-4 py-2 rounded-full shadow-md">
               <FaStar className="text-lg" />
               <span className="text-lg font-semibold">{lab.rating}</span>
             </div>
           </div>
 
-          {/* Description */}
           <div className="mt-6 text-text-primary text-lg leading-relaxed mb-8">
             {lab.description}
           </div>
-
-          {/* Address Section aligned to right */}
           <div className="flex justify-end">
             <div className="flex items-center gap-2 text-text-secondary">
               <FaMapMarkerAlt className="text-primary" />
               <span className="text-md">{lab.address}, {lab.location}</span>
             </div>
           </div>
+          
         </div>
       </div>
 
-      {/* Tests & Packages Section */}
       <div className="mb-12">
         <h2 className="text-3xl font-bold text-text-dark mb-6">Tests & Packages</h2>
         <div className="text-text-secondary text-md">
@@ -97,7 +88,6 @@ export default function LabDetails() {
         </div>
       </div>
 
-      {/* User Feedback Section */}
       <div>
         <h2 className="text-3xl font-bold text-text-dark mb-6">User Feedback</h2>
         <div className="text-text-secondary text-md">
