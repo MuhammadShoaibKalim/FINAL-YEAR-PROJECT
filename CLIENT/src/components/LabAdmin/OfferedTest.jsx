@@ -1,36 +1,49 @@
 import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 import AddCustomTest from "./AddCustomTest";
 import axios from "axios";
+import { toast } from "react-hot-toast";
 
 export default function OfferedTests() {
   const [showAddCustomTest, setShowAddCustomTest] = useState(false);
   const [tests, setTests] = useState([]);
   const [editingTestId, setEditingTestId] = useState(null);
-  const [editForm, setEditForm] = useState({ name: "", price: "" });
+  const [editForm, setEditForm] = useState({ name: "", price: "", discount: "" });
+
+  const user = useSelector((state) => state.auth?.user);
 
   const fetchTestsAndPackages = async () => {
     try {
-      const { data: testData } = await axios.get("/api/tests/get-all-tests");
-      const { data: packageData } = await axios.get("/api/tests/get-all-packages");
+      const res = await fetch("/api/labadmin/labdashboard", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+      });
 
-      const combined = [
-        ...testData.tests.map((t) => ({ ...t, type: "Test" })),
-        ...packageData.packages.map((p) => ({ ...p, type: "Package" })),
-      ];
-
-      setTests(combined);
+      const json = await res.json();
+      if (json.success) {
+        const dashboardTests = json.data.testPackages || [];
+        setTests(dashboardTests);
+      } else {
+        toast.error(json.message || "Failed to load test/packages");
+      }
     } catch (error) {
-      console.error("Error fetching tests/packages", error);
+      console.error("Error fetching dashboard tests/packages", error);
+      toast.error("Error fetching your lab's test/package data");
     }
   };
 
   useEffect(() => {
     fetchTestsAndPackages();
-  }, []);
+  }, [showAddCustomTest]);
 
   const handleEdit = (test) => {
     setEditingTestId(test._id);
-    setEditForm({ name: test.name, price: test.price });
+    setEditForm({
+      name: test.name,
+      price: test.price,
+      discount: test.discount || "",
+    });
   };
 
   const handleEditChange = (e) => {
@@ -40,36 +53,49 @@ export default function OfferedTests() {
 
   const handleSaveEdit = async (test) => {
     try {
-      if (test.type === "Test") {
-        await axios.put(`/api/tests/update-test/${test._id}`, {
-          name: editForm.name,
-          price: editForm.price,
-        });
-      } else {
-        await axios.put(`/api/tests/update-package/${test._id}`, {
-          name: editForm.name,
-          price: editForm.price,
-        });
-      }
+      const payload = {
+        name: editForm.name,
+        price: editForm.price,
+        discount: editForm.discount,
+      };
+
+      const endpoint =
+        test.type === "Test"
+          ? `/api/tests/update-test/${test._id}`
+          : `/api/tests/update-package/${test._id}`;
+
+      await axios.put(endpoint, payload, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+      });
+
       fetchTestsAndPackages();
       setEditingTestId(null);
+      toast.success("Item updated successfully");
     } catch (error) {
       console.error("Error updating", error);
-      alert("Update failed");
+      toast.error("Update failed");
     }
   };
 
   const handleDelete = async (test) => {
     try {
-      if (test.type === "Test") {
-        await axios.delete(`/api/tests/delete-test/${test._id}`);
-      } else {
-        await axios.delete(`/api/tests/delete-package/${test._id}`);
-      }
+      const endpoint =
+        test.type === "Test"
+          ? `/api/tests/delete-test/${test._id}`
+          : `/api/tests/delete-package/${test._id}`;
+
+      await axios.delete(endpoint, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+      });
       fetchTestsAndPackages();
+      toast.success("Item deleted");
     } catch (error) {
       console.error("Error deleting", error);
-      alert("Delete failed");
+      toast.error("Delete failed");
     }
   };
 
@@ -79,7 +105,6 @@ export default function OfferedTests() {
         <AddCustomTest onClose={() => setShowAddCustomTest(false)} />
       ) : (
         <div className="flex flex-col bg-white shadow-lg rounded-lg p-6 mt-12 w-full max-w-8xl">
-          
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
             <div>
               <h2 className="text-2xl font-bold text-text-dark">Offered Tests & Packages</h2>
@@ -94,10 +119,11 @@ export default function OfferedTests() {
           </div>
 
           <div className="bg-white p-4 shadow-md rounded-lg">
-            <div className="hidden md:grid grid-cols-6 bg-primary text-white font-semibold text-lg rounded-t-md py-3 px-6">
+            <div className="hidden md:grid grid-cols-7 bg-primary text-white font-semibold text-lg rounded-t-md py-3 px-6">
               <span>Name</span>
               <span>Type</span>
               <span>Price</span>
+              <span>Discount</span>
               <span>Rating</span>
               <span>Booked</span>
               <span>Actions</span>
@@ -106,7 +132,7 @@ export default function OfferedTests() {
             {tests.map((item) => (
               <div
                 key={item._id}
-                className="grid grid-cols-1 md:grid-cols-6 gap-2 md:gap-0 py-4 px-6 border-b items-center text-sm"
+                className="grid grid-cols-1 md:grid-cols-7 gap-2 md:gap-0 py-4 px-6 border-b items-center text-sm"
               >
                 {editingTestId === item._id ? (
                   <input
@@ -134,15 +160,28 @@ export default function OfferedTests() {
                   <span>PKR {item.price}</span>
                 )}
 
-                <span>{item.rating || "0.0"} ⭐</span>
+                {editingTestId === item._id ? (
+                  <input
+                    type="number"
+                    name="discount"
+                    value={editForm.discount}
+                    onChange={handleEditChange}
+                    className="border p-2 rounded"
+                    min="0"
+                    max="100"
+                  />
+                ) : (
+                  <span>{item.discount ? `${item.discount}%` : "-"}</span>
+                )}
 
+                <span>{item.rating || "0.0"} ⭐</span>
                 <span>{item.bookedCount || "0"}</span>
 
                 <div className="flex space-x-2">
                   {editingTestId === item._id ? (
                     <button
                       onClick={() => handleSaveEdit(item)}
-                      className="bg-green-500 text-white px-3 py-1 rounded"
+                      className="bg-primary/90 text-white px-3 py-1 rounded"
                     >
                       Save
                     </button>
