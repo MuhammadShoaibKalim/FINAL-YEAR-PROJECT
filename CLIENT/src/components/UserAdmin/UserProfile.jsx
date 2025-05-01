@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { FaUser, FaEdit, FaShoppingCart, FaBoxOpen, FaInbox } from "react-icons/fa";
+import { FaUser, FaEdit, FaShoppingCart, FaBoxOpen, FaInbox, FaFileMedical } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { updateUser } from "../../redux/AuthSlice.js";
 import Orders from "./Orders.jsx"
 import UserInbox from "./UserInbox.jsx";
 import Cart from "./Cart.jsx";
-
+import UserReports from "./UserReports.jsx";
 
 const UserProfile = () => {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
   const user = useSelector((state) => state.auth?.user);
+  const currentLabId = useSelector((state) => state.lab?.currentLabId || null);
 
   const [userData, setUserData] = useState({
     firstName: "",
@@ -37,20 +38,18 @@ const UserProfile = () => {
     }
   }, [user]);
 
-
   if (loading) {
     return <div className="text-center py-10 text-gray-600 text-lg">Loading user profile...</div>;
   }
-  
 
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
-  
+
     if (!user || !user._id) {
       console.error("User not found");
       return alert("User not loaded yet. Please wait...");
     }
-  
+
     const formData = new FormData();
     formData.append("firstName", userData.firstName);
     formData.append("lastName", userData.lastName);
@@ -58,7 +57,7 @@ const UserProfile = () => {
     if (file) {
       formData.append("image", file);
     }
-  
+
     try {
       const response = await fetch(`/api/auth/profile/${user._id}`, {
         method: "PUT",
@@ -67,11 +66,10 @@ const UserProfile = () => {
         },
         body: formData,
       });
-  
+
       const result = await response.json();
       if (result.success) {
         alert("Profile updated successfully");
-        // dispatch(updateUser());  
         window.location.reload(); 
       } else {
         alert(result.message || "Update failed");
@@ -81,15 +79,14 @@ const UserProfile = () => {
       alert("An error occurred");
     }
   };
-  
-  
 
   const sections = [
     { id: "profile", label: "My Profile", icon: <FaUser /> },
     { id: "edit", label: "Update Profile", icon: <FaEdit /> },
     { id: "cart", label: "My Cart", icon: <FaShoppingCart /> },
     { id: "orders", label: "My Orders", icon: <FaBoxOpen /> },
-    { id: "inbox", label: "Inbox", icon: <FaInbox/>}
+    { id: "inbox", label: "Inbox", icon: <FaInbox /> },
+    { id: "reports", label: "My Reports", icon: <FaFileMedical /> },
   ];
 
   const renderSection = () => {
@@ -98,9 +95,7 @@ const UserProfile = () => {
         return (
           <div className="space-y-2">
             <h2 className="text-lg font-semibold">Personal Details</h2>
-            {user?.image && (<img src={user.image} alt="Profile" className="w-24 h-24 rounded-full object-cover"/>)}
-
-
+            {user?.image && (<img src={user.image} alt="Profile" className="w-24 h-24 rounded-full object-cover"/>) }
             <p><strong>Name:</strong> {user?.firstName} {user?.lastName}</p>
             <p><strong>Email:</strong> {user?.email}</p>
             <p><strong>Phone:</strong> {user?.phoneNo || 'N/A'}</p>
@@ -144,7 +139,9 @@ const UserProfile = () => {
       case "orders":
         return <Orders />;
       case "inbox":
-         return <UserInbox />;
+        return <UserInbox />;
+      case "reports":
+        return <UserReports />;
       default:
         return <h2>Welcome</h2>;
     }
