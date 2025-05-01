@@ -64,7 +64,7 @@ const Login = () => {
         if (role === "superadmin") {
           navigate("/admin/super/overview", { replace: true });
         } else if (role === "labadmin") {
-          navigate("/labadmin/lab/overview", { replace: true });
+          navigate("/labadmin/lab/labdashboard", { replace: true });
         } else {
           navigate("/userprofile", { replace: true });
         }
