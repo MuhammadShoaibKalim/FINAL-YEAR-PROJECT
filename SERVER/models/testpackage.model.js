@@ -45,10 +45,10 @@ const testSchema = new mongoose.Schema({
     default: 0 
   },
   lab: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Lab",
-    required: true
-  },
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Lab",
+  required: true,
+},
 },
   {
     timestamps: true
@@ -103,12 +103,11 @@ const packageSchema = new mongoose.Schema({
     type: Number, 
     default: 0 
   },
-  lab: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Lab",
-    required: true
-  },
-},
+lab: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Lab",
+  required: true,
+},},
   {
     timestamps: true
   });
