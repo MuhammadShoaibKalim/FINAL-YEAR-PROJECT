@@ -19,7 +19,7 @@ const PublicLayout = () => {
       } else if (role === 'labadmin') {
         navigate('/labadmin/lab/overview', { replace: true });
       } else {
-        navigate('/userprofile', { replace: true });
+        navigate('/user', { replace: true });
       }
     }
   }, [user, isAuthenticated, navigate]);
