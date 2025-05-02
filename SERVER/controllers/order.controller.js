@@ -1,6 +1,8 @@
 import {Order, Cart} from '../models/order.model.js';
 import User from '../models/user.model.js';
 
+
+//Orders
 export const createOrder = async (req, res) => {
   try {
     const {
@@ -13,16 +15,18 @@ export const createOrder = async (req, res) => {
       state,
       country,
       collectionMethod,
-      bookingDetails,
+      bookingDate,
+      bookingTime,
     } = req.body;
 
     const deliveryCharge = collectionMethod === "Home Collection" ? 100 : 0;
-    const cartItems = await Cart.find({ userId: req.user.id });
 
-    if (!cartItems.length) return res.status(400).json({ message: "Cart is empty" });
+    const cartItems = await Cart.find({ userId: req.user.id });
+    if (!cartItems.length)
+      return res.status(400).json({ message: "Cart is empty" });
 
     const grouped = {};
-    cartItems.forEach(item => {
+    cartItems.forEach((item) => {
       const labKey = item.labId.toString();
       if (!grouped[labKey]) grouped[labKey] = [];
       grouped[labKey].push(item);
@@ -48,7 +52,10 @@ export const createOrder = async (req, res) => {
           state,
           country,
           collectionMethod,
-          bookingDetails,
+          bookingDetails: {
+            date: bookingDate,
+            time: bookingTime
+          },
           subtotal,
           deliveryCharge,
         });
@@ -57,14 +64,13 @@ export const createOrder = async (req, res) => {
     }
 
     await Cart.deleteMany({ userId: req.user.id });
-
     res.status(201).json({ message: "Order placed successfully", orders });
+
   } catch (err) {
     console.error("Order creation error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
-
 export const getUserOrders = async (req, res) => {
   try {
     const orders = await Order.find({ userId: req.user.id });
@@ -127,10 +133,7 @@ export const cancelOrder = async (req, res) => {
   }
 };
 
-
-
-
-// Add item to cart
+// Carts 
 export const addToCart = async (req, res) => {
   try {
     const { testOrPackageId, type, name, price, labId } = req.body;
@@ -151,14 +154,12 @@ export const addToCart = async (req, res) => {
     });
 
     await newCartItem.save();
-    res.status(201).json({ success: true, cartItem: newCartItem });
+    res.status(201).json({ success: true, itemId: newCartItem._id, cartItem: newCartItem });
   } catch (error) {
     console.error("Add to cart error:", error.message);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
-
-// Get all items for logged-in user
 export const getUserCart = async (req, res) => {
   try {
     const cartItems = await Cart.find({ userId: req.user.id });
@@ -173,8 +174,6 @@ export const getUserCart = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error", error: error.message });
   }
 };
-
-// Get single cart item by ID
 export const getCartItem = async (req, res) => {
   try {
     const cartItem = await Cart.findById(req.params.id);
@@ -193,7 +192,6 @@ export const getCartItem = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error", error: error.message });
   }
 };
-
 export const removeFromCart = async (req, res) => {
   try {
     const cartItem = await Cart.findById(req.params.id);
@@ -213,7 +211,6 @@ export const removeFromCart = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error", error: error.message });
   }
 };
-
 export const clearCart = async (req, res) => {
   try {
     await Cart.deleteMany({ userId: req.user.id });
@@ -227,5 +224,3 @@ export const clearCart = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error", error: error.message });
   }
 };
-
-
