@@ -28,7 +28,7 @@ const Login = () => {
       } else if (role === "labadmin") {
         navigate("/labadmin/lab/overview", { replace: true });
       } else {
-        navigate("/userprofile", { replace: true });
+        navigate("/user", { replace: true });
       }
     }
   }, [user, navigate]);
@@ -66,7 +66,7 @@ const Login = () => {
         } else if (role === "labadmin") {
           navigate("/labadmin/lab/labdashboard", { replace: true });
         } else {
-          navigate("/userprofile", { replace: true });
+          navigate("/user", { replace: true });
         }
       }
     } catch (err) {
