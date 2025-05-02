@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { setUser } from '../../redux/AuthSlice';
+import setUser from '../../redux/AuthSlice';
 import { FaBars, FaTimes, FaUserCircle, FaSignInAlt, FaUserPlus, FaChevronDown } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import Topbar from './Topbar';
