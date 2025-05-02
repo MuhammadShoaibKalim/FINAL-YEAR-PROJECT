@@ -42,7 +42,6 @@ import OrderEdit from "./components/LabAdmin/OrderEdit";
 import FAQ from "./pages/Home/FAQ";
 import AIRecommendation from "./components/Ai/AIRecommendation";
 import UserReview from "./pages/Home/UserRev";
-import UserProfile from "./components/UserAdmin/UserProfile";
 import Messages from "./components/LabAdmin/LabAdminInbox";
 import LabProfile from "./components/LabAdmin/LabAdminProfileSettings";
 import Labes from "./pages/Labs/Labs";
@@ -51,7 +50,6 @@ import TestPackages from "./pages/Labs/TestPackages";
 import PlaceOrder from "./pages/Labs/PlaceOrders";
 import ConfirmBookingDetails from "./pages/Labs/ConfirmBookingDetails";
 // import LabSettings from "./components/LabAdmin/Settings";
-import Cart from "./components/UserAdmin/Cart";
 import Payment from "./components/Payment/Payment";
 import Failure from "./components/Payment/Failure";
 import Success from "./components/Payment/Success";
@@ -63,7 +61,22 @@ import ResetPassword from "./components/Auth/ResetPassword";
 import LabAdminProfileSettings from "./components/LabAdmin/LabAdminProfileSettings";
 
 
+// userprofile layout
+import UserProfileLayout from "./components/UserAdmin/UserProfileLayout";
+import UserProfile from "./components/UserAdmin/UserProfile";
+import UserReport from "./components/UserAdmin/UserReports";
+import UserCart from "./components/UserAdmin/Cart";
+import UserMessage from "./components/UserAdmin/UserInbox";
+import UserOrder from "./components/UserAdmin/Orders";
+import UserReports from "./components/UserAdmin/UserReports";
+import UserProfileEdit from "./components/UserAdmin/UserProfileEdit";
+
+
+
+
+
 const App = () => {
+
   const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
 
@@ -148,19 +161,24 @@ const App = () => {
             <Route path="/labs/:id/testpackage" element={<TestPackages />} />
             <Route path="place-order" element={<PlaceOrder />} />
             <Route path="confirm-booking" element={<ConfirmBookingDetails />} />
-
-
-
-
-
-            {/* 
-            <Route path="cart" element={<Cart />} /> */}
             <Route path="payment" element={<Payment />} />
             <Route path="payment/success" element={<Success />} />
             <Route path="payment/failure" element={<Failure />} />
-            <Route path="userprofile" element={<UserProfile />} />
             <Route path="/user/inbox" element={<UserInbox />} />
           </Route>
+
+         
+         {/* UserProfile Layout */}
+         <Route path="/user" element={<UserProfileLayout />}>
+          <Route index element={<UserProfile />} />
+          <Route path="profile" element={<UserProfile />} />
+          <Route path="edit" element={<UserProfileEdit isEdit />} />
+          <Route path="cart" element={<UserCart />} />
+          <Route path="orders" element={<UserOrder />} />
+          <Route path="messages" element={<UserInbox />} />
+          <Route path="reports" element={<UserReports />} />
+        </Route>
+         
 
           {/* Super Admin Routes */}
           <Route 
