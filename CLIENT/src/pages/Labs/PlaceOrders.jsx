@@ -42,6 +42,12 @@ const PlaceOrder = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    if (!formData.collectionMethod) {
+      toast.error("Please select a collection method");
+      return;
+    }
+
     localStorage.setItem("bookingData", JSON.stringify(formData));
     navigate("/confirm-booking");
   };
@@ -52,7 +58,6 @@ const PlaceOrder = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-10">
-      {/* Back Button */}
       <button
         className="text-primary hover:underline flex items-center gap-2 mb-6"
         onClick={() => navigate(-1)}
@@ -60,15 +65,17 @@ const PlaceOrder = () => {
         <FaArrowLeft /> Back to Cart
       </button>
 
-      {/* Title */}
       <div className="bg-white p-6 rounded-lg shadow border border-primary mb-6">
         <h1 className="text-3xl font-bold text-primary mb-2">Book Your Lab Test</h1>
-        <p className="text-gray-600">Provide accurate information and select your preferred collection method.</p>
+        <p className="text-gray-600">
+          Provide accurate information and select your preferred collection method.
+        </p>
       </div>
 
-      {/* Combined Form */}
-      <form onSubmit={handleSubmit} className="bg-white p-8 border rounded-lg shadow space-y-6">
-        {/* Collection Method */}
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white p-8 border rounded-lg shadow space-y-6"
+      >
         <div>
           <label className="block text-lg font-medium mb-2">Collection Method</label>
           <div className="flex gap-4">
@@ -96,11 +103,12 @@ const PlaceOrder = () => {
             </button>
           </div>
           {formData.collectionMethod && (
-            <p className="mt-2 text-green-600 font-medium">Selected: {formData.collectionMethod}</p>
+            <p className="mt-2 text-green-600 font-medium">
+              Selected: {formData.collectionMethod}
+            </p>
           )}
         </div>
 
-        {/* Form Inputs */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm mb-1 font-medium">Full Name</label>
@@ -198,7 +206,6 @@ const PlaceOrder = () => {
           </div>
         </div>
 
-        {/* Submit */}
         <div className="flex justify-between">
           <button
             type="button"
