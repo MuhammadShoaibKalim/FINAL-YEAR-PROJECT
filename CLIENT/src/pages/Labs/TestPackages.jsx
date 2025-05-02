@@ -1,16 +1,20 @@
+// TestPackages.jsx
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { AiOutlineArrowRight } from "react-icons/ai";
 import { FaStar, FaEye, FaMapMarkerAlt } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import CartSection from "../../components/Cart/CartSection";
 import { setCurrentLabId } from "../../redux/LabSlice";
+import { addItem } from "../../redux/CartSlice";
 
 const TestPackages = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
+  const cartItems = useSelector((state) => state.cart.items);
+
   const [tests, setTests] = useState([]);
   const [packages, setPackages] = useState([]);
   const [labDetails, setLabDetails] = useState(null);
@@ -18,28 +22,12 @@ const TestPackages = () => {
   const [sortOption, setSortOption] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
-  const [cartItems, setCartItems] = useState([]);
   const [addingItemId, setAddingItemId] = useState(null);
-
-
-  const fetchCartItems = async () => {
-    try {
-      const res = await axios.get("/api/cart", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-        },
-      });
-      if (res.data.success) {
-        setCartItems(res.data.cartItems);
-      }
-    } catch (err) {
-      console.error("Fetch cart error:", err);
-    }
-  };
 
   const handleAddToCart = async (item) => {
     try {
       setAddingItemId(item._id);
+
       const response = await axios.post(
         "/api/cart/add",
         {
@@ -65,7 +53,8 @@ const TestPackages = () => {
           labId: id,
           quantity: 1,
         };
-        setCartItems((prev) => [...prev, newCartItem]);
+
+        dispatch(addItem(newCartItem));
         toast.success("Item added to cart");
       } else {
         toast.error(response.data.message || "Failed to add to cart");
@@ -77,29 +66,6 @@ const TestPackages = () => {
       setAddingItemId(null);
     }
   };
-
-
-
-  const handleRemoveFromCart = async (itemId) => {
-    try {
-      const res = await axios.delete(`/api/cart/remove/${itemId}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-        },
-      });
-
-      if (res.data.success) {
-        toast.success("Removed from cart");
-        fetchCartItems();
-      }
-    } catch (error) {
-      console.error("Remove cart item error:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchCartItems();
-  }, []);
 
   const renderStars = (rating) => {
     const fullStars = Math.floor(rating);
@@ -186,16 +152,11 @@ const TestPackages = () => {
         Back to Labs
       </button>
 
-      {/* Lab Info */}
       {labDetails && (
         <div className="flex flex-col md:flex-row bg-bg-primary rounded-4xl shadow-primary p-10 border border-border-light mb-12 items-center md:items-start gap-12">
           <div className="w-full md:w-1/3 flex justify-center">
             <div className="w-72 h-72 rounded-4xl overflow-hidden border-4 border-primary shadow-lg">
-              <img
-                src={labDetails.image}
-                alt={labDetails.name}
-                className="w-full h-full object-cover object-center"
-              />
+              <img src={labDetails.image} alt={labDetails.name} className="w-full h-full object-cover object-center" />
             </div>
           </div>
           <div className="flex-1 relative">
@@ -219,8 +180,8 @@ const TestPackages = () => {
         </div>
       )}
 
-      {/* Filters */}
       <h1 className="text-3xl font-bold text-primary mb-4">Tests & Packages</h1>
+
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
         <input
           type="text"
@@ -244,15 +205,13 @@ const TestPackages = () => {
         </select>
       </div>
 
-      {/* Type Filter */}
       <div className="mb-8">
         <div className="flex gap-4">
           {["All", "Test", "Package"].map((type) => (
             <button
               key={type}
               onClick={() => handleFilter(type)}
-              className={`px-4 py-2 border rounded-lg shadow transition ${activeFilter === type ? "bg-primary text-white" : "text-primary border-primary"
-                }`}
+              className={`px-4 py-2 border rounded-lg shadow transition ${activeFilter === type ? "bg-primary text-white" : "text-primary border-primary"}`}
             >
               {type}
             </button>
@@ -260,13 +219,9 @@ const TestPackages = () => {
         </div>
       </div>
 
-      {/* Tests & Packages Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {combined.map((item) => (
-          <div
-            key={item._id}
-            className="bg-white rounded-xl shadow-lg p-5 relative flex flex-col justify-between hover:shadow-2xl transition duration-200 border"
-          >
+          <div key={item._id} className="bg-white rounded-xl shadow-lg p-5 relative flex flex-col justify-between hover:shadow-2xl transition duration-200 border">
             <div className="flex justify-between items-center text-sm mb-3 text-gray-600">
               <div className="flex items-center gap-1"><FaEye /> {item.bookedCount || 0}</div>
               <div className="flex items-center gap-1">{renderStars(item.rating || 0)}</div>
@@ -286,17 +241,11 @@ const TestPackages = () => {
             <div className="flex flex-col gap-2 mt-auto">
               <button
                 disabled={addingItemId === item._id}
-                onClick={() => {
-                  
-                  setAddingItemId(item._id);
-                  handleAddToCart(item).finally(() => setAddingItemId(null));
-                }}
-                className={`bg-primary text-white rounded-md py-2 transition ${addingItemId === item._id ? "opacity-60 cursor-not-allowed" : "hover:bg-primary-hover"
-                  }`}
+                onClick={() => handleAddToCart(item)}
+                className={`bg-primary text-white rounded-md py-2 transition ${addingItemId === item._id ? "opacity-60 cursor-not-allowed" : "hover:bg-primary-hover"}`}
               >
                 {addingItemId === item._id ? "Adding..." : "Add to Cart"}
               </button>
-
 
               <button
                 className="border border-primary text-primary rounded-md py-2 hover:bg-gray-50 transition"
@@ -309,7 +258,7 @@ const TestPackages = () => {
         ))}
       </div>
 
-      <CartSection cartItems={cartItems} onRemove={handleRemoveFromCart} />
+      <CartSection />
 
       {selectedItem && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
