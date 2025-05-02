@@ -86,16 +86,16 @@ const HeaderUser = () => {
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                   className="flex items-center space-x-2 text-gray-600 hover:text-primary transition-colors duration-200"
                 >
-                 {user?.image ? (
-  <img
-    src={user.image}
-    alt="Profile"
-    className="w-8 h-8 rounded-full object-cover border border-gray-300"
-  />
-) : (
-  <FaUserCircle className="text-2xl text-gray-600" />
-)}
-<span className="text-sm font-medium">{user?.firstName || 'User'}</span>
+                  {user?.image ? (
+                    <img
+                      src={user.image}
+                      alt="Profile"
+                      className="w-8 h-8 rounded-full object-cover border border-gray-300"
+                    />
+                  ) : (
+                    <FaUserCircle className="text-2xl text-gray-600" />
+                  )}
+                  <span className="text-sm font-medium">{user?.firstName || 'User'}</span>
 
                 </button>
 
@@ -106,7 +106,7 @@ const HeaderUser = () => {
                       <p className="text-xs text-gray-500">{user?.email || 'user@example.com'}</p>
                     </div> */}
                     <Link
-                      to="/userprofile"
+                      to="/user"
                       className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                       onClick={() => setIsProfileOpen(false)}
                     >
@@ -165,15 +165,15 @@ const HeaderUser = () => {
                 <div className="pt-4 pb-3 border-t border-gray-200">
                   <div className="px-3 py-2 border-b border-gray-100">
                     <div className="flex items-center space-x-2">
-                    {user?.image ? (
-  <img
-    src={user.image}
-    alt="Profile"
-    className="w-8 h-8 rounded-full object-cover border border-gray-300"
-  />
-) : (
-  <FaUserCircle className="text-xl text-gray-600" />
-)}
+                      {user?.image ? (
+                        <img
+                          src={user.image}
+                          alt="Profile"
+                          className="w-8 h-8 rounded-full object-cover border border-gray-300"
+                        />
+                      ) : (
+                        <FaUserCircle className="text-xl text-gray-600" />
+                      )}
 
                       <div>
                         <p className="font-medium text-gray-900">{user?.firstName || 'User'}</p>
@@ -181,14 +181,14 @@ const HeaderUser = () => {
                     </div>
                   </div>
                   <Link
-                    to="/userprofile"
+                    to="/user"
                     onClick={() => setIsOpen(false)}
                     className="flex items-center px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50 rounded-md transition-colors duration-200"
                   >
                     <FaChartLine className="mr-2" /> Dashboard
                   </Link>
                   <Link
-                    to="/userprofile"
+                    to="/user"
                     onClick={() => setIsOpen(false)}
                     className="flex items-center px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50 rounded-md transition-colors duration-200"
                   >
@@ -205,10 +205,10 @@ const HeaderUser = () => {
                   </button>
                 </div>
               </div>
-      </div>
+            </div>
           )}
         </nav>
-    </header>
+      </header>
     </>
   );
 };
