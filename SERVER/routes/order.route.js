@@ -21,7 +21,7 @@ const router = express.Router();
 
 // Order routes
 router.post("/create", isAuthenticated, createOrder);
-router.get("/my", isAuthenticated, getUserOrders);
+router.get("/user", isAuthenticated, getUserOrders);
 router.get("/all", isAuthenticated, isLabAdmin, getAllOrders);
 router.put("/:id/status", isAuthenticated, isLabAdmin, updateOrderStatus);
 router.put("/:id/cancel", isAuthenticated, cancelOrder);
@@ -35,6 +35,7 @@ router.get('/', isAuthenticated, getUserCart);
 router.get('/:id', isAuthenticated, getCartItem);
 router.delete('/remove/:id', isAuthenticated, removeFromCart);
 router.delete('/clear', isAuthenticated, clearCart);
+
 
 export default router;
 
