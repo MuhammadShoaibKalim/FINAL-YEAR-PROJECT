@@ -7,61 +7,74 @@ import { useNavigate } from "react-router-dom";
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 const Payment = () => {
-  const items = useSelector((state) => state.cart.items || []);
   const [formData, setFormData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [cartItems, setCartItems] = useState([]);
+  const [total, setTotal] = useState(0);
   const navigate = useNavigate();
-
-  const totalAmount = items.reduce(
-    (acc, item) => acc + item.price * item.quantity,
-    0
-  );
 
   useEffect(() => {
     const storedData = localStorage.getItem("bookingData");
-    if (storedData) {
-      const parsedData = JSON.parse(storedData);
-      console.log("Loaded formData:", parsedData);
-      setFormData(parsedData);
-    } else {
+    if (!storedData) {
       alert("Booking details not found!");
-      navigate(-1); 
+      navigate(-1);
+    } else {
+      setFormData(JSON.parse(storedData));
     }
+
+    const fetchCart = async () => {
+      try {
+        const res = await fetch("/api/cart", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        });
+        const data = await res.json();
+        if (data.success) {
+          const updated = data.cartItems.map((item) => ({
+            ...item,
+            quantity: item.quantity || 1,
+            totalPrice: item.price * (item.quantity || 1),
+          }));
+          setCartItems(updated);
+          const totalAmt = updated.reduce((sum, item) => sum + item.totalPrice, 0);
+          setTotal(totalAmt);
+        } else {
+          setCartItems([]);
+        }
+      } catch (err) {
+        console.error("Failed to fetch cart:", err);
+      }
+    };
+
+    fetchCart();
   }, [navigate]);
 
   const makePayment = async () => {
-    if (items.length === 0) {
+    if (cartItems.length === 0) {
       alert("Cart is empty.");
       return;
     }
-
     try {
       setIsLoading(true);
       const stripe = await stripePromise;
 
-      const response = await fetch(
-        "http://localhost:5000/api/payment/create-checkout-session",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-          },
-          body: JSON.stringify({ items }),
-        }
-      );
+      const response = await fetch("/api/payment/create-checkout-session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+        body: JSON.stringify({ items: cartItems }),
+      });
 
       const session = await response.json();
-
       if (!session.id) {
-        alert("Failed to create session");
+        alert("Failed to create Stripe session");
         return;
       }
 
-      const result = await stripe.redirectToCheckout({
-        sessionId: session.id,
-      });
-
+      const result = await stripe.redirectToCheckout({ sessionId: session.id });
       if (result.error) {
         console.error(result.error.message);
         alert("Stripe redirect failed.");
@@ -91,46 +104,31 @@ const Payment = () => {
       {formData ? (
         <div className="p-4 border border-gray-200 rounded-lg">
           <div className="mb-4">
-            <p className="text-lg">
-              <strong>Name:</strong> {formData.name}
-            </p>
-            <p className="text-lg">
-              <strong>Email:</strong> {formData.email}
-            </p>
-            <p className="text-lg">
-              <strong>Phone:</strong> {formData.phoneNumber}
-            </p>
-            <p className="text-lg">
-              <strong>Collection Method:</strong>{" "}
-              {formData.collectionMethod || "Not selected"}
-            </p>
+            <p className="text-lg"><strong>Name:</strong> {formData.name}</p>
+            <p className="text-lg"><strong>Email:</strong> {formData.email}</p>
+            <p className="text-lg"><strong>Phone:</strong> {formData.phoneNumber}</p>
+            <p className="text-lg"><strong>Collection:</strong> {formData.collectionMethod}</p>
           </div>
 
           <h3 className="text-xl font-semibold mt-6 mb-2">Order Summary</h3>
 
-          {items.length > 0 ? (
+          {cartItems.length > 0 ? (
             <>
-              {items.map((item) => (
+              {cartItems.map((item) => (
                 <div
-                  key={item.id}
+                  key={item._id}
                   className="flex justify-between items-center mb-4 p-4 bg-gray-100 rounded-lg"
                 >
                   <div>
                     <p className="text-lg font-semibold">{item.name}</p>
-                    <p className="text-sm text-gray-600">
-                      Price: Rs {item.price}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Quantity: {item.quantity}
-                    </p>
+                    <p className="text-sm text-gray-600">Price: Rs {item.price}</p>
+                    <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
                   </div>
-                  <p className="text-xl font-bold">
-                    Rs {item.price * item.quantity}
-                  </p>
+                  <p className="text-xl font-bold">Rs {item.totalPrice}</p>
                 </div>
               ))}
               <div className="text-right font-bold text-lg mt-2">
-                Total: Rs {totalAmount}
+                Total: Rs {total}
               </div>
             </>
           ) : (
