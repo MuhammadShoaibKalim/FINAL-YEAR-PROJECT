@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
+import { loadStripe } from "@stripe/stripe-js";
+import { toast } from "react-hot-toast";
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 const ConfirmBookingDetails = () => {
   const navigate = useNavigate();
@@ -8,17 +12,10 @@ const ConfirmBookingDetails = () => {
   const [totalAmount, setTotalAmount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isPaying, setIsPaying] = useState(false);
-  const [formData, setFormData] = useState(null);
+
+  const bookingData = JSON.parse(localStorage.getItem("bookingData")) || {};
 
   useEffect(() => {
-    const storedData = localStorage.getItem("bookingData");
-    if (storedData) {
-      setFormData(JSON.parse(storedData));
-    } else {
-      alert("Booking details not found!");
-      navigate(-1);
-    }
-
     const fetchCart = async () => {
       try {
         const res = await fetch("/api/cart", {
@@ -56,20 +53,41 @@ const ConfirmBookingDetails = () => {
     };
 
     fetchCart();
-  }, [navigate]);
+  }, []);
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     setIsPaying(true);
-    setTimeout(() => {
-      navigate("/payment", {
-        state: {
-          user: JSON.parse(localStorage.getItem("user")) || {},
-          bookingData: formData,
-          cartItems,
-          totalAmount,
+    try {
+      localStorage.setItem("bookingData", JSON.stringify(bookingData));
+      
+
+      const stripe = await stripePromise;
+      const response = await fetch("/api/payment/create-checkout-session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
+        body: JSON.stringify({ items: cartItems }),
       });
-    }, 500);
+
+      const session = await response.json();
+      if (!session.id) {
+        toast.error("Failed to create Stripe session");
+        return;
+      }
+
+      const result = await stripe.redirectToCheckout({ sessionId: session.id });
+      if (result.error) {
+        console.error(result.error.message);
+        toast.error("Stripe redirect failed");
+      }
+    } catch (error) {
+      console.error("Payment error:", error);
+      toast.error("Payment failed. Try again later.");
+    } finally {
+      setIsPaying(false);
+    }
   };
 
   if (loading) return <p className="text-center">Loading booking details...</p>;
@@ -89,16 +107,16 @@ const ConfirmBookingDetails = () => {
         <div className="bg-white p-6 rounded shadow-md border flex-1">
           <h2 className="text-xl font-bold mb-4 text-primary">Patient Details</h2>
           <ul className="space-y-1 text-gray-800">
-            <li><strong>Name:</strong> {formData?.name}</li>
-            <li><strong>Email:</strong> {formData?.email}</li>
-            <li><strong>Phone:</strong> {formData?.phoneNumber}</li>
-            <li><strong>Age:</strong> {formData?.age}</li>
-            <li><strong>Gender:</strong> {formData?.gender}</li>
-            <li><strong>Address:</strong> {formData?.address}</li>
-            <li><strong>State:</strong> {formData?.state}</li>
-            <li><strong>Collection Method:</strong> {formData?.collectionMethod}</li>
-            <li><strong>Date:</strong> {formData?.bookingDate}</li>
-            <li><strong>Time:</strong> {formData?.bookingTime}</li>
+            <li><strong>Name:</strong> {bookingData.name}</li>
+            <li><strong>Email:</strong> {bookingData.email}</li>
+            <li><strong>Phone:</strong> {bookingData.phoneNumber}</li>
+            <li><strong>Age:</strong> {bookingData.age}</li>
+            <li><strong>Gender:</strong> {bookingData.gender}</li>
+            <li><strong>Address:</strong> {bookingData.address}</li>
+            <li><strong>State:</strong> {bookingData.state}</li>
+            <li><strong>Collection Method:</strong> {bookingData.collectionMethod}</li>
+            <li><strong>Date:</strong> {bookingData.bookingDate}</li>
+            <li><strong>Time:</strong> {bookingData.bookingTime}</li>
           </ul>
         </div>
 
@@ -132,9 +150,9 @@ const ConfirmBookingDetails = () => {
           onClick={handlePayment}
           disabled={isPaying}
           className={`w-full text-white text-lg py-3 rounded transition 
-          ${isPaying ? 'bg-primary cursor-not-allowed' : 'bg-gray hover:bg-gray/90'}`}
+          ${isPaying ? 'bg-primary cursor-not-allowed' : 'bg-primary hover:bg-primary-dark'}`}
         >
-          {isPaying ? 'Processing...' : 'Pay Now'}
+          {isPaying ? 'Processing...' : 'Proceed to Payment'}
         </button>
       </div>
     </div>
