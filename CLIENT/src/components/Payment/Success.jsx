@@ -1,19 +1,55 @@
-import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-hot-toast";
 
-const Success = () => {
-    return (
-      <div className="p-6 mt-32 max-w-6xl mx-auto text-center">
-        <h2>Payment Successful 🎉</h2>
-        <p>Thank you for your payment!</p>
-        {/* Go to Home Page */}
-        <Link to="/">
-          <button className="mt-4 bg-primary text-white py-2 px-4 rounded hover:bg-primary-dark">
-            Go to Home
-          </button>
-          </Link>
-      </div>
-    );
-  };
-  
-  export default Success;
-  
+const PaymentSuccess = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const completeOrder = async () => {
+      const bookingData = JSON.parse(localStorage.getItem("bookingData")) || {};
+
+      try {
+        const res = await fetch("/api/orders/create", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+          body: JSON.stringify(bookingData), 
+        });
+        
+
+        if (!res.ok) {
+          throw new Error("Order creation failed");
+        }
+
+        await fetch("/api/cart/clear", {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        });
+
+        toast.success("Order placed and cart cleared successfully!");
+        localStorage.removeItem("bookingData");
+        navigate("/profile/orders"); // needed to adjust
+
+      } catch (err) {
+        console.error("Error placing order:", err);
+        toast.error("Something went wrong while saving your order.");
+      }
+    };
+
+    completeOrder();
+  }, [navigate]);
+
+  return (
+    <div className="text-center mt-20">
+      <h1 className="text-2xl font-bold text-green-600">Payment Successful ✅</h1>
+      <p>Processing your order, please wait...</p>
+    </div>
+  );
+};
+
+export default PaymentSuccess;
