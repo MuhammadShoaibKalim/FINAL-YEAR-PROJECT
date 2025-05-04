@@ -68,8 +68,16 @@ const ConfirmBookingDetails = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
-        body: JSON.stringify({ items: cartItems }),
+        body: JSON.stringify({
+          items: cartItems.map((item) => ({
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity || 1, 
+          })),
+        }),
       });
+      
+      
 
       const session = await response.json();
       if (!session.id) {
