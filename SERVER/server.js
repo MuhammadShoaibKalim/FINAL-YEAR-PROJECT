@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import orderRoutes from "./routes/order.route.js";
+import cartRoutes from "./routes/cart.route.js";
 import labAdminRoutes from "./routes/admin.route.js";
 import superAdminRoutes from "./routes/admin.route.js";
 import {protect} from './middlewares/auth.middleware.js';
@@ -39,7 +40,7 @@ app.use("/api/packages", testPackageRoutes );
 app.use("/api/users", userRoutes)
 app.use("/api/query", queryRoutes);
 app.use('/api/get-recommendation', recommendationRoutes)
-app.use("/api/cart", orderRoutes);
+app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/payment", paymentRoutes);
 
