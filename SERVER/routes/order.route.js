@@ -1,43 +1,33 @@
+// ✅ routes/order.routes.js
 import express from "express";
 import {
   createOrder,
   getUserOrders,
+  getAllOrders,
+  getLabOrders,
   updateOrderStatus,
   deleteOrder,
-  getAllOrders,
   cancelOrder,
-  addToCart,
-  removeFromCart,
-  getUserCart,
-  getCartItem,
-  clearCart
+  getOrderById,
 } from "../controllers/order.controller.js";
-import { 
-  isAuthenticated,
-  isLabAdmin 
-} from "../middlewares/auth.middleware.js";
-const router = express.Router();
 
+import { isAuthenticated, isLabAdmin } from "../middlewares/auth.middleware.js";
+import upload from "../middlewares/upload.middleware.js";
+
+const router = express.Router();
 
 // Order routes
 router.post("/create", isAuthenticated, createOrder);
 router.get("/user", isAuthenticated, getUserOrders);
 router.get("/all", isAuthenticated, isLabAdmin, getAllOrders);
-router.put("/:id/status", isAuthenticated, isLabAdmin, updateOrderStatus);
+router.get("/lab", isAuthenticated, isLabAdmin, getLabOrders);
+
+// router.put("/:id/status", isAuthenticated, isLabAdmin,upload.single("report"), updateOrderStatus);
+router.put("/:id/update-status", isAuthenticated, isLabAdmin, upload.single("report"), updateOrderStatus);
+// router.put("/:id/update-status", isAuthenticated, isLabAdmin, updateOrderStatus);
 router.put("/:id/cancel", isAuthenticated, cancelOrder);
 router.delete("/:id", isAuthenticated, isLabAdmin, deleteOrder);
 
-
-
-// Cart routes
-router.post('/add', isAuthenticated, addToCart);
-router.get('/', isAuthenticated, getUserCart);
-router.get('/:id', isAuthenticated, getCartItem);
-router.delete('/remove/:id', isAuthenticated, removeFromCart);
-router.delete('/clear', isAuthenticated, clearCart);
-
+router.get("/:id", isAuthenticated, getOrderById);
 
 export default router;
-
-
-
