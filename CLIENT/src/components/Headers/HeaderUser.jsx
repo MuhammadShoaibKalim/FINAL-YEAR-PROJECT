@@ -112,13 +112,7 @@ const HeaderUser = () => {
                     >
                       <FaChartLine className="mr-2" /> Dashboard
                     </Link>
-                    {/* <Link
-                      to="/userprofile"
-                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                      onClick={() => setIsProfileOpen(false)}
-                    >
-                      <FaUserCircle className="mr-2" /> Profile
-                    </Link> */}
+                    
                     <button
                       onClick={() => {
                         setIsProfileOpen(false);
