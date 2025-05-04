@@ -1,63 +1,90 @@
 import React, { useEffect, useState } from "react";
 import { FaDownload, FaFileAlt } from "react-icons/fa";
 
+// Utility function to get the file name from Cloudinary URL
+function getCloudinaryFileName(url) {
+  try {
+    const parts = url.split("/");
+    const fileWithExt = parts[parts.length - 1];
+    const name = fileWithExt.split(".")[0]; 
+    return name;
+  } catch {
+    return "report";
+  }
+}
+
 const UserReports = () => {
-  const [reports, setReports] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchReports = async () => {
-    try {
-      const res = await fetch("/api/results/user", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-        },
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        setReports(data.reports);
-      } else {
-        console.error("Failed to fetch reports");
-      }
-    } catch (err) {
-      console.error("Error fetching reports:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchReports();
+    const fetchOrders = async () => {
+      try {
+        const res = await fetch("/api/orders/user", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        });
+        const data = await res.json();
+        if (res.ok && data.orders) {
+          setOrders(data.orders);
+        } else {
+          console.error("No orders found or invalid response");
+        }
+      } catch (err) {
+        console.error("Error fetching reports:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
   }, []);
 
-  if (loading) return <p>Loading reports...</p>;
+  const ordersWithReports = orders.filter((order) => order.reportFile);
+
+  if (loading) {
+    return (
+      <div className="text-center py-10 text-gray-500 text-lg">
+        Loading reports...
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-4">
-      {reports.length === 0 ? (
-        <p className="text-gray-600">No reports available.</p>
+    <div className="bg-white shadow-md rounded-xl p-6 max-w-5xl mx-auto">
+      <h2 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-2 flex items-center gap-2">
+        <FaFileAlt className="text-primary" /> My Reports
+      </h2>
+
+      {ordersWithReports.length === 0 ? (
+        <p className="text-gray-500 text-center">No reports available yet.</p>
       ) : (
-        <div className="grid grid-cols-1 gap-4">
-          {reports.map((report) => (
+        <div className="space-y-4">
+          {ordersWithReports.map((order) => (
             <div
-              key={report._id}
-              className="p-4 border rounded-lg shadow flex justify-between items-center"
+              key={order._id}
+              className="border rounded-lg p-4 flex flex-col md:flex-row md:justify-between md:items-center gap-4 shadow-sm"
             >
               <div>
-                <h4 className="font-semibold text-lg">
-                  {report.testId?.name || report.packageId?.name || "Unnamed Report"}
+                <h4 className="text-lg font-semibold text-gray-800">
+                  Report for Order #{order._id.slice(-6)}
                 </h4>
-                <p className="text-sm text-gray-500">Status: {report.status}</p>
-                <p className="text-sm text-gray-500">Uploaded: {new Date(report.createdAt).toLocaleDateString()}</p>
+                <p className="text-sm text-gray-500">
+                  Date: {new Date(order.createdAt).toLocaleDateString()}
+                </p>
+                <p className="text-sm text-gray-500 capitalize">
+                  Status: <span className="font-medium">{order.status}</span>
+                </p>
               </div>
               <a
-                href={report.resultFile}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-primary text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-primary-dark"
-              >
-                <FaDownload /> Download
-              </a>
+  href={order.reportFile}
+  download
+  className="bg-primary text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-primary-dark transition"
+>
+  <FaDownload /> Download Report
+</a>
+
             </div>
           ))}
         </div>
