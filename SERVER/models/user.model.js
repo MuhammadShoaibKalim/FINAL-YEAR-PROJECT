@@ -60,15 +60,10 @@ const UserSchema = new mongoose.Schema(
       match: [/^\d{10,15}$/, "Please provide a valid phone number"],
       default: null,
     },
-    image:{
-      type: String,
-      default: '',
-      required:false
-    },
     image: {
-  type: String,
-  default: ''
-},
+     type: String,
+     default: ''
+  },
     role: {
       type: String,
       enum: ["superadmin", "labadmin", "user"],
