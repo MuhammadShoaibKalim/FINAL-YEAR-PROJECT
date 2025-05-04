@@ -1,81 +1,128 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { updateUser } from "../../redux/AuthSlice";
+import toast from "react-hot-toast";
 
-const UserProfileEdit = ({ user, onProfileUpdated }) => {
-  const [userData, setUserData] = useState({
-    firstName: user?.firstName || "",
-    lastName: user?.lastName || "",
-    phoneNo: user?.phoneNo || "",
-  });
+const EditProfile = () => {
+  const user = useSelector((state) => state.auth.user);
+  const dispatch = useDispatch();
+  const [formData, setFormData] = useState({ firstName: "", lastName: "", phoneNo: "" });
   const [file, setFile] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleProfileUpdate = async (e) => {
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        phoneNo: user.phoneNo || "",
+      });
+    }
+  }, [user]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!user || !user._id) {
-      return alert("User not loaded yet. Please wait...");
+      toast.error("User not loaded.");
+      return;
     }
 
-    const formData = new FormData();
-    formData.append("firstName", userData.firstName);
-    formData.append("lastName", userData.lastName);
-    formData.append("phoneNo", userData.phoneNo);
-    if (file) {
-      formData.append("image", file);
-    }
+    const data = new FormData();
+    data.append("firstName", formData.firstName);
+    data.append("lastName", formData.lastName);
+    data.append("phoneNo", formData.phoneNo);
+    if (file) data.append("image", file);
+
+    setLoading(true);
 
     try {
-      const response = await fetch(`/api/auth/profile/${user._id}`, {
+      const res = await fetch(`/api/auth/profile/${user._id}`, {
         method: "PUT",
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken') || sessionStorage.getItem('authToken')}`,
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
-        body: formData,
+        body: data,
       });
 
-      const result = await response.json();
+      const result = await res.json();
       if (result.success) {
-        alert("Profile updated successfully");
-        onProfileUpdated();  // You can reload user data or refresh page
+        toast.success("Profile updated successfully");
+        dispatch(updateUser());
       } else {
-        alert(result.message || "Update failed");
+        toast.error(result.message || "Update failed");
       }
     } catch (err) {
-      console.error("Update error:", err);
-      alert("An error occurred");
+      console.error("Update failed", err);
+      toast.error("An error occurred");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleProfileUpdate} className="space-y-3">
-      <input
-        className="w-full border p-2"
-        value={userData.firstName}
-        onChange={(e) => setUserData({ ...userData, firstName: e.target.value })}
-        placeholder="First Name"
-      />
-      <input
-        className="w-full border p-2"
-        value={userData.lastName}
-        onChange={(e) => setUserData({ ...userData, lastName: e.target.value })}
-        placeholder="Last Name"
-      />
-      <input
-        className="w-full border p-2"
-        value={userData.phoneNo}
-        onChange={(e) => setUserData({ ...userData, phoneNo: e.target.value })}
-        placeholder="Phone Number"
-      />
-      <input
-        type="file"
-        accept="image/*"
-        onChange={(e) => setFile(e.target.files[0])}
-      />
-      {file && <img src={URL.createObjectURL(file)} alt="Preview" className="w-24 h-24 rounded-full" />}
-      <button className="bg-primary text-white px-4 py-2 rounded" type="submit">
-        Update Profile
-      </button>
-    </form>
+    <div className="bg-white shadow-md rounded-xl p-6 max-w-4xl mx-auto">
+      <h2 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">Edit Profile</h2>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Image Preview */}
+        <div className="flex items-center gap-6">
+          <div className="w-24 h-24">
+            {file ? (
+              <img src={URL.createObjectURL(file)} alt="Preview" className="rounded-full object-cover w-24 h-24 border" />
+            ) : user?.image ? (
+              <img src={user.image} alt="Profile" className="rounded-full object-cover w-24 h-24 border" />
+            ) : (
+              <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 border">
+                No Image
+              </div>
+            )}
+          </div>
+          <input
+            type="file"
+            onChange={(e) => setFile(e.target.files[0])}
+            disabled={loading}
+            className="text-sm"
+          />
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <input
+            value={formData.firstName}
+            onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+            placeholder="First Name"
+            className="border p-3 w-full rounded"
+            disabled={loading}
+          />
+          <input
+            value={formData.lastName}
+            onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+            placeholder="Last Name"
+            className="border p-3 w-full rounded"
+            disabled={loading}
+          />
+        </div>
+
+        <input
+          value={formData.phoneNo}
+          onChange={(e) => setFormData({ ...formData, phoneNo: e.target.value })}
+          placeholder="Phone Number"
+          className="border p-3 w-full rounded"
+          disabled={loading}
+        />
+
+        {loading ? (
+          <button type="button" className="bg-gray-400 text-white px-6 py-2 rounded" disabled>
+            Updating...
+          </button>
+        ) : (
+          <button type="submit" className="bg-primary text-white px-6 py-2 rounded hover:bg-opacity-90 transition">
+            Update Profile
+          </button>
+        )}
+      </form>
+    </div>
   );
 };
 
-export default UserProfileEdit;
+export default EditProfile;
