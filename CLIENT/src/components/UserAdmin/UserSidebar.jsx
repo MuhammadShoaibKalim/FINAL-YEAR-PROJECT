@@ -6,7 +6,7 @@ const UserSidebar = () => {
     `flex items-center gap-2 p-2 rounded hover:bg-gray-100 ${isActive ? 'bg-teal-500 text-white' : 'text-gray-700'}`;
 
   return (
-    <div className="w-64 p-4 bg-white rounded shadow-lg mt-4">
+    <div className="w-64 p-4 bg-white rounded shadow-lg">
       <h2 className="text-lg font-bold mb-4 text-teal-600">My Profile</h2>
       <ul className="space-y-2">
         <li><NavLink to="profile" className={linkStyle}><FaUser /> Profile</NavLink></li>
