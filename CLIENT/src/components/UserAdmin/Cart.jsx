@@ -75,7 +75,7 @@ const Cart = () => {
 
   if (!cartItems || cartItems.length === 0) {
     return (
-      <div className="mt-10 p-6 bg-white rounded-xl shadow-md border">
+       <div className="bg-white shadow-md rounded-xl p-6 max-w-4xl mx-auto ">
         <h2 className="text-xl font-bold text-primary mb-4">Your Cart</h2>
         <p className="text-gray-500">No items in cart.</p>
       </div>
