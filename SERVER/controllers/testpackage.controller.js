@@ -12,17 +12,28 @@ export const createTest = async (req, res) => {
       return res.status(400).json({ error: "Name and price are required." });
     }
 
-    const lab = req.user.labId; 
+    // const lab = req.user.labId; 
 
-    const newTest = await Test.create({
-      name,
-      description,
-      price,
-      discount,
-      lab,
-      createdBy: req.user._id,
-      lab: req.user.assignedLab,
-    });
+    // const newTest = await Test.create({
+    //   name,
+    //   description,
+    //   price,
+    //   discount,
+    //   lab,
+    //   createdBy: req.user._id,
+    //   lab: req.user.assignedLab,
+    // });
+    const lab = req.user.assignedLab || req.user.labId || req.user.lab;
+
+const newTest = await Test.create({
+  name,
+  description,
+  price,
+  discount,
+  lab,
+  createdBy: req.user._id,
+});
+
 
     await Lab.findByIdAndUpdate(lab, { $push: { tests: newTest._id } });
 
