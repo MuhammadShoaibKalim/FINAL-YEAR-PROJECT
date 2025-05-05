@@ -1,6 +1,6 @@
 // ✅ controllers/order.controller.js
 import { Order, Cart } from '../models/order.model.js';
-
+import {Test, Package} from "../models/testpackage.model.js"
 export const createOrder = async (req, res) => {
   try {
     const {
@@ -48,6 +48,13 @@ export const createOrder = async (req, res) => {
       status: "Pending"
     });
 
+    for (const item of items) {
+      if (item.type === "Test") {
+        await Test.findByIdAndUpdate(item.testOrPackageId, { $inc: { bookedCount: 1 } });
+      } else if (item.type === "Package") {
+        await Package.findByIdAndUpdate(item.testOrPackageId, { $inc: { bookedCount: 1 } });
+      }
+    }
     await Cart.deleteMany({ userId: req.user.id });
     res.status(201).json({ message: "Order placed successfully", order: newOrder });
   } catch (err) {
@@ -65,9 +72,22 @@ export const getUserOrders = async (req, res) => {
   }
 };
 
+// export const getOrderById = async (req, res) => {
+//   try {
+//     const order = await Order.findById(req.params.id);
+//     if (!order) return res.status(404).json({ message: "Order not found" });
+//     res.status(200).json({ order });
+//   } catch (error) {
+//     res.status(500).json({ message: "Failed to fetch order" });
+//   }
+// };
+
 export const getOrderById = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id);
+    const order = await Order.findById(req.params.id)
+      .populate("items.labId", "name")  
+      .populate("userId", "firstName lastName email");
+
     if (!order) return res.status(404).json({ message: "Order not found" });
     res.status(200).json({ order });
   } catch (error) {
@@ -87,7 +107,9 @@ export const getAllOrders = async (req, res) => {
 export const getLabOrders = async (req, res) => {
   try {
     const labId = req.user.labId;
-    const orders = await Order.find({ "items.labId": labId });
+    // const orders = await Order.find({ "items.labId": labId });
+    const orders = await Order.find({ "items.labId": labId }).sort({ updatedAt: -1 });
+
     res.status(200).json({ message: "Orders for this lab", orders });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -101,7 +123,7 @@ export const updateOrderStatus = async (req, res) => {
     const paymentStatus = req.body.paymentStatus?.toString();
     const completionDate = req.body.completionDate;
 
-    const validStatuses = ["Pending", "Approved", "Completed", "Cancelled"];
+    const validStatuses = ["Pending", "Approved", "Completed", "Cancelled","Progress"];
     const validPayments = ["pending", "paid", "unpaid"];
 
     if (!validStatuses.includes(status)) {
