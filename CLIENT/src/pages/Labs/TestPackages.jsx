@@ -23,11 +23,12 @@ const TestPackages = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
   const [addingItemId, setAddingItemId] = useState(null);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [userRating, setUserRating] = useState(0);
 
   const handleAddToCart = async (item) => {
     try {
       setAddingItemId(item._id);
-
       const response = await axios.post(
         "/api/cart/add",
         {
@@ -43,7 +44,6 @@ const TestPackages = () => {
           },
         }
       );
-
       if (response.data.success) {
         const newCartItem = {
           _id: response.data.itemId || item._id,
@@ -53,7 +53,6 @@ const TestPackages = () => {
           labId: id,
           quantity: 1,
         };
-
         dispatch(addItem(newCartItem));
         toast.success("Item added to cart");
       } else {
@@ -64,6 +63,32 @@ const TestPackages = () => {
       toast.error(err.response?.data?.message || "Failed to add to cart");
     } finally {
       setAddingItemId(null);
+    }
+  };
+
+  const submitFeedback = async (itemId, type) => {
+    try {
+      await axios.post(
+        "/api/tests/feedback/add",
+        {
+          testOrPackageId: itemId,
+          type,
+          rating: userRating,
+          comment: feedbackText,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        }
+      );
+      toast.success("Feedback submitted");
+      setFeedbackText("");
+      setUserRating(0);
+      setSelectedItem(null);
+    } catch (error) {
+      toast.error("Failed to submit feedback");
+
     }
   };
 
@@ -203,6 +228,7 @@ const TestPackages = () => {
           <option value="rating">Rating: High to Low</option>
           <option value="lowrating">Rating: Low to High</option>
         </select>
+
       </div>
 
       <div className="mb-8">
@@ -257,9 +283,7 @@ const TestPackages = () => {
           </div>
         ))}
       </div>
-
       <CartSection />
-
       {selectedItem && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-8 rounded-lg max-w-md w-full relative shadow-lg space-y-4">
@@ -268,9 +292,36 @@ const TestPackages = () => {
               <div className="text-yellow-400 text-lg">{renderStars(selectedItem.rating || 0)}</div>
             </div>
             <div className="text-gray-700">{selectedItem.description}</div>
-            <div className="flex justify-between items-center">
-              <span className="text-lg font-semibold text-primary">PKR {selectedItem.price}</span>
-              <button onClick={closeModal} className="text-red-500 hover:underline">Close</button>
+            <div className="flex flex-col gap-4">
+              <label className="text-sm font-medium">Rate this {selectedItem.type.toLowerCase()}</label>
+              <select
+                value={userRating}
+                onChange={(e) => setUserRating(Number(e.target.value))}
+                className="border p-2 rounded"
+              >
+                <option value={0}>Select rating</option>
+                {[1, 2, 3, 4, 5].map((val) => (
+                  <option key={val} value={val}>{val} Star{val > 1 ? "s" : ""}</option>
+                ))}
+              </select>
+              <textarea
+                value={feedbackText}
+                onChange={(e) => setFeedbackText(e.target.value)}
+                placeholder="Write feedback..."
+                className="border p-2 rounded"
+              />
+              <button
+                onClick={() => submitFeedback(selectedItem._id, selectedItem.type)}
+                className="bg-primary text-white py-2 rounded hover:bg-primary-dark"
+              >
+                Submit Feedback
+              </button>
+              <button
+                onClick={closeModal}
+                className="text-red-500 hover:underline"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>
