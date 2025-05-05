@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { FaUser, FaEnvelope, FaPhoneAlt, FaFlask } from "react-icons/fa";
+import { FaUser, FaEnvelope, FaPhoneAlt, FaFlask, FaRegAddressCard } from "react-icons/fa";
 import { MdOutlineCheckCircle, MdCancel } from "react-icons/md";
-import { FaRegAddressCard } from "react-icons/fa";
 import { CiLocationOn } from "react-icons/ci";
 
 const LabAdminProfileSettings = () => {
@@ -62,15 +61,15 @@ const LabAdminProfileSettings = () => {
   if (loading) return <div className="text-center py-10">Loading...</div>;
 
   return (
-    <div className="bg-white p-8 rounded-lg shadow-lg mt-10 w-full max-w-6xl mx-auto">
+    <div className="bg-bg-primary p-8 rounded-lg shadow-primary mt-10 w-full max-w-6xl mx-auto">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h2 className="text-2xl font-bold text-primary">Welcome to Lab Admin Profile Settings</h2>
-          <p className="text-gray-600">Manage your personal and lab details from here.</p>
+          <p className="text.text-secondary">Manage your personal and lab details from here.</p>
         </div>
         <div className="flex gap-4">
-          <button onClick={() => setActiveTab("profile")} className={`px-4 py-2 rounded-md font-semibold ${activeTab === "profile" ? "bg-primary text-white" : "bg-gray-300 text-gray-700"}`}>Profile</button>
-          <button onClick={() => setActiveTab("lab")} className={`px-4 py-2 rounded-md font-semibold ${activeTab === "lab" ? "bg-primary text-white" : "bg-gray-300 text-gray-700"}`}>Lab</button>
+          <button onClick={() => setActiveTab("profile")} className={`px-4 py-2 rounded-md font-semibold ${activeTab === "profile" ? "bg-primary text-white" : "bg.gray.light text.text-dark"}`}>Profile</button>
+          <button onClick={() => setActiveTab("lab")} className={`px-4 py-2 rounded-md font-semibold ${activeTab === "lab" ? "bg-primary text-white" : "bg.gray.light text.text-dark"}`}>Lab</button>
         </div>
       </div>
 
@@ -217,8 +216,8 @@ const LabSection = ({ lab, labForm, setLabForm, labImagePreview, setLabImagePrev
           <img src={labImagePreview || "https://via.placeholder.com/300x200"} alt="Lab" className="w-32 h-32 rounded-lg object-cover border-4 border-primary" />
         </label>
         <div className="flex items-center">
-          {lab?.isActive ? <MdOutlineCheckCircle className="text-green-500" size={24} /> : <MdCancel className="text-red-500" size={24} />}
-          <span className="ml-2 text-gray-700">{lab?.isActive ? "Active" : "Inactive"}</span>
+          {lab?.isActive ? <MdOutlineCheckCircle className="text-success" size={24} /> : <MdCancel className="text-error" size={24} />}
+          <span className="ml-2 text.text-dark">{lab?.isActive ? "Active" : "Inactive"}</span>
         </div>
       </div>
 
@@ -244,11 +243,11 @@ const LabSection = ({ lab, labForm, setLabForm, labImagePreview, setLabImagePrev
 };
 
 const ViewField = ({ icon, title, value }) => (
-  <div className="flex items-center gap-4 bg-gray-100 rounded-md p-4">
+  <div className="flex items-center gap-4 bg.gray.lighter rounded-md p-4">
     <div className="text-primary">{icon}</div>
     <div>
-      <p className="text-xs text-gray-400">{title}</p>
-      <p className="text-lg font-semibold text-gray-700">{value || "-"}</p>
+      <p className="text-xs text.text-light">{title}</p>
+      <p className="text-lg font-semibold text.text-dark">{value || "-"}</p>
     </div>
   </div>
 );
@@ -259,7 +258,7 @@ const InputField = ({ name, value, onChange }) => (
     name={name}
     value={value}
     onChange={onChange}
-    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+    className="w-full px-4 py-2 border border.border.DEFAULT rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
     placeholder={name.charAt(0).toUpperCase() + name.slice(1)}
   />
 );
@@ -275,7 +274,7 @@ const ActionButtons = ({ editing, onEdit, onSave, onCancel }) => (
         <button onClick={onSave} className="bg-secondary text-white px-6 py-2 rounded-md hover:bg-primary/90">
           Save
         </button>
-        <button onClick={onCancel} className="bg-gray-400 text-white px-6 py-2 rounded-md hover:bg-gray-500">
+        <button onClick={onCancel} className="bg.gray.dark text-white px-6 py-2 rounded-md hover:bg.gray.DEFAULT">
           Cancel
         </button>
       </>
