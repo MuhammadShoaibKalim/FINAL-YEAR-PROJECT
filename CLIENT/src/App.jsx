@@ -209,7 +209,7 @@ const App = () => {
             <Route index element={<LabOverview />} />
             <Route path="labdashboard" element={<LabOverview />} />
             <Route path="profile" element={<LabProfile />} />
-            <Route path="orders" element = {<Orders/>}/>
+            <Route path="orders" element={<Orders />} />
             <Route path="orders/edit/:orderId" element={<OrderEdit />} />
             {/* <Route path="orders/:orderId" element={<OrderEdit />} /> */}
             <Route path="reports" element={<Reports />} />
