@@ -58,7 +58,7 @@ export default function AddCustomTest({ onClose }) {
       });
 
       toast.success(`${type} added successfully!`);
-      navigate("/labadmin/lab/tests");
+      onClose();
     } catch (err) {
       console.error("Error adding test/package", err);
       toast.error("Failed to add item. Please try again.");
