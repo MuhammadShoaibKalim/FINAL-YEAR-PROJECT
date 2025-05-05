@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { FaTimes } from "react-icons/fa";
+
+
+function formatTimeTo12Hour(time24) {
+  const [hours, minutes] = time24.split(':');
+  const date = new Date();
+  date.setHours(+hours);
+  date.setMinutes(+minutes);
+  return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+}
+
 
 const OrderEdit = () => {
   const { orderId } = useParams();
@@ -11,7 +22,6 @@ const OrderEdit = () => {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // ✅ Fetch order details
   useEffect(() => {
     const fetchOrder = async () => {
       try {
@@ -37,7 +47,6 @@ const OrderEdit = () => {
     fetchOrder();
   }, [orderId]);
 
-  // ✅ Submit form data using FormData
   const handleUpdateOrder = async () => {
     if (!status || !paymentStatus) {
       toast.error("Both status and payment status are required.");
@@ -47,7 +56,7 @@ const OrderEdit = () => {
     const formData = new FormData();
     formData.append("status", status);
     formData.append("paymentStatus", paymentStatus);
-    if (file) formData.append("report", file); 
+    if (file) formData.append("report", file);
 
     setLoading(true);
     try {
@@ -56,14 +65,14 @@ const OrderEdit = () => {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
-        body: formData, // ✅ don't set Content-Type manually
+        body: formData,
       });
 
       const data = await res.json();
-
       if (res.ok) {
         toast.success("Order updated successfully");
-        navigate("/labadmin/lab/orders");
+        navigate("/labadmin/lab/orders?refresh=true");
+        // navigate("/labadmin/lab/orders");
       } else {
         toast.error(data.message || "Update failed");
       }
@@ -78,86 +87,97 @@ const OrderEdit = () => {
   if (!order) return <p className="p-6">Loading order...</p>;
 
   return (
-    <div className="p-6 bg-white shadow-md rounded max-w-2xl mx-auto mt-10">
-      <h2 className="text-2xl font-semibold mb-4">Edit Order</h2>
-
-      <div className="mb-3 text-sm text-gray-700 space-y-1">
-        <p><strong>Booking:</strong> {order.items?.map(i => i.name).join(", ")}</p>
-        <p><strong>Patient:</strong> {order.name}</p>
-        <p><strong>Collection:</strong> {order.collectionMethod}</p>
-        <p><strong>Total:</strong> PKR {order.totalPrice}</p>
-        <p><strong>Date:</strong> {new Date(order.bookingDetails?.date).toLocaleDateString()} at {order.bookingDetails?.time}</p>
-      </div>
-
-      <div className="mb-4">
-        <label className="block mb-1 font-semibold">Order Status <span className="text-red-500">*</span></label>
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          className="w-full border p-2 rounded"
+    <div className="p-6 bg-white shadow-md rounded max-w-4xl mx-auto mt-10 relative">
+      {/* 🔙 Back & ❌ Close */}
+      <div className="flex justify-between items-center mb-4">
+        <button
+          onClick={() => navigate("/labadmin/lab/orders")}
+          className="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded"
         >
-          <option value="">-- Select Status --</option>
-          <option value="Pending">Pending</option>
-          <option value="Approved">Approved</option>
-          <option value="Completed">Completed</option>
-          <option value="Cancelled">Cancelled</option>
-        </select>
-      </div>
-
-      <div className="mb-4">
-        <label className="block mb-1 font-semibold">Payment Status <span className="text-red-500">*</span></label>
-        <select
-          value={paymentStatus}
-          onChange={(e) => setPaymentStatus(e.target.value)}
-          className="w-full border p-2 rounded"
+          ← Back to Orders
+        </button>
+        <button
+          onClick={() => navigate("/labadmin/lab/orders")}
+          className="text-gray-600 hover:text-red-500 text-xl"
+          title="Close"
         >
-          <option value="">-- Select Payment --</option>
-          <option value="pending">Pending</option>
-          <option value="paid">Paid</option>
-          <option value="unpaid">Unpaid</option>
-        </select>
+          <FaTimes />
+        </button>
       </div>
 
-      {/* <div className="mb-4">
-        <label className="block mb-1 font-semibold">Upload Report (optional)</label>
-        <input
-          type="file"
-          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-          onChange={(e) => setFile(e.target.files[0])}
-          className="w-full border p-2 rounded"
-        />
-      </div> */}
-      <div className="mb-4">
-  <label className="block mb-1 font-semibold">Upload Report (optional)</label>
-  
-  {/* ✅ Show existing report link if uploaded */}
-  {order.reportFile && (
-    <div className="mt-2 text-sm text-green-600">
-      Report already uploaded:{" "}
-      <a
-        href={order.reportFile}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="underline text-blue-600"
-      >
-        View Report
-      </a>
-    </div>
-  )}
+      <h2 className="text-3xl font-bold mb-6">Order Details</h2>
 
-  <input
-    type="file"
-    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-    onChange={(e) => setFile(e.target.files[0])}
-    className="w-full border p-2 rounded"
-  />
-</div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-800">
+        <div>
+          <p><strong>Patient Name:</strong> {order.name}</p>
+          <p><strong>Email:</strong> {order.email}</p>
+          <p><strong>Phone:</strong> {order.phoneNumber}</p>
+          <p><strong>Gender:</strong> {order.gender}</p>
+          <p><strong>Age:</strong> {order.age}</p>
+        </div>
+        <div>
+          <p><strong>Address:</strong> {order.address}, {order.state}, {order.country}</p>
+          <p><strong>Collection Method:</strong> {order.collectionMethod}</p>
+          <p><strong>Order Date:</strong> {
+  order.bookingDetails?.date && order.bookingDetails?.time
+    ? `${new Date(order.bookingDetails.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}, ${formatTimeTo12Hour(order.bookingDetails.time)}`
+    : 'N/A'
+}</p>
 
+          <p><strong>Total Price:</strong> Rs. {order.totalPrice}</p>
+        </div>
+      </div>
+
+      <div className="mt-6">
+        <h3 className="text-xl font-semibold mb-2">Tests & Packages</h3>
+        <ul className="space-y-2">
+          {order.items?.map((item, idx) => (
+            <li key={idx} className="border p-3 rounded">
+              <p><strong>Name:</strong> {item.name}</p>
+              <p><strong>Type:</strong> {item.type}</p>
+              <p><strong>Price:</strong> Rs. {item.price}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block font-semibold">Order Status *</label>
+          <select value={status} onChange={(e) => setStatus(e.target.value)} className="w-full border p-2 rounded">
+            <option value="">-- Select Status --</option>
+            <option value="Pending">Pending</option>
+            <option value="Approved">Approved</option>
+            <option value="Progress">Progress</option>
+            <option value="Completed">Completed</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div>
+          <label className="block font-semibold">Payment Status *</label>
+          <select value={paymentStatus} onChange={(e) => setPaymentStatus(e.target.value)} className="w-full border p-2 rounded">
+            <option value="">-- Select Payment --</option>
+            <option value="pending">Pending</option>
+            <option value="paid">Paid</option>
+            <option value="unpaid">Unpaid</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="mt-4">
+        <label className="block font-semibold">Upload Report (optional)</label>
+        {order.reportFile && (
+          <div className="mt-2 text-sm text-green-600">
+            Existing report: <a href={order.reportFile} target="_blank" rel="noopener noreferrer" className="underline text-blue-600">View Report</a>
+          </div>
+        )}
+        <input type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onChange={(e) => setFile(e.target.files[0])} className="w-full border p-2 rounded mt-2" />
+      </div>
 
       <button
         onClick={handleUpdateOrder}
         disabled={loading}
-        className={`w-full text-white py-2 rounded ${loading ? 'bg-gray-400' : 'bg-primary hover:bg-primary-dark'}`}
+        className={`mt-6 w-full text-white py-2 rounded ${loading ? 'bg-gray-400' : 'bg-primary hover:bg-primary-dark'}`}
       >
         {loading ? "Updating..." : "Update Order"}
       </button>
