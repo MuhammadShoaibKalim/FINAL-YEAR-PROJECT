@@ -2,44 +2,33 @@ import mongoose from "mongoose";
 import { Test, Package } from "../models/testpackage.model.js";
 import Lab from "../models/lab.model.js";
 
-// ------------------ TEST CONTROLLERS 
 
+// ------------------ TEST CONTROLLERS 
 export const createTest = async (req, res) => {
   try {
     const { name, description, price, discount } = req.body;
 
-    if (!name || !price) {
-      return res.status(400).json({ error: "Name and price are required." });
+    if (!name || !price || !description) {
+      return res.status(400).json({ error: "Name, price, and description are required." });
     }
 
-    // const lab = req.user.labId; 
-
-    // const newTest = await Test.create({
-    //   name,
-    //   description,
-    //   price,
-    //   discount,
-    //   lab,
-    //   createdBy: req.user._id,
-    //   lab: req.user.assignedLab,
-    // });
     const lab = req.user.assignedLab || req.user.labId || req.user.lab;
 
-const newTest = await Test.create({
-  name,
-  description,
-  price,
-  discount,
-  lab,
-  createdBy: req.user._id,
-});
-
+    const newTest = await Test.create({
+      name,
+      description,
+      price,
+      discount,
+      lab,
+      createdBy: req.user._id,
+    });
 
     await Lab.findByIdAndUpdate(lab, { $push: { tests: newTest._id } });
 
     res.status(201).json({ success: true, test: newTest });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error in createTest:", error);
+    res.status(500).json({ error: error.message || "Internal Server Error" });
   }
 };
 export const updateTest = async (req, res) => {
@@ -99,19 +88,35 @@ export const getTestById = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+export const addTestReview = async (req, res) => {
+  const { rating, review } = req.body;
+  const { id } = req.params;
+
+  const test = await Test.findById(id);
+  if (!test) return res.status(404).json({ error: "Test not found" });
+
+  test.feedbacks.push({ userId: req.user.id, rating, review });
+
+  const total = test.feedbacks.reduce((acc, f) => acc + f.rating, 0);
+  test.rating = total / test.feedbacks.length;
+
+  await test.save();
+  res.status(200).json({ success: true, message: "Review added." });
+};
+
+
+
 
 // ------------------ PACKAGE CONTROLLERS 
-
 export const createPackage = async (req, res) => {
   try {
     const { name, description, price, tests, discount } = req.body;
 
-    if (!name || !price || !tests) {
-      return res.status(400).json({ error: "Name, price, and tests are required." });
+    if (!name || !price || !description || !tests || !Array.isArray(tests) || tests.length === 0) {
+      return res.status(400).json({ error: "Name, price, description, and at least one test are required." });
     }
 
-    const lab = req.user.labId || req.user.lab; 
-
+    const lab = req.user.assignedLab || req.user.labId || req.user.lab;
 
     const newPackage = await Package.create({
       name,
@@ -121,14 +126,14 @@ export const createPackage = async (req, res) => {
       discount,
       lab,
       createdBy: req.user._id,
-      lab: req.user.assignedLab,
     });
 
     await Lab.findByIdAndUpdate(lab, { $push: { packages: newPackage._id } });
 
     res.status(201).json({ success: true, package: newPackage });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error in createPackage:", error);
+    res.status(500).json({ error: error.message || "Internal Server Error" });
   }
 };
 export const updatePackage = async (req, res) => {
@@ -191,5 +196,53 @@ export const getPackageById = async (req, res) => {
     res.status(200).json({ success: true, package: packageItem });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+export const addPackageReview = async (req, res) => {
+  const { rating, review } = req.body;
+  const { id } = req.params;
+
+  const pkg = await Package.findById(id);
+  if (!pkg) return res.status(404).json({ error: "Package not found" });
+
+  pkg.feedbacks.push({ userId: req.user.id, rating, review });
+
+  const total = pkg.feedbacks.reduce((acc, f) => acc + f.rating, 0);
+  pkg.rating = total / pkg.feedbacks.length;
+
+  await pkg.save();
+  res.status(200).json({ success: true, message: "Review added." });
+};
+export const addFeedback = async (req, res) => {
+  try {
+    const { testOrPackageId, type, rating, comment } = req.body;
+    if (!testOrPackageId || !type || !rating) {
+      return res.status(400).json({ message: "Missing fields" });
+    }
+
+    const feedback = {
+      userId: req.user.id,
+      rating,
+      comment,
+      date: new Date(),
+    };
+
+    let itemModel = type === "Test" ? Test : Package;
+
+    const item = await itemModel.findById(testOrPackageId);
+    if (!item) return res.status(404).json({ message: `${type} not found` });
+
+    item.feedbacks.push(feedback);
+
+    // Recalculate average rating
+    const totalRatings = item.feedbacks.reduce((acc, f) => acc + f.rating, 0);
+    item.rating = totalRatings / item.feedbacks.length;
+
+    await item.save();
+
+    res.status(200).json({ message: "Feedback submitted" });
+  } catch (err) {
+    console.error("Feedback error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };
