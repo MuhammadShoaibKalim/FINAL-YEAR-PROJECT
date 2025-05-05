@@ -1,13 +1,36 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+
 
 const Orders = () => {
   const navigate = useNavigate();
   const [orderList, setOrderList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const location = useLocation(); // 👈 Get query params here
 
-  // ✅ Fetch Orders for Lab Admin
+
+   const fetchOrders = async () => {
+    try {
+      const res = await fetch("/api/orders/lab", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+      });
+
+      const data = await res.json();
+      if (data.orders) setOrderList(data.orders);
+      else setOrderList([]);
+    } catch (error) {
+      console.error("Failed to fetch lab orders:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
+    fetchOrders();
+  }, [location.search]); // 👈 re-trigger fetch when query param changes
+ useEffect(() => {
     const fetchOrders = async () => {
       try {
         const res = await fetch("/api/orders/lab", {
@@ -29,100 +52,83 @@ const Orders = () => {
     fetchOrders();
   }, []);
 
-  // ✅ Delete Order
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this order?")) {
-      try {
-        await fetch(`/api/orders/${id}`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-          },
-        });
-
-        setOrderList((prev) => prev.filter((order) => order._id !== id));
-      } catch (error) {
-        console.error("Error deleting order:", error);
-      }
-    }
-  };
-
   if (loading) return <p className="text-gray-500">Loading orders...</p>;
 
   return (
     <div className="p-4 w-full">
       <div className="bg-white shadow-lg rounded-lg p-6 mt-4 w-full">
-        <h2 className="text-2xl font-semibold mb-2">Orders</h2>
-        <p className="text-gray-700">Manage all your existing orders</p>
+        <h2 className="text-2xl font-semibold mb-2">Orders Overview</h2>
+        <p className="text-gray-700">Quick view of bookings received</p>
       </div>
 
       <div className="bg-white p-2 shadow-lg rounded-lg mt-4 overflow-x-auto">
-        <table className="w-full border-collapse min-w-[800px]">
+        <table className="w-full border-collapse min-w-[900px]">
           <thead>
             <tr className="bg-primary text-white text-left">
-              <th className="p-3">ID</th>
-              <th className="p-3">Booking</th>
-              <th className="p-3">Type</th>
+              <th className="p-3">Patient</th>
+              <th className="p-3">Tests/Package</th>
+              <th className="p-3">Booking Date</th>
+              <th className="p-3">Collection</th>
               <th className="p-3">Status</th>
               <th className="p-3">Payment</th>
-              <th className="p-3">Patient</th>
-              <th className="p-3">Order Date</th>
-              <th className="p-3">Collection</th>
-              <th className="p-3">Actions</th>
+              <th className="p-3">Report</th>
+              <th className="p-3">Action</th>
             </tr>
           </thead>
           <tbody>
             {orderList.map((order) => (
               <tr key={order._id} className="border-b hover:bg-gray-100 transition">
-                <td className="p-3 truncate max-w-[100px]">{order._id}</td>
-
-                {/* ✅ Booking: First item title */}
-                <td className="p-3 truncate max-w-[200px]">
-                  {order.items && order.items.length > 0 ? order.items[0].name : "N/A"}
-                </td>
-
-                {/* ✅ Type: First item type */}
+                <td className="p-3">{order.name || "Unknown"}</td>
+                <td className="p-3">{order.items?.length || 0}</td>
                 <td className="p-3">
-                  {order.items && order.items.length > 0 ? order.items[0].type : "N/A"}
+                  {new Date(order.bookingDetails?.date).toLocaleDateString()}{" "}
+                  {order.bookingDetails?.time}
                 </td>
-
-                {/* ✅ Status from schema */}
+                <td className="p-3">{order.collectionMethod}</td>
                 <td className="p-3">
-                  <span className={`px-2 py-1 rounded text-sm ${order.status === "completed" ? "bg-green-200 text-green-800" : "bg-yellow-200 text-yellow-800"}`}>
+                  <span
+                    className={`px-2 py-1 rounded text-sm ${
+                      order.status === "Completed"
+                        ? "bg-green-100 text-green-800"
+                        : order.status === "Cancelled"
+                        ? "bg-red-100 text-red-700"
+                        : "bg-yellow-100 text-yellow-700"
+                    }`}
+                  >
                     {order.status}
                   </span>
                 </td>
-
-                {/* ✅ Payment (pending / paid / unpaid) */}
                 <td className="p-3">
-                  <span className={`px-2 py-1 rounded text-sm ${order.paymentStatus === "paid" ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"}`}>
+                  <span
+                    className={`px-2 py-1 rounded text-sm ${
+                      order.paymentStatus === "paid"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-700"
+                    }`}
+                  >
                     {order.paymentStatus || "pending"}
                   </span>
                 </td>
-
-                {/* ✅ Patient: name from form */}
-                <td className="p-3">{order.name}</td>
-
-                {/* ✅ Order Date: from bookingDetails */}
                 <td className="p-3">
-                  {order.bookingDetails?.date} {order.bookingDetails?.time}
+                  {order.reportFile ? (
+                    <a
+                      href={order.reportFile}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 underline text-sm"
+                    >
+                      View Report
+                    </a>
+                  ) : (
+                    <span className="text-gray-500 text-sm">Not Uploaded</span>
+                  )}
                 </td>
-
-                {/* ✅ Collection type: Home / Lab */}
-                <td className="p-3">{order.collectionMethod}</td>
-
-                <td className="p-3 flex space-x-2">
+                <td className="p-3">
                   <button
-                    onClick={() => navigate(`edit/${order._id}`)}
-                    className="bg-primary text-white px-3 py-1 rounded transition"
+                    onClick={() => navigate(`/labadmin/lab/orders/edit/${order._id}`)}
+                    className="bg-primary text-white px-3 py-1 rounded"
                   >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(order._id)}
-                    className="bg-red-500 text-white px-3 py-1 rounded transition hover:bg-red-600"
-                  >
-                    Delete
+                    View / Edit
                   </button>
                 </td>
               </tr>
