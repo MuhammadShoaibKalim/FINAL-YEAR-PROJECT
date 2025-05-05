@@ -11,6 +11,7 @@ const CartSchema = new mongoose.Schema({
     ref: 'Lab',
     required: true
   },
+  
   testOrPackageId: {
     type: mongoose.Schema.Types.ObjectId,
     refPath: 'type',
@@ -56,7 +57,11 @@ const OrderSchema = new mongoose.Schema({
   address: { type: String, required: true },
   state: { type: String, required: true },
   country: { type: String, required: true },
-
+  paymentStatus: {
+    type: String,
+    enum: ["pending", "paid", "unpaid"],
+    default: "pending",
+  },
   collectionMethod: {
     type: String,
     enum: ["Home Collection", "Lab Visit"],
