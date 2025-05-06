@@ -7,7 +7,10 @@ import {
     updateUserProfile, 
     deleteUserAccount, 
     checkUser,
-    resetPassword} from "../controllers/user.controller.js";
+    resetPassword,
+    verifyEmail,
+    resendVerificationEmail,
+    resetPasswordForce} from "../controllers/user.controller.js";
 import { isAuthenticated, isSuperAdmin } from "../middlewares/auth.middleware.js";
 import {
   getUsers, 
@@ -31,9 +34,11 @@ router.post("/logout", userLogout);
 router.get("/profile", isAuthenticated, getUserProfile);
 router.put('/profile/:id', isAuthenticated, upload.single('image'), updateUserProfile);
 router.get("/getuser", isAuthenticated, checkUser);
-router.delete("/:id", isAuthenticated, deleteUserAccount);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password/:token', resetPassword);
+router.get("/verify-email", verifyEmail);
+router.post('/resend-verification', resendVerificationEmail);
+router.post("/reset-password-force/:id", resetPasswordForce);
 
 
 
