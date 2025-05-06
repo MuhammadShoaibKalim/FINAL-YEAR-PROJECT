@@ -3,7 +3,8 @@ import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
 const ProtectedRoute = ({ children, roles }) => {
-  const { user, isAuthenticated } = useSelector((state) => state.auth); 
+  // const { user, isAuthenticated } = useSelector((state) => state.auth);
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -12,11 +13,11 @@ const ProtectedRoute = ({ children, roles }) => {
     return () => clearTimeout(timer);
   }, []);
 
-  if (isLoading) {
-    return null;
-  }
+  if (isLoading) return null;
 
-  if ( !user) {
+  
+  if (!isAuthenticated || !user){
+
     return <Navigate to="/login" replace />;
   }
 
@@ -27,4 +28,4 @@ const ProtectedRoute = ({ children, roles }) => {
   return children;
 };
 
-export default ProtectedRoute; 
+export default ProtectedRoute;
