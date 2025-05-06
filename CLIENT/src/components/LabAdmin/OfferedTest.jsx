@@ -119,12 +119,11 @@ export default function OfferedTests() {
           </div>
 
           <div className="bg-white p-4 shadow-md rounded-lg">
-            <div className="hidden md:grid grid-cols-7 bg-primary text-white font-semibold text-lg rounded-t-md py-3 px-6">
+            <div className="hidden md:grid grid-cols-6 bg-primary text-white font-semibold text-lg rounded-t-md py-3 px-6">
               <span>Name</span>
               <span>Type</span>
               <span>Price</span>
               <span>Discount</span>
-              <span>Rating</span>
               <span>Booked</span>
               <span>Actions</span>
             </div>
@@ -132,8 +131,9 @@ export default function OfferedTests() {
             {tests.map((item) => (
               <div
                 key={item._id}
-                className="grid grid-cols-1 md:grid-cols-7 gap-2 md:gap-0 py-4 px-6 border-b items-center text-sm"
+                className="grid grid-cols-1 md:grid-cols-6 gap-2 md:gap-0 py-4 px-6 border-b items-center text-sm"
               >
+                {/* Name */}
                 {editingTestId === item._id ? (
                   <input
                     type="text"
@@ -146,8 +146,10 @@ export default function OfferedTests() {
                   <span>{item.name}</span>
                 )}
 
+                {/* Type */}
                 <span>{item.type}</span>
 
+                {/* Price */}
                 {editingTestId === item._id ? (
                   <input
                     type="number"
@@ -160,6 +162,7 @@ export default function OfferedTests() {
                   <span>PKR {item.price}</span>
                 )}
 
+                {/* Discount */}
                 {editingTestId === item._id ? (
                   <input
                     type="number"
@@ -174,9 +177,10 @@ export default function OfferedTests() {
                   <span>{item.discount ? `${item.discount}%` : "-"}</span>
                 )}
 
-                <span>{item.rating || "0.0"} ⭐</span>
+                {/* Booked Count */}
                 <span>{item.bookedCount || "0"}</span>
 
+                {/* Actions */}
                 <div className="flex space-x-2">
                   {editingTestId === item._id ? (
                     <button
