@@ -6,7 +6,7 @@ import {Order} from "../models/order.model.js";
 import { Test, Package} from "../models/testpackage.model.js";
 import mongoose from "mongoose";
 import Query from "../models/query.model.js";
-
+import { sendEmail } from "../utils/sendEmail.util.js";
 
 
 
@@ -289,6 +289,53 @@ export const superAdminOverview = async (req, res) => {
 //     res.status(500).json({ message: "Error creating user", error: error.message });
 //   }
 // };
+// export const createUser = async (req, res) => {
+//   try {
+//     if (!req.user || req.user.role !== "superadmin") {
+//       return res.status(403).json({ message: "Access denied. Only Super Admin can create users." });
+//     }
+
+//     const { firstName, lastName, email, password, role } = req.body;
+
+//     if (!firstName || !lastName || !email || !password || !role) {
+//       return res.status(400).json({ message: "All fields are required." });
+//     }
+
+//     const existingUser = await User.findOne({ email });
+//     if (existingUser) {
+//       return res.status(400).json({ message: "User with this email already exists." });
+//     }
+
+//     const salt = await bcrypt.genSalt(10);
+//     const hashedPassword = await bcrypt.hash(password, salt);
+
+//     let image = "";
+//     if (req.file) {
+//       image = req.file.path;
+//     }
+    
+
+//     const newUser = await User.create({
+//       firstName,
+//       lastName,
+//       email,
+//       password: hashedPassword,
+//       role,
+//       image, 
+//     });
+
+//     res.status(201).json({
+//       success: true,
+//       message: "User created successfully",
+//       createdUser: newUser,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: "Error creating user", error: error.message });
+//   }
+// };
+
+
 export const createUser = async (req, res) => {
   try {
     if (!req.user || req.user.role !== "superadmin") {
@@ -297,40 +344,67 @@ export const createUser = async (req, res) => {
 
     const { firstName, lastName, email, password, role } = req.body;
 
+    // Validation
     if (!firstName || !lastName || !email || !password || !role) {
       return res.status(400).json({ message: "All fields are required." });
     }
 
+    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User with this email already exists." });
     }
 
+    // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Handle image upload
     let image = "";
     if (req.file) {
       image = req.file.path;
     }
-    
 
+    // Create user with verified status & forcePasswordChange
     const newUser = await User.create({
       firstName,
       lastName,
       email,
       password: hashedPassword,
       role,
-      image, 
+      image,
+      isVerified: true,               
+      forcePasswordChange: true,     
+    });
+
+    // Send login email
+    await sendEmail({
+      to: email,
+      subject: "Lab Admin Account Created - Digital LabCore",
+      html: `
+        <h2>Hello ${firstName},</h2>
+        <p>You have been added as a <strong>${role}</strong> on Digital LabCore.</p>
+        <p>Use the following credentials to log in:</p>
+        <ul>
+          <li><strong>Email:</strong> ${email}</li>
+          <li><strong>Password:</strong> ${password}</li>
+        </ul>
+        <p>
+          <a href="${process.env.FRONTEND_URL}/login">Click here to log in</a>.
+          You will be asked to reset your password after your first login for security reasons.
+        </p>
+        <p>Welcome aboard!</p>
+      `,
     });
 
     res.status(201).json({
       success: true,
-      message: "User created successfully",
+      message: "User created and login email sent.",
       createdUser: newUser,
     });
+
   } catch (error) {
-    console.error(error);
+    console.error("Create User Error:", error);
     res.status(500).json({ message: "Error creating user", error: error.message });
   }
 };
