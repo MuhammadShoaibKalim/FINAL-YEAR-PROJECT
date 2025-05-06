@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import AddLabAdminForm from "./AddUserForm";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 
 const Users = () => {
@@ -9,6 +10,7 @@ const Users = () => {
   const [showForm, setShowForm] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [currentUserId, setCurrentUserId] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -105,6 +107,8 @@ const Users = () => {
         fetchData();
         setShowForm(false);
         setCurrentUser(null);
+        navigate("/admin/super/users");
+
       } else {
         toast.error("Something went wrong");
         alert(data.message || "Failed to update user.");
