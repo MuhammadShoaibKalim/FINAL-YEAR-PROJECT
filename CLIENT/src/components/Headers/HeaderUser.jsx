@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaSignInAlt, FaBars, FaTimes, FaUserCircle, FaSignOutAlt, FaChartLine, FaPhone, FaEnvelope } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
-import { SetUser, Logout } from '../../redux/AuthSlice.js';
+import { SetUser, logoutUser  } from '../../redux/AuthSlice.js';
 import toast from 'react-hot-toast';
 import logo from "../../assets/logo.png";
 
@@ -18,14 +18,22 @@ const HeaderUser = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // const logout = () => {
+  //   localStorage.removeItem('token');
+  //   dispatch(SetUser(null));
+  //   dispatch(Logout());
+  //   toast.success('Logged out successfully');
+  //   navigate('/login');
+  // };
   const logout = () => {
-    localStorage.removeItem('token');
-    dispatch(SetUser(null));
-    dispatch(Logout());
-    toast.success('Logged out successfully');
-    navigate('/login');
+    dispatch(logoutUser()).then(() => {
+      toast.success('Logged out successfully');
+      navigate('/login');
+    });
   };
+  
 
+  
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
