@@ -16,6 +16,7 @@ export default function AddCustomTest({ onClose }) {
   });
 
   const [availableTests, setAvailableTests] = useState([]);
+  const [totalTestPrice, setTotalTestPrice] = useState(0);
 
   useEffect(() => {
     const fetchTests = async () => {
@@ -29,6 +30,25 @@ export default function AddCustomTest({ onClose }) {
     fetchTests();
   }, []);
 
+  useEffect(() => {
+    if (type === "Package" && formData.tests.length > 0) {
+      const selectedPrices = availableTests
+        .filter((t) => formData.tests.includes(t._id))
+        .map((t) => Number(t.price));
+      const sum = selectedPrices.reduce((acc, curr) => acc + curr, 0);
+      setTotalTestPrice(sum);
+  
+      // Suggest 10% off price if user hasn't set it manually
+      setFormData((prev) => ({
+        ...prev,
+        price: prev.price || Math.round(sum * 0.9),
+      }));
+    } else {
+      setTotalTestPrice(0);
+    }
+  }, [formData.tests, type, availableTests]);
+  
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -36,6 +56,27 @@ export default function AddCustomTest({ onClose }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (type === "Package") {
+      if (formData.tests.length === 0) {
+        return toast.error("Please select at least one test.");
+      }
+    
+      const packagePrice = Number(formData.price);
+    
+      if (packagePrice <= 0 || packagePrice > totalTestPrice) {
+        return toast.error(
+          `Package price must be greater than 0 and less than or equal to PKR ${totalTestPrice}.`
+        );
+      }
+    
+      if (packagePrice < totalTestPrice * 0.3) {
+        return toast.error("Discount too high. Minimum 30% of total value required.");
+      }
+    }
+    
+    
+
     try {
       const payload = {
         name: formData.name,
@@ -44,12 +85,12 @@ export default function AddCustomTest({ onClose }) {
         discount: formData.discount,
       };
 
-      const endpoint =
-        type === "Test" ? "/api/tests/add-test" : "/api/tests/add-package";
-
       if (type === "Package") {
         payload.tests = formData.tests;
       }
+
+      const endpoint =
+        type === "Test" ? "/api/tests/add-test" : "/api/tests/add-package";
 
       await axios.post(endpoint, payload, {
         headers: {
@@ -70,6 +111,7 @@ export default function AddCustomTest({ onClose }) {
       <h2 className="text-3xl font-bold mb-8">Add {type}</h2>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Type Select */}
         <div>
           <label className="block mb-2">Select Type</label>
           <select
@@ -82,6 +124,7 @@ export default function AddCustomTest({ onClose }) {
           </select>
         </div>
 
+        {/* Name */}
         <div>
           <label className="block mb-2">Name</label>
           <input
@@ -94,18 +137,57 @@ export default function AddCustomTest({ onClose }) {
           />
         </div>
 
-        <div>
-          <label className="block mb-2">Price (PKR)</label>
-          <input
-            type="number"
-            name="price"
-            value={formData.price}
-            onChange={handleChange}
-            className="w-full p-3 border rounded-md"
-            required
-          />
-        </div>
+        {/* Total Test Price for Package */}
+        {type === "Package" && (
+          <div>
+            <label className="block mb-2">Total Price of Selected Tests (Auto)</label>
+            <input
+              type="number"
+              value={totalTestPrice}
+              className="w-full p-3 border rounded-md bg-gray-100"
+              readOnly
+            />
+          </div>
+        )}
 
+{/* Price */}
+<div>
+  <label className="block mb-2">
+    {type === "Package" ? "Discounted Package Price (PKR)" : "Price (PKR)"}
+  </label>
+  <input
+    type="number"
+    name="price"
+    value={formData.price}
+    onChange={handleChange}
+    className="w-full p-3 border rounded-md"
+    required
+    min="1"
+    max={type === "Package" ? totalTestPrice : undefined}
+  />
+
+  {/* Discount hint for packages */}
+  {type === "Package" &&
+    formData.price &&
+    Number(formData.price) > 0 &&
+    Number(formData.price) < totalTestPrice && (
+      <p
+        className={`text-sm mt-1 ${
+          (totalTestPrice - formData.price) / totalTestPrice > 0.5
+            ? "text-red-500"
+            : "text-green-600"
+        }`}
+      >
+        {((totalTestPrice - formData.price) / totalTestPrice) > 0.5
+          ? `⚠️ You're giving over 50% discount. Please review carefully.`
+          : `You’re offering a discount of PKR ${totalTestPrice - formData.price} (${Math.round(
+              ((totalTestPrice - formData.price) / totalTestPrice) * 100
+            )}%)`}
+      </p>
+    )}
+</div>
+
+        {/* Discount (Optional) */}
         <div>
           <label className="block mb-2">Discount (%)</label>
           <input
@@ -120,6 +202,7 @@ export default function AddCustomTest({ onClose }) {
           />
         </div>
 
+        {/* Description */}
         <div>
           <label className="block mb-2">Description</label>
           <textarea
@@ -131,6 +214,7 @@ export default function AddCustomTest({ onClose }) {
           />
         </div>
 
+        {/* Select Tests for Package */}
         {type === "Package" && (
           <div>
             <label className="block mb-2 font-medium text-gray-700">
@@ -164,6 +248,7 @@ export default function AddCustomTest({ onClose }) {
           </div>
         )}
 
+        {/* Buttons */}
         <div className="flex justify-between gap-4">
           <button
             type="button"
