@@ -24,7 +24,7 @@ const Overview = () => {
         if (res.status === 403) throw new Error("Access denied");
 
         const data = await res.json();
-        console.log("\ud83d\udcca Overview Data:", data); // Debug output
+        console.log("📊 Overview Data:", data);
         setOverviewData(data);
         setLoading(false);
       } catch (err) {
@@ -61,7 +61,7 @@ const Overview = () => {
         <OverviewCard title="Total Labs" value={totalLabs} icon={<FlaskConical className="w-6 h-6 text-white" />} />
         <OverviewCard title="Total Users" value={totalUsers} icon={<User className="w-6 h-6 text-white" />} />
         <OverviewCard title="Total Orders" value={totalOrders} icon={<ShoppingCart className="w-6 h-6 text-white" />} />
-        <OverviewCard title="Total Revenue" value={`Rs. ${totalRevenue}`} icon={<DollarSign className="w-6 h-6 text-white" />} />
+        <OverviewCard title="Total Revenue" value={`Rs. ${totalRevenue.toLocaleString()}`} icon={<DollarSign className="w-6 h-6 text-white" />} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
@@ -149,35 +149,48 @@ const Overview = () => {
         )}
       </ChartCard>
 
-      <ChartCard title="Top Performing Lab Admins">
-  {topLabAdmins.length === 0 ? (
-    <p className="text-center text-sm text-gray-500">No lab admin data available.</p>
-  ) : (
-    <div className="overflow-x-auto rounded-xl shadow-sm">
-      <table className="min-w-full text-sm text-left bg-white border border-gray-200 rounded-lg overflow-hidden">
-        <thead className="bg-primary text-white">
-          <tr>
-            <th className="px-4 py-3 font-semibold">Name</th>
-            <th className="px-4 py-3 font-semibold">Lab</th>
-            <th className="px-4 py-3 font-semibold">Orders</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-200">
-          {topLabAdmins.map((admin, index) => (
-            <tr
-              key={index}
-              className={`hover:bg-gray-100 transition duration-200 ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}
-            >
-              <td className="px-4 py-3 font-medium text-gray-800">{admin.name}</td>
-              <td className="px-4 py-3 text-gray-700">{admin.lab}</td>
-              <td className="px-4 py-3 font-semibold text-primary-dark">{admin.orders}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )}
-</ChartCard>
+
+      <ChartCard title="Lab Performance Overview">
+        {labsWithMostOrders.length === 0 ? (
+          <p className="text-center text-sm text-gray-500">No performance data available.</p>
+        ) : (
+          <div className="overflow-x-auto rounded-xl shadow-sm">
+            <table className="min-w-full text-sm text-left bg-white border border-gray-200 rounded-lg overflow-hidden">
+              <thead className="bg-primary text-white">
+                <tr>
+                  <th className="px-4 py-3 font-semibold">#</th>
+                  <th className="px-4 py-3 font-semibold">Lab Name</th>
+                  <th className="px-4 py-3 font-semibold">Total Orders</th>
+                  <th className="px-4 py-3 font-semibold">Revenue</th>
+                  <th className="px-4 py-3 font-semibold">Performance</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {labsWithMostOrders.map((lab, index) => (
+                  <tr
+                    key={index}
+                    className={`hover:bg-gray-100 transition duration-200 ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}
+                  >
+                    <td className="px-4 py-3 text-gray-600">{index + 1}</td>
+                    <td className="px-4 py-3 font-medium text-gray-800">{lab.name}</td>
+                    <td className="px-4 py-3 text-gray-700">{lab.orders}</td>
+                    <td className="px-4 py-3 text-green-600 font-semibold">Rs. {lab.revenue?.toLocaleString() || 0}</td>
+                    <td className="px-4 py-3 text-blue-600 font-medium">
+                      {index === 0
+                        ? "🏆 Top Performer"
+                        : index <= 2
+                          ? "🔥 Excellent"
+                          : index <= 5
+                            ? "✅ Good"
+                            : "Average"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </ChartCard>
 
     </div>
   );
