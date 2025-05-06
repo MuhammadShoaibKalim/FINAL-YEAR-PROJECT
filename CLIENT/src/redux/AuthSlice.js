@@ -24,12 +24,20 @@ export const loginUser = createAsyncThunk(
   }
 );
 
-export const logoutUser = createAsyncThunk('auth/logoutUser', async () => {
+// export const logoutUser = createAsyncThunk('auth/logoutUser', async () => {
+//   localStorage.removeItem('authToken');
+//   localStorage.removeItem('userId');
+//   sessionStorage.removeItem('authToken');
+//   return;
+// });
+export const logoutUser = createAsyncThunk('auth/logoutUser', async (_, { dispatch }) => {
   localStorage.removeItem('authToken');
   localStorage.removeItem('userId');
   sessionStorage.removeItem('authToken');
-  return;
+  // dispatch(Logout());
 });
+
+
 
 export const checkUser = createAsyncThunk(
   'auth/checkUser',
@@ -77,14 +85,15 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     SetUser: (state, action) => {
-      if (!action.payload) {
-        console.error('Attempting to set null user data');
-        return;
+      const userData = action.payload;
+      if (userData) {
+        state.user = userData;
+        state.isAuthenticated = true;
+      } else {
+        state.user = null;
+        state.isAuthenticated = false;
       }
-      console.log('Setting user manually:', action.payload);
-      state.user = action.payload;
-      state.isAuthenticated = true;
-    },
+    },    
     Logout: (state) => {
       state.user = null;
       state.loading = false;
