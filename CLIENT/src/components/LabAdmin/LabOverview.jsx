@@ -34,7 +34,10 @@ const LabDashboard = () => {
     completionRate: 0,
     ordersOverTime: [],
     testPackages: [],
+    totalEarnings: 0,
+    pendingReports: 0,
   });
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -74,6 +77,8 @@ const LabDashboard = () => {
     completionRate,
     ordersOverTime,
     testPackages,
+    totalEarnings,
+    pendingReports,
   } = data;
 
   const pieData = [
@@ -87,7 +92,8 @@ const LabDashboard = () => {
     <div className="p-6 max-w-7xl mx-auto space-y-10">
       <div>
         <h2 className="text-3xl font-bold text-text-dark mb-2">Lab Dashboard</h2>
-        <p className="text-text-tertiary mb-6">Snapshot of lab’s performance</p>
+        <p className="text-text-tertiary mb-6">Snapshot of your lab’s performance</p>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           <StatCard title="Total Orders" value={totalOrders} icon={<FaClipboardList size={24} />} />
           <StatCard title="Pending Orders" value={pendingOrders} icon={<FaClock size={24} />} />
@@ -95,16 +101,15 @@ const LabDashboard = () => {
           <StatCard title="Cancelled Orders" value={cancelledOrders} icon={<FaTimesCircle size={24} />} />
           <StatCard title="In Progress" value={inProgressOrders} icon={<FaSpinner size={24} />} />
           <StatCard title="Tests & Packages" value={totalTests + totalPackages} icon={<FaFlask size={24} />} />
+          <StatCard title="Reports Pending" value={pendingReports} icon={<FaClock size={24} />} />
+          <StatCard title="Total Earnings" value={`PKR ${totalEarnings.toLocaleString()}`} icon={<FaChartPie size={24} />} />
         </div>
       </div>
 
       <div className="bg-bg-secondary p-6 rounded-lg shadow-primary">
         <h3 className="text-lg font-semibold text-text-dark">Order Completion Rate</h3>
         <div className="relative w-full h-5 bg-border-light rounded-full overflow-hidden mt-3">
-          <div
-            className="h-full bg-primary transition-all duration-500"
-            style={{ width: `${completionRate}%` }}
-          ></div>
+          <div className="h-full bg-primary transition-all duration-500" style={{ width: `${completionRate}%` }}></div>
         </div>
         <p className="mt-2 text-text-secondary">{completionRate}% completed</p>
       </div>
@@ -129,15 +134,7 @@ const LabDashboard = () => {
         <h3 className="text-xl font-semibold text-text-dark mb-4">Test vs Package Ratio</h3>
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
-            <Pie
-              data={pieData}
-              cx="50%"
-              cy="50%"
-              outerRadius={100}
-              fill="#8884d8"
-              dataKey="value"
-              label
-            >
+            <Pie data={pieData} cx="50%" cy="50%" outerRadius={100} fill="#8884d8" dataKey="value" label>
               {pieData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
               ))}
@@ -158,9 +155,7 @@ const LabDashboard = () => {
               <div key={item._id} className="bg-white border border-border rounded-lg p-4 shadow-sm">
                 <div className="flex justify-between items-center">
                   <h4 className="text-md font-bold text-text-primary">{item.name}</h4>
-                  <span className="text-xs text-white bg-primary px-2 py-1 rounded-full">
-                    {item.type}
-                  </span>
+                  <span className="text-xs text-white bg-primary px-2 py-1 rounded-full">{item.type}</span>
                 </div>
                 <p className="text-sm text-text-tertiary mt-2">PKR {item.price}</p>
               </div>
