@@ -75,6 +75,7 @@ import Unauthorized from "./pages/Unauthorized";
 import CheckEmail from "./components/Auth/CheckEmail";
 import ResendVerification from "./components/Auth/ResendEmailVerification";
 import ResetPasswordForce from "./components/Auth/ResetPasswordForce";
+import Join from "./pages/NavbarPages/Join";
 
 
 
@@ -140,7 +141,7 @@ const App = () => {
         <Routes>
 
           {/* User Login?register */}
-             <Route path="register" element={<Register />} />
+            <Route path="register" element={<Register />} />
             <Route path="login" element={<Login />} />
             <Route path="/verify-email" element={<EmailVerification />} />
             <Route path="/resend-verification" element={<ResendVerification />} />
@@ -150,15 +151,12 @@ const App = () => {
             <Route path="/reset-password-force/:id" element={<ResetPasswordForce />} />
 
 
-
-            
-
-
           {/* Public Routes */}
           <Route path="/" element={<UserLayout />}>
             <Route index element={<Home />} />
             <Route path="about" element={<About />} />
             <Route path="contact" element={<Contact />} />
+            <Route path="join" element={<Join />} />
             <Route path="privacy-policy" element={<Privacy />} />
             <Route path="testimonials" element={<UserReview />} />
             <Route path="features" element={<Features />} />
@@ -168,7 +166,6 @@ const App = () => {
             <Route path="symptoms/:symptomId" element={<SymptomDetails />} />
             <Route path="partners" element={<Partners />} />
             <Route path="services" element={<Hero />} />
-
           </Route>
 
           {/* Protected User Routes */}
@@ -187,7 +184,6 @@ const App = () => {
 
          
          {/* UserProfile Layout */}
-         {/* <Route path="/user" element={<UserProfileLayout />}> */}
          <Route path="/user" element={<ProtectedRoute roles={['user']}><UserProfileLayout /> </ProtectedRoute>}>
           <Route index element={<UserProfile />} />
           <Route path="profile" element={<UserProfile />} />
