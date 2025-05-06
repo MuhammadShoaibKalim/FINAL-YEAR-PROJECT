@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 // import Header from "../Layouts/Header";
-import Footer from "../Common/Footer";
+import Footer from "../Headers/Footer";
 import Header from  "../Headers/Header"
 
 const UserLayout = () => {
