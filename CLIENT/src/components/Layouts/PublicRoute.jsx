@@ -15,7 +15,6 @@ const PublicRoute = () => {
     return null;
   }
 
-  // If user is authenticated, immediately redirect to their dashboard
   if (isAuthenticated && user) {
     const role = user.role?.toLowerCase()?.replace(/\s+/g, '');
     
@@ -23,12 +22,13 @@ const PublicRoute = () => {
       return <Navigate to="/admin/super/overview" replace />;
     } else if (role === 'labadmin') {
       return <Navigate to="/labadmin/lab/overview" replace />;
-    } else {
+    } else if (role === 'user') {
       return <Navigate to="/user" replace />;
+    } else {
+      return <Navigate to="/unauthorized" replace />;
     }
   }
-
-  // If not authenticated, render the public route content
+  
   return <Outlet />;
 };
 
