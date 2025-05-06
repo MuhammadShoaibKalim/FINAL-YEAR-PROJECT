@@ -3,15 +3,68 @@ import mongoose from "mongoose";
 import User from "../models/user.model.js";
 import { Test, Package } from "../models/testpackage.model.js";
 import {Order} from "../models/order.model.js"; 
+import { sendEmail } from "../utils/sendEmail.util.js";
 
+// export const addLab = async (req, res) => {
+//   try {
+//     if (req.user.role !== "superadmin") {
+//       return res.status(403).json({ message: "Access denied. Only Super Admin can create labs." });
+//     }
 
+//     const { name, address, location, description, type, assignedAdmin  } = req.body;
+
+//     if (!name || !address || !location || !description || !type || !assignedAdmin) {
+//       return res.status(400).json({ message: "All fields are required." });
+//     }
+
+//     const isActive = req.body.isActive === "true" || req.body.isActive === "on";
+//     const image = req.file ? req.file.path : "";
+   
+    
+//     const labAdmin = await User.findById(assignedAdmin);
+//     if (!labAdmin) {
+//       return res.status(404).json({ message: "Lab Admin not found" });
+//     }
+    
+//     const existingLab = await Lab.findOne({ labAdmin: assignedAdmin });
+//     if (existingLab) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Lab admin is already assigned to another lab.",
+//       });
+//     }
+    
+  
+
+//     const newLab = await Lab.create({
+//       name,
+//       address,
+//       location,
+//       description,
+//       type,
+//       image,
+//       isActive,
+//       createdBy: req.user._id,
+//       labAdmin: assignedAdmin,
+//     });
+
+//     res.status(201).json({ 
+//       success: true,
+//       message: "Lab created successfully",
+//       lab: newLab
+//     });
+        
+//   } catch (error) {
+//     res.status(500).json({ message: "Error creating lab", error: error.message });
+//   }
+// };
 export const addLab = async (req, res) => {
   try {
     if (req.user.role !== "superadmin") {
       return res.status(403).json({ message: "Access denied. Only Super Admin can create labs." });
     }
 
-    const { name, address, location, description, type, assignedAdmin  } = req.body;
+    const { name, address, location, description, type, assignedAdmin } = req.body;
 
     if (!name || !address || !location || !description || !type || !assignedAdmin) {
       return res.status(400).json({ message: "All fields are required." });
@@ -19,13 +72,12 @@ export const addLab = async (req, res) => {
 
     const isActive = req.body.isActive === "true" || req.body.isActive === "on";
     const image = req.file ? req.file.path : "";
-   
-    
+
     const labAdmin = await User.findById(assignedAdmin);
     if (!labAdmin) {
       return res.status(404).json({ message: "Lab Admin not found" });
     }
-    
+
     const existingLab = await Lab.findOne({ labAdmin: assignedAdmin });
     if (existingLab) {
       return res.status(400).json({
@@ -33,8 +85,6 @@ export const addLab = async (req, res) => {
         message: "Lab admin is already assigned to another lab.",
       });
     }
-    
-  
 
     const newLab = await Lab.create({
       name,
@@ -48,16 +98,29 @@ export const addLab = async (req, res) => {
       labAdmin: assignedAdmin,
     });
 
-    res.status(201).json({ 
-      success: true,
-      message: "Lab created successfully",
-      lab: newLab
+    // Send lab assignment email
+    await sendEmail({
+      to: labAdmin.email,
+      subject: "You've Been Assigned a Lab - Digital LabCore",
+      html: `
+        <p>Hello ${labAdmin.firstName},</p>
+        <p>You have been assigned as the admin of the lab: <strong>${name}</strong>.</p>
+        <p>Please login and start managing your lab.</p>
+        <a href="${process.env.FRONTEND_URL}/login">Login Here</a>
+      `,
     });
-        
+
+    res.status(201).json({
+      success: true,
+      message: "Lab created and assignment email sent.",
+      lab: newLab,
+    });
+
   } catch (error) {
     res.status(500).json({ message: "Error creating lab", error: error.message });
   }
 };
+
 export const getAllLabs = async (req, res) => {
   try {
     if (req.user.role !== "superadmin") {
