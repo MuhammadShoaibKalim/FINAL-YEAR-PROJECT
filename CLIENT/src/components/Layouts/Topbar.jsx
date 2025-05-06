@@ -1,74 +1,35 @@
-import { FaPhone, FaEnvelope, FaMapMarkerAlt, FaFacebook, FaTwitter, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
-import { IoMdTime } from 'react-icons/io';
+import { FaShoppingCart } from 'react-icons/fa';
+import { useSelector } from 'react-redux';
 
 const Topbar = () => {
+  // Get the total quantity of items from Redux
+  const totalQuantity = useSelector((state) => state.cart.totalQuantity);
+
   return (
-    <div className="bg-gradient-to-r from-primary to-primary-dark text-white text-xs md:text-sm relative overflow-hidden">
-      {/* Decorative background elements */}
+    <div className="bg-gradient-to-r from-primary to-primary-dark text-white text-xs md:text-sm relative overflow-hidden z-50">
       <div className="absolute inset-0">
         <div className="absolute top-0 left-0 w-[300px] h-[300px] bg-white/5 rounded-full blur-[50px] animate-pulse" />
         <div className="absolute bottom-0 right-0 w-[300px] h-[300px] bg-white/5 rounded-full blur-[50px] animate-pulse" />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        <div className="flex items-center justify-between h-12">
-          {/* Left side - Contact Info */}
-          <div className="hidden md:flex items-center space-x-6">
-            <a href="tel:+1234567890" className="flex items-center group">
-              <div className="flex items-center justify-center w-7 h-7 rounded-full bg-white/10 group-hover:bg-white/20 transition-all duration-300 backdrop-blur-sm">
-                <FaPhone className="text-white" size={12} />
-              </div>
-              <span className="ml-2 group-hover:text-white/80 transition-colors duration-300">+1 (234) 567-890</span>
-            </a>
-            <a href="mailto:info@labcore.com" className="flex items-center group">
-              <div className="flex items-center justify-center w-7 h-7 rounded-full bg-white/10 group-hover:bg-white/20 transition-all duration-300 backdrop-blur-sm">
-                <FaEnvelope className="text-white" size={12} />
-              </div>
-              <span className="ml-2 group-hover:text-white/80 transition-colors duration-300">info@labcore.com</span>
-            </a>
-            <div className="flex items-center group">
-              <div className="flex items-center justify-center w-7 h-7 rounded-full bg-white/10 group-hover:bg-white/20 transition-all duration-300 backdrop-blur-sm">
-                <IoMdTime className="text-white" size={14} />
-              </div>
-              <span className="ml-2 group-hover:text-white/80 transition-colors duration-300">Mon-Fri: 8AM-6PM</span>
-            </div>
-          </div>
+        <div className="flex items-center justify-end h-12 space-x-4">
+          <div className="flex items-center space-x-4 border-l border-white/20 pl-4">
+            <a href="/about" className="hover:text-white/80 font-medium transition-colors">About Us</a>
+            <span className="text-white/30">|</span>
+            <a href="/contact" className="hover:text-white/80 font-medium transition-colors">Contact Us</a>
+            <span className="text-white/30">|</span>
 
-          {/* Right side - Social Links & Quick Actions */}
-          <div className="flex items-center space-x-4">
-            <div className="hidden md:flex items-center space-x-4 mr-4">
-              <a href="#" className="group">
-                <div className="flex items-center justify-center w-7 h-7 rounded-full bg-white/10 group-hover:bg-white/20 transition-all duration-300 backdrop-blur-sm">
-                  <FaWhatsapp className="text-white" size={14} />
-                </div>
-              </a>
-              <a href="#" className="group">
-                <div className="flex items-center justify-center w-7 h-7 rounded-full bg-white/10 group-hover:bg-white/20 transition-all duration-300 backdrop-blur-sm">
-                  <FaFacebook className="text-white" size={14} />
-                </div>
-              </a>
-              <a href="#" className="group">
-                <div className="flex items-center justify-center w-7 h-7 rounded-full bg-white/10 group-hover:bg-white/20 transition-all duration-300 backdrop-blur-sm">
-                  <FaTwitter className="text-white" size={14} />
-                </div>
-              </a>
-              <a href="#" className="group">
-                <div className="flex items-center justify-center w-7 h-7 rounded-full bg-white/10 group-hover:bg-white/20 transition-all duration-300 backdrop-blur-sm">
-                  <FaLinkedin className="text-white" size={14} />
-                </div>
-              </a>
-            </div>
-            
-            {/* Quick Actions */}
-            <div className="flex items-center space-x-3 border-l border-white/20 pl-4">
-              <a href="#" className="text-xs md:text-sm hover:text-white/80 transition-colors duration-300 font-medium">
-                Emergency
-              </a>
-              <span className="text-white/20">|</span>
-              <a href="#" className="text-xs md:text-sm hover:text-white/80 transition-colors duration-300 font-medium">
-                Book Now
-              </a>
-            </div>
+            <a href="/user/cart" className="relative flex items-center hover:text-white/80 font-medium transition-colors">
+              <FaShoppingCart className="mr-1" size={16} />
+              Cart
+              {totalQuantity > 0 && (
+                <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[10px] rounded-full px-1.5 py-0.5 font-bold animate-bounce">
+                  {totalQuantity}
+                </span>
+              )}
+            </a>
+
           </div>
         </div>
       </div>
