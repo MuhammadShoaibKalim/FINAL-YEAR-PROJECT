@@ -4,8 +4,9 @@ import { Toaster } from 'react-hot-toast';
 import { CartProvider } from "react-use-cart";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { SetUser } from './redux/AuthSlice';
+import { SetUser, logoutUser } from './redux/AuthSlice';
 import { get } from "./Services/ApiEndpoints";
+
 
 import UserLayout from "./components/Layouts/UserLayout";
 import SuperAdminLayout from "./components/SuperAdmin/SuperAdminLayout";
@@ -35,7 +36,6 @@ import SymptomDetails from "./pages/Symptoms/SymptomDetails";
 
 // Lab Admin Components
 import Orders from "./components/LabAdmin/Orders";
-import Reports from "./components/LabAdmin/ReportCard";
 import OfferedTest from "./components/LabAdmin/OfferedTest";
 import LabOverview from "./components/LabAdmin/LabOverview";
 import OrderEdit from "./components/LabAdmin/OrderEdit";
@@ -64,12 +64,17 @@ import LabAdminProfileSettings from "./components/LabAdmin/LabAdminProfileSettin
 // userprofile layout
 import UserProfileLayout from "./components/UserAdmin/UserProfileLayout";
 import UserProfile from "./components/UserAdmin/UserProfile";
-import UserReport from "./components/UserAdmin/UserReports";
+// import UserReport from "./components/UserAdmin/UserReports";
 import UserCart from "./components/UserAdmin/Cart";
 import UserMessage from "./components/UserAdmin/UserInbox";
 import UserOrder from "./components/UserAdmin/Orders";
 import UserReports from "./components/UserAdmin/UserReports";
 import UserProfileEdit from "./components/UserAdmin/UserProfileEdit";
+import EmailVerification from "./components/Auth/EmailVerification";
+import Unauthorized from "./pages/Unauthorized";
+import CheckEmail from "./components/Auth/CheckEmail";
+import ResendVerification from "./components/Auth/ResendEmailVerification";
+import ResetPasswordForce from "./components/Auth/ResetPasswordForce";
 
 
 
@@ -109,7 +114,11 @@ const App = () => {
         }
       } catch (error) {
         console.error('Error checking user:', error);
-        dispatch(Logout());
+        dispatch(logoutUser());
+        // dispatch(Logout());
+        // dispatch(Logout());
+        // dispatch(logoutUser());
+
       }
     };
   
@@ -133,8 +142,17 @@ const App = () => {
           {/* User Login?register */}
              <Route path="register" element={<Register />} />
             <Route path="login" element={<Login />} />
+            <Route path="/verify-email" element={<EmailVerification />} />
+            <Route path="/resend-verification" element={<ResendVerification />} />
             <Route path="/user/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password/:token" element={<ResetPassword />} />
+            <Route path="/check-email" element={<CheckEmail />} />
+            <Route path="/reset-password-force/:id" element={<ResetPasswordForce />} />
+
+
+
+            
+
 
           {/* Public Routes */}
           <Route path="/" element={<UserLayout />}>
@@ -169,7 +187,8 @@ const App = () => {
 
          
          {/* UserProfile Layout */}
-         <Route path="/user" element={<UserProfileLayout />}>
+         {/* <Route path="/user" element={<UserProfileLayout />}> */}
+         <Route path="/user" element={<ProtectedRoute roles={['user']}><UserProfileLayout /> </ProtectedRoute>}>
           <Route index element={<UserProfile />} />
           <Route path="profile" element={<UserProfile />} />
           <Route path="edit" element={<UserProfileEdit isEdit />} />
@@ -212,7 +231,6 @@ const App = () => {
             <Route path="orders" element={<Orders />} />
             <Route path="orders/edit/:orderId" element={<OrderEdit />} />
             {/* <Route path="orders/:orderId" element={<OrderEdit />} /> */}
-            <Route path="reports" element={<Reports />} />
             <Route path="tests" element={<OfferedTest />} />
             <Route path="messages" element={<Messages />} />
             <Route path="settings" element={<LabAdminProfileSettings />} />
@@ -220,6 +238,7 @@ const App = () => {
 
           {/* 404 Not Found */}
           <Route path="*" element={<NotFound />} />
+          <Route path="unauthorized" element={<Unauthorized />} />
         </Routes>
       </CartProvider>
     </BrowserRouter>
