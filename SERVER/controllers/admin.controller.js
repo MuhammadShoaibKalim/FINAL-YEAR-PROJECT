@@ -88,22 +88,34 @@ export const logoutSuperAdmin = (req, res) => {
     res.status(500).json({ message: "Error logging out", error: error.message });
   }
 };
+
+
 export const superAdminOverview = async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
     const totalLabs = await Lab.countDocuments();
     const totalOrders = await Order.countDocuments();
 
+    // ✅ Total Revenue from completed and paid orders
     const revenueData = await Order.aggregate([
       { $match: { status: "Completed", paymentStatus: "paid" } },
-      { $group: { _id: null, total: { $sum: "$totalPrice" } } }
+      { $unwind: "$items" },
+      { $group: { _id: null, total: { $sum: "$items.price" } } }
     ]);
     const totalRevenue = revenueData[0]?.total || 0;
 
+    // ✅ Labs with Most Orders (from completed and paid)
     const labsWithMostOrders = await Order.aggregate([
       { $unwind: "$items" },
-      { $group: { _id: "$items.labId", totalOrders: { $sum: 1 } } },
-      { $sort: { totalOrders: -1 } },
+      { $match: { paymentStatus: "paid", status: "Completed" } },
+      {
+        $group: {
+          _id: "$items.labId",
+          totalOrders: { $sum: 1 },
+          revenue: { $sum: "$items.price" }
+        }
+      },
+      { $sort: { revenue: -1, totalOrders: -1 } },
       { $limit: 5 },
       {
         $lookup: {
@@ -114,18 +126,17 @@ export const superAdminOverview = async (req, res) => {
         },
       },
       { $unwind: "$labDetails" },
-      { $project: { _id: 0, name: "$labDetails.name", orders: "$totalOrders" } },
+      {
+        $project: {
+          _id: 0,
+          name: "$labDetails.name",
+          orders: "$totalOrders",
+          revenue: 1
+        },
+      },
     ]);
-    
-    
 
-    // const mostUsedTests = await Order.aggregate([
-    //   { $unwind: "$tests" },
-    //   { $group: { _id: "$tests.testName", value: { $sum: 1 } } },
-    //   { $sort: { value: -1 } },
-    //   { $limit: 5 },
-    //   { $project: { name: "$_id", value: 1, _id: 0 } },
-    // ]);
+    // ✅ Most Booked Tests
     const mostUsedTests = await Order.aggregate([
       { $unwind: "$items" },
       { $group: { _id: "$items.name", value: { $sum: 1 } } },
@@ -133,17 +144,18 @@ export const superAdminOverview = async (req, res) => {
       { $limit: 5 },
       { $project: { name: "$_id", value: 1, _id: 0 } },
     ]);
-    
 
+    // ✅ Order Status Summary
     const orderStatus = await Order.aggregate([
       { $group: { _id: "$status", value: { $sum: 1 } } },
       { $project: { name: "$_id", value: 1, _id: 0 } },
     ]);
 
+    // ✅ Monthly Order Trend
     const monthlyOrders = await Order.aggregate([
       {
         $group: {
-          _id: { $substr: ["$createdAt", 0, 7] }, 
+          _id: { $substr: ["$createdAt", 0, 7] }, // "YYYY-MM"
           orders: { $sum: 1 },
         },
       },
@@ -157,7 +169,9 @@ export const superAdminOverview = async (req, res) => {
       },
     ]);
 
+    // ✅ Top Performing Lab Admins from Completed + Paid Orders
     const topLabAdmins = await Order.aggregate([
+      { $match: { status: "Completed", paymentStatus: "paid" } }, // ✅ Added filter here
       { $unwind: "$items" },
       {
         $lookup: {
@@ -183,13 +197,12 @@ export const superAdminOverview = async (req, res) => {
           name: { $first: { $concat: ["$admin.firstName", " ", "$admin.lastName"] } },
           lab: { $first: "$lab.name" },
           orders: { $sum: 1 },
+          revenue: { $sum: "$items.price" }
         }
       },
-      { $sort: { orders: -1 } },
+      { $sort: { revenue: -1 } },
       { $limit: 5 }
     ]);
-    
-    
 
     res.status(200).json({
       totalUsers,
@@ -206,134 +219,6 @@ export const superAdminOverview = async (req, res) => {
     res.status(500).json({ message: "Error fetching overview data", error: error.message });
   }
 };
-
-// export const superAdminOverview = async (req, res) => {
-//   try {
-//     const totalUsers = await User.countDocuments();
-//     const totalLabs = await Lab.countDocuments();
-//     const totalOrders = await Order.countDocuments();
-
-//     const labsWithMostOrders = await Order.aggregate([
-//       { $group: { _id: "$labId", totalOrders: { $sum: 1 } } },
-//       { $sort: { totalOrders: -1 } },
-//       { $limit: 5 },
-//       {
-//         $lookup: {
-//           from: "labs",
-//           localField: "_id",
-//           foreignField: "_id",
-//           as: "labDetails",
-//         },
-//       },
-//       { $unwind: "$labDetails" },
-//       { $project: { _id: 0, name: "$labDetails.name", Orders: "$totalOrders" } },
-//     ]);
-
-//     const mostUsedTests = await Order.aggregate([
-//       { $unwind: "$tests" },
-//       { $group: { _id: "$tests.testName", value: { $sum: 1 } } },
-//       { $sort: { value: -1 } },
-//       { $limit: 5 },
-//       { $project: { name: "$_id", value: 1, _id: 0 } },
-//     ]);
-
-//     const orderStatus = await Order.aggregate([
-//       { $group: { _id: "$status", value: { $sum: 1 } } },
-//       { $project: { name: "$_id", value: 1, _id: 0 } },
-//     ]);
-
-//     res.status(200).json({
-//       totalUsers,
-//       totalLabs,
-//       totalOrders,
-//       labsWithMostOrders,
-//       mostUsedTests,
-//       orderStatus,
-//     });
-//   } catch (error) {
-//     res.status(500).json({ message: "Error fetching overview data", error: error.message });
-//   }
-// };
-
-// export const createUser = async (req, res) => {
-//   try {
-//     if (!req.user || req.user.role !== "superadmin") {
-//       return res.status(403).json({ message: "Access denied. Only Super Admin can create users." });
-//     }
-
-//     const { firstName, lastName, email, password, role } = req.body;
-
-//     if (!firstName || !lastName || !email || !password || !role) {
-//       return res.status(400).json({ message: "All fields are required" });
-//     }
-
-//     const existingUser = await User.findOne({ email });
-//     if (existingUser) {
-//       return res.status(400).json({ message: "User with this email already exists." });
-//     }
-
-//     const newUser = await User.create({
-//       firstName,
-//       lastName,
-//       email,
-//       password,
-//       role,
-//     });
-
-//     res.status(201).json({
-//       success: true,
-//       message: "User created successfully",
-//       createdUser: newUser,
-//     });
-//   } catch (error) {
-//     res.status(500).json({ message: "Error creating user", error: error.message });
-//   }
-// };
-// export const createUser = async (req, res) => {
-//   try {
-//     if (!req.user || req.user.role !== "superadmin") {
-//       return res.status(403).json({ message: "Access denied. Only Super Admin can create users." });
-//     }
-
-//     const { firstName, lastName, email, password, role } = req.body;
-
-//     if (!firstName || !lastName || !email || !password || !role) {
-//       return res.status(400).json({ message: "All fields are required." });
-//     }
-
-//     const existingUser = await User.findOne({ email });
-//     if (existingUser) {
-//       return res.status(400).json({ message: "User with this email already exists." });
-//     }
-
-//     const salt = await bcrypt.genSalt(10);
-//     const hashedPassword = await bcrypt.hash(password, salt);
-
-//     let image = "";
-//     if (req.file) {
-//       image = req.file.path;
-//     }
-    
-
-//     const newUser = await User.create({
-//       firstName,
-//       lastName,
-//       email,
-//       password: hashedPassword,
-//       role,
-//       image, 
-//     });
-
-//     res.status(201).json({
-//       success: true,
-//       message: "User created successfully",
-//       createdUser: newUser,
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: "Error creating user", error: error.message });
-//   }
-// };
 
 
 export const createUser = async (req, res) => {
@@ -471,35 +356,6 @@ export const deleteUser = async (req, res) => {
     res.status(500).json({ message: "Error deleting user", error: error.message });
   }
 };
-// export const updateUser = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { firstName, lastName, email, password, role } = req.body;
-
-//     const user = await User.findById(id);
-//     if (!user) return res.status(404).json({ message: "User not found" });
-
-//     user.firstName = firstName;
-//     user.lastName = lastName;
-//     user.email = email;
-//     user.role = role;
-
-//     if (password && password.trim() !== "") {
-//       user.password = password;
-//     }
-
-//     await user.save();
-
-//     res.status(200).json({
-//       success: true,
-//       message: "User updated successfully",
-//       updatedUser: user,
-//     });
-//   } catch (error) {
-//     console.error("Error updating user:", error);
-//     res.status(500).json({ message: "Error updating user", error: error.message });
-//   }
-// };
 export const getLabAdmins = async (req, res) => {
   try {
     if (!req.user || req.user.role !== "superadmin") {
@@ -619,46 +475,6 @@ export const changePassword = async (req, res) => {
 
 
 // Lab Admin controller function
-// Lab admin controller functions
-// export const loginLabAdmin = async (req, res) => {
-//   try {
-//     const { email, password } = req.body;
-
-//     const labAdmin = await User.findOne({ email, role: "Lab Admin" });
-//     if (!labAdmin) {
-//       return res.status(404).json({ message: "Lab Admin not found" });
-//     }
-
-//      if (password) {
-//              const salt = await bcrypt.genSalt(10);
-//              labAdmin.password = await bcrypt.hash(password, salt);
-//            }
-           
-//            const isPasswordCorrect = await bcrypt.compare(password.trim(), labAdmin.password);
-//            // console.log(" Password :",isPasswordCorrect);
-//            if (!isPasswordCorrect) {
-//              return res.status(401).json({ message: "Invalid email or password" });
-//            }
-
-//     const token = generateToken(labAdmin); 
-
-
-//     res.status(200).json({
-//       success: true,
-//       message: "Login successful",
-//       labAdmin: {
-//         id: labAdmin._id,
-//         email: labAdmin.email,
-//         firstName: labAdmin.firstName,
-//         lastName: labAdmin.lastName,
-//         role: labAdmin.role,
-//       },
-//       token,
-//     });
-//   } catch (error) {
-//     res.status(500).json({ message: "Error logging in Lab Admin", error: error.message });
-//   }
-// };
 
 export const loginLabAdmin = async (req, res) => {
   try {
@@ -712,68 +528,13 @@ export const logoutLabAdmin = (req, res) => {
     res.status(500).json({ message: "Error logging out Lab Admin", error: error.message });
   }
 };
-// export const getLabDashboardOverview = async (req, res) => {
-//   try {
-//     const labId = req.user.labId || req.user.lab;
-//     if (!labId) return res.status(400).json({ success: false, message: "Lab ID not found in token." });
-//     console.log(labId);
-
-//     const totalTests = await Test.countDocuments({ lab: labId });
-//     const totalPackages = await Package.countDocuments({ lab: labId });
-
-//     const totalOrders = await Order.countDocuments({ lab: labId });
-//     const pendingOrders = await Order.countDocuments({ lab: labId, status: "pending" });
-//     const completedOrders = await Order.countDocuments({ lab: labId, status: "completed" });
-
-//     const completionRate = totalOrders > 0 ? Math.round((completedOrders / totalOrders) * 100) : 0;
-
-//     const ordersOverTime = await Order.aggregate([
-//       { $match: { lab: new mongoose.Types.ObjectId(labId) } },
-//       {
-//         $group: {
-//           _id: { $dateToString: { format: "%d-%m-%Y", date: "$createdAt" } },
-//           orders: { $sum: 1 },
-//         },
-//       },
-//       { $sort: { _id: 1 } },
-//     ]);
-
-//     const testAndPackages = await Promise.all([
-//       Test.find({ lab: labId }).select("_id name price rating bookedCount"),
-//       Package.find({ lab: labId }).select("_id name price rating bookedCount"),
-//     ]);
-    
-//     const all = [
-//       ...testAndPackages[0].map((item) => ({ ...item._doc, type: "Test" })),
-//       ...testAndPackages[1].map((item) => ({ ...item._doc, type: "Package" })),
-//     ];
-    
-
-//     res.status(200).json({
-//       success: true,
-//       data: {
-//         totalOrders,
-//         pendingOrders,
-//         completedOrders,
-//         totalTests,
-//         totalPackages,
-//         completionRate,
-//         ordersOverTime: ordersOverTime.map((o) => ({ name: o._id, orders: o.orders })),
-//         testPackages: all,
-
-//       },
-//     });
-//   } catch (error) {
-//     console.error("Error in LabDashboard API:", error);
-//     res.status(500).json({ success: false, message: "Internal Server Error" });
-//   }
-// };
-
 export const getLabDashboardOverview = async (req, res) => {
   try {
     const labId = req.user.labId;
-    if (!labId) return res.status(400).json({ success: false, message: "Lab ID not found in token." });
+    if (!labId)
+      return res.status(400).json({ success: false, message: "Lab ID not found in token." });
 
+    // ✅ Only fetch lab orders (all statuses)
     const orders = await Order.find({ "items.labId": labId });
 
     const totalOrders = orders.length;
@@ -783,6 +544,14 @@ export const getLabDashboardOverview = async (req, res) => {
     const inProgressOrders = orders.filter((o) => o.status === "Progress").length;
     const completionRate = totalOrders > 0 ? Math.round((completedOrders / totalOrders) * 100) : 0;
 
+    // ✅ Pending report count
+    const pendingReportsCount = await Order.countDocuments({
+      "items.labId": labId,
+      status: "Completed",
+      "items.reportFile": { $in: [null, ""] },
+    });
+
+    // ✅ Orders over time chart
     const ordersOverTimeRaw = await Order.aggregate([
       { $match: { "items.labId": new mongoose.Types.ObjectId(labId) } },
       {
@@ -821,7 +590,7 @@ export const getLabDashboardOverview = async (req, res) => {
       },
       { $sort: { _id: 1 } },
     ]);
-    
+
     const ordersOverTime = ordersOverTimeRaw.map((o) => ({
       date: o._id,
       Pending: o.Pending,
@@ -829,9 +598,8 @@ export const getLabDashboardOverview = async (req, res) => {
       Cancelled: o.Cancelled,
       InProgress: o.InProgress,
     }));
-    
 
-
+    // ✅ Tests & packages owned by this lab
     const [tests, packages] = await Promise.all([
       Test.find({ lab: labId }).select("_id name price rating bookedCount"),
       Package.find({ lab: labId }).select("_id name price rating bookedCount"),
@@ -841,6 +609,19 @@ export const getLabDashboardOverview = async (req, res) => {
       ...tests.map((item) => ({ ...item._doc, type: "Test" })),
       ...packages.map((item) => ({ ...item._doc, type: "Package" })),
     ];
+
+    // ✅ Total Earnings: Only from completed + paid orders
+    const paidCompletedOrders = await Order.find({
+      status: "Completed",
+      paymentStatus: "paid",
+      "items.labId": labId,
+    });
+
+    const totalEarnings = paidCompletedOrders.reduce((sum, order) => {
+      const labItems = order.items.filter((item) => item.labId.toString() === labId.toString());
+      const labItemTotal = labItems.reduce((itemSum, item) => itemSum + (item.price || 0), 0);
+      return sum + labItemTotal;
+    }, 0);
 
     res.status(200).json({
       success: true,
@@ -853,16 +634,18 @@ export const getLabDashboardOverview = async (req, res) => {
         totalTests: tests.length,
         totalPackages: packages.length,
         completionRate,
-        ordersOverTime, 
+        ordersOverTime,
         testPackages,
+        totalEarnings,
+        pendingReports: pendingReportsCount,
       },
     });
-    
   } catch (error) {
     console.error("Error in LabDashboard API:", error);
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
+
 export const getLabAdminProfile = async (req, res) => {
 try {
   const labAdminId = req.user.id;
