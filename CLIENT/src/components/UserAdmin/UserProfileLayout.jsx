@@ -1,6 +1,6 @@
 import { Outlet } from "react-router-dom";
 import UserSidebar from './UserSidebar';
-import Footer from '../Common/Footer';
+import Footer from '../Headers/Footer';
 import Topbar from "../Layouts/Topbar";
 import HeaderUser from "../Headers/HeaderUser";
 
