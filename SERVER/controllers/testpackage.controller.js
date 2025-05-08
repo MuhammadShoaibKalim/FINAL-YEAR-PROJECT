@@ -68,7 +68,7 @@ export const getAllTests = async (req, res) => {
     // const tests = await Test.find()
     //   .populate("createdBy", "name email")
     //   .populate("lab", "name location");
-    const tests = await Test.find().select("name price discount lab bookedCount rating");
+    const tests = await Test.find().select("name price discount lab bookedCount rating type");
     res.status(200).json({ success: true, tests });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -174,7 +174,7 @@ export const getAllPackages = async (req, res) => {
     //   .populate("tests", "name price")
     //   .populate("createdBy", "name email")
     //   .populate("lab", "name location");
-    const packages = await Package.find().select("name price discount lab bookedCount rating description");
+    const packages = await Package.find().select("name price discount lab bookedCount rating description type");
 
 
     res.status(200).json({ success: true, packages });
@@ -244,5 +244,25 @@ export const addFeedback = async (req, res) => {
   } catch (err) {
     console.error("Feedback error:", err);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const getAllPublicTests = async (req, res) => {
+  try {
+    const tests = await Test.find().select("name price discount lab bookedCount rating type").populate("lab", "name location");
+    res.status(200).json({ success: true, tests });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+export const getAllPublicPackages = async (req, res) => {
+  try {
+    const packages = await Package.find()
+      .select("name price discount lab bookedCount rating description type")
+      .populate("lab", "name location");
+    
+    res.status(200).json({ success: true, packages });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 };
