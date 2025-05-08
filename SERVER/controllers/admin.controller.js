@@ -530,7 +530,8 @@ export const logoutLabAdmin = (req, res) => {
 };
 export const getLabDashboardOverview = async (req, res) => {
   try {
-    const labId = req.user.labId;
+    // const labId = req.user.labId;
+    const labId = req.user.labId || req.user.lab;
     if (!labId)
       return res.status(400).json({ success: false, message: "Lab ID not found in token." });
 
