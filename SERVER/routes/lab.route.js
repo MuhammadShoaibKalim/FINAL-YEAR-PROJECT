@@ -8,6 +8,7 @@ import {
   getAllLabs,
   getPublicLabs,
   getPublicLabById,
+  getAllLabsPublic
 } from "../controllers/lab.controller.js";
 import {  isAuthenticated, isLabAdmin, isSuperAdmin, protect } from "../middlewares/auth.middleware.js";
 import upload from "../middlewares/upload.middleware.js";
@@ -23,5 +24,8 @@ router.delete("/:id", protect, deleteLab);
 
 router.get("/public", getPublicLabs);
 router.get("/public/:id", getPublicLabById); 
+
+//all test and package labs
+router.get("/get-all", isAuthenticated, getAllLabsPublic);
 
 export default router;
