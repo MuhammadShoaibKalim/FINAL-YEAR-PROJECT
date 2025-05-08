@@ -44,6 +44,12 @@ const testSchema = new mongoose.Schema({
     type: Number, 
     default: 0 
   },
+  type: {
+  type: String,
+  enum: ["Test", "Package", "Radiology", "Pathology", "Other"], 
+  default: "Test",
+  required: true,
+},
   lab: {
   type: mongoose.Schema.Types.ObjectId,
   ref: "Lab",
@@ -112,6 +118,12 @@ rating: { type: Number, default: 0 },
   discount: { 
     type: Number, 
     default: 0 
+  },
+  type: {
+    type: String,
+    enum: ["Test", "Package", "Radiology", "Pathology", "Other"], 
+    default: "Package",
+    required: true,
   },
 lab: {
   type: mongoose.Schema.Types.ObjectId,
