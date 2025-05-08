@@ -12,7 +12,9 @@ import {
   getPackageById,
   addTestReview,
   addPackageReview,
-  addFeedback
+  addFeedback,
+  getAllPublicTests,
+  getAllPublicPackages
 } from "../controllers/testpackage.controller.js";
 import { isAuthenticated, isLabAdmin } from "../middlewares/auth.middleware.js";
 const router = express.Router();
@@ -38,5 +40,11 @@ router.put("/update-package/:id", isAuthenticated, isLabAdmin, updatePackage);
 router.delete("/delete-package/:id", isAuthenticated, isLabAdmin, deletePackage);
 router.get("/get-all-packages", isAuthenticated, getAllPackages);
 router.get("/get-package/:id", isAuthenticated, getPackageById);
+
+
+//get all test and packages
+router.get("/public-tests", isAuthenticated, getAllPublicTests);
+router.get("/public-packages", isAuthenticated, getAllPublicPackages);
+
 
 export default router;
