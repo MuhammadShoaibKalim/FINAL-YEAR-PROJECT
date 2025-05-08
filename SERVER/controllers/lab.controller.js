@@ -300,6 +300,15 @@ export const getPublicLabById = async (req, res) => {
   }
 };
 
+export const getAllLabsPublic = async (req, res) => {
+  try {
+      const labs = await Lab.find({ isActive: true }).select("-createdBy -lastUpdatedBy"); 
+      res.status(200).json({ labs });
+  } catch (error) {
+      res.status(500).json({ message: "Failed to fetch labs", error });
+  }
+};
+
 
 
 
