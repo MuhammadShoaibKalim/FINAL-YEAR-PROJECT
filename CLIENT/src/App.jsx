@@ -76,6 +76,7 @@ import CheckEmail from "./components/Auth/CheckEmail";
 import ResendVerification from "./components/Auth/ResendEmailVerification";
 import ResetPasswordForce from "./components/Auth/ResetPasswordForce";
 import Join from "./pages/NavbarPages/Join";
+import AllTests from "./pages/TestPackges/AllTests";
 
 
 
@@ -180,6 +181,11 @@ const App = () => {
             <Route path="payment/success" element={<Success />} />
             <Route path="payment/failure" element={<Failure />} />
             <Route path="/user/inbox" element={<UserInbox />} />
+
+
+            {/*All Test/package */}
+            <Route path="all-tests-packages" element={<AllTests />} />
+
           </Route>
 
          
