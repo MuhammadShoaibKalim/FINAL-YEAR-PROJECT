@@ -20,10 +20,21 @@ import cors from "cors";
 dotenv.config();
 const app = express();
 
+// CORS Configuration
+const corsOptions = {
+    origin: process.env.NODE_ENV === 'production' 
+        ? process.env.FRONTEND_URL 
+        : ['http://localhost:5173', 'http://127.0.0.1:5173'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['set-cookie'],
+    maxAge: 600,
+    optionsSuccessStatus: 200
+};
 
-
-app.use(cookieParser())
-app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+app.use(cors(corsOptions));
+app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -51,9 +62,33 @@ connectDB();
 
 //server
 const PORT = process.env.PORT || 7000;
-app.listen(PORT, () =>{
+const server = app.listen(PORT, () =>{
     console.log(`Server is running on port ${PORT}`);
-})
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+    console.log('UNHANDLED REJECTION! 💥 Shutting down...');
+    console.log(err.name, err.message);
+    server.close(() => {
+        process.exit(1);
+    });
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+    console.log('UNCAUGHT EXCEPTION! 💥 Shutting down...');
+    console.log(err.name, err.message);
+    process.exit(1);
+});
+
+// Graceful shutdown on SIGTERM
+process.on('SIGTERM', () => {
+    console.log('👋 SIGTERM RECEIVED. Shutting down gracefully');
+    server.close(() => {
+        console.log('💥 Process terminated!');
+    });
+});
 
 
 
