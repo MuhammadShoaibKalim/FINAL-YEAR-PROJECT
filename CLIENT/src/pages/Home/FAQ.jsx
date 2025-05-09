@@ -9,28 +9,6 @@ const FAQ = () => {
     setActiveIndex(activeIndex === index ? null : index);
   };
 
-  // const faqs = [
-  //   {
-  //     question: "What is Digital LabCore Test Information?",
-  //     answer: "Our platform provides access to detailed lab test information, including pricing and instructions, ensuring you can make informed healthcare decisions.",
-  //   },
-  //   {
-  //     question: "How does AI-Powered Recommendations work?",
-  //     answer: "Our advanced AI analyzes your symptoms and suggests relevant tests, helping you choose the most appropriate tests for your health needs.",
-  //   },
-  //   {
-  //     question: "What is Personalized Healthcare?",
-  //     answer: "The platform offers personalized test recommendations based on your health status, empowering you to make independent and informed decisions.",
-  //   },
-  //   {
-  //     question: "How do I schedule a test?",
-  //     answer: "You can easily book your lab tests through our intuitive platform. Simply select the tests you need, choose a convenient time, and complete your booking.",
-  //   },
-  //   {
-  //     question: "Is my data secure?",
-  //     answer: "Yes, your health data is protected with the highest level of security protocols and encryption, ensuring complete privacy and safety.",
-  //   },
-  // ];
   const faqs = [
     {
       question: "How do I book a test?",
@@ -51,95 +29,97 @@ const FAQ = () => {
   ];
 
   return (
-    <section className="relative py-24 bg-gradient-to-b from-bg-primary to-bg-secondary overflow-hidden">
-      {/* Decorative background elements */}
-      <div className="absolute inset-0">
-        <div className="absolute top-0 left-0 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[100px] animate-pulse" />
-        <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-secondary/5 rounded-full blur-[100px] animate-pulse" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-accent/5 rounded-full blur-[120px] animate-pulse" />
-      </div>
-
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        {/* Header Section */}
-        <div className="text-center mb-20">
-          <h2 className="text-4xl md:text-5xl font-bold text-text-primary mb-6">
-            Frequently Asked Questions
-          </h2>
-          <p className="text-xl text-text-secondary max-w-2xl mx-auto">
-            Find answers to common questions about our services and processes
-          </p>
+    <div className="max-w-9xl mx-auto px-4 font-sans">
+      <section className="relative py-16 md:py-24 bg-gradient-to-b from-bg-primary to-bg-secondary/90 overflow-hidden  shadow">
+        {/* Decorative background elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-0 left-0 w-[600px] h-[600px] md:w-[800px] md:h-[800px] bg-primary/5 rounded-full blur-[80px] md:blur-[100px] animate-pulse" />
+          <div className="absolute bottom-0 right-0 w-[600px] h-[600px] md:w-[800px] md:h-[800px] bg-secondary/5 rounded-full blur-[80px] md:blur-[100px] animate-pulse" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] md:w-[1000px] md:h-[1000px] bg-accent/5 rounded-full blur-[100px] md:blur-[120px] animate-pulse" />
         </div>
 
-        {/* FAQ Items */}
-        <div className="space-y-6">
-          {faqs.map((faq, index) => (
-            <div 
-              key={index}
-              className="group relative overflow-hidden rounded-2xl 
-                bg-bg-primary/40 backdrop-blur-md
-                border border-border/20
-                hover:border-primary/40 transition-all duration-500
-                hover:shadow-xl hover:shadow-primary/10
-                hover:translate-y-[-2px]"
-            >
-              {/* Question */}
-              <div
-                className="flex justify-between items-center p-8 cursor-pointer"
-                onClick={() => toggleAnswer(index)}
-              >
-                <h3 className="text-xl font-semibold text-text-primary 
-                  group-hover:text-primary transition-colors duration-500">
-                  {faq.question}
-                </h3>
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center
-                  ${activeIndex === index ? 'bg-primary/20' : 'bg-bg-primary/50'}
-                  group-hover:bg-primary/20 transition-all duration-500
-                  group-hover:scale-110`}>
-                  {activeIndex === index ? (
-                    <FaChevronUp className="w-5 h-5 text-primary" />
-                  ) : (
-                    <FaChevronDown className="w-5 h-5 text-text-secondary 
-                      group-hover:text-primary transition-colors duration-500" />
-                  )}
-                </div>
-              </div>
-
-              {/* Answer */}
-              {activeIndex === index && (
-                <div className="px-8 pb-8">
-                  <div className="h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent mb-8" />
-                  <p className="text-lg text-text-secondary leading-relaxed">
-                    {faq.answer}
-                  </p>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* Contact Support */}
-        <div className="text-center mt-16">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-6">
-            <FaHeadset className="w-8 h-8 text-primary" />
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          {/* Header Section */}
+          <div className="text-center mb-12 md:mb-20">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-text-primary mb-4 md:mb-6">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-lg md:text-xl text-text-secondary/90 max-w-2xl mx-auto">
+              Find answers to common questions about our services and processes
+            </p>
           </div>
-          <p className="text-xl text-text-secondary mb-6">
-            Still have questions? {`We're`} here to help!
-          </p>
-          <Link to="/contact">
-            <button className="inline-flex items-center justify-center 
-              bg-gradient-to-r from-primary to-primary/80 text-white 
-              font-medium py-4 px-8 rounded-xl
-              hover:from-primary/90 hover:to-primary/70 
-              transition-all duration-300
-              hover:translate-y-[-2px] hover:shadow-xl hover:shadow-primary/20
-              group">
-              Contact Support
-              <FaChevronDown className="ml-2 w-4 h-4 transform group-hover:translate-y-1 transition-transform duration-300" />
-            </button>
-          </Link>
+
+          {/* FAQ Items */}
+          <div className="space-y-4 md:space-y-6">
+            {faqs.map((faq, index) => (
+              <div 
+                key={index}
+                className={`group relative overflow-hidden rounded-xl md:rounded-2xl 
+                  bg-bg-primary/60 backdrop-blur-sm
+                  border border-border/20
+                  hover:border-primary/40 transition-all duration-300
+                  ${activeIndex === index ? 'shadow-lg shadow-primary/10' : 'shadow-md'}
+                  hover:shadow-lg hover:shadow-primary/10
+                  hover:-translate-y-[1px]`}
+              >
+                {/* Question */}
+                <div
+                  className="flex justify-between items-center p-6 md:p-8 cursor-pointer"
+                  onClick={() => toggleAnswer(index)}
+                >
+                  <h3 className="text-lg md:text-xl font-semibold text-text-primary 
+                    group-hover:text-primary transition-colors duration-300">
+                    {faq.question}
+                  </h3>
+                  <div className={`w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center
+                    ${activeIndex === index ? 'bg-primary/20 text-primary' : 'bg-bg-primary/50 text-text-secondary'}
+                    group-hover:bg-primary/20 transition-all duration-300
+                    group-hover:scale-105`}>
+                    {activeIndex === index ? (
+                      <FaChevronUp className="w-4 h-4 md:w-5 md:h-5" />
+                    ) : (
+                      <FaChevronDown className="w-4 h-4 md:w-5 md:h-5" />
+                    )}
+                  </div>
+                </div>
+
+                {/* Answer */}
+                {activeIndex === index && (
+                  <div className="px-6 md:px-8 pb-6 md:pb-8">
+                    <div className="h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent mb-6 md:mb-8" />
+                    <p className="text-base md:text-lg text-text-secondary/90 leading-relaxed">
+                      {faq.answer}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Contact Support */}
+          <div className="text-center mt-12 md:mt-16">
+            <div className="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-full bg-primary/10 mb-4 md:mb-6">
+              <FaHeadset className="w-6 h-6 md:w-8 md:h-8 text-primary" />
+            </div>
+            <p className="text-lg md:text-xl text-text-secondary/90 mb-4 md:mb-6">
+              Still have questions? {`We're`} here to help!
+            </p>
+            <Link to="/contact">
+              <button className="inline-flex items-center justify-center 
+                bg-gradient-to-r from-primary to-primary/80 text-white 
+                font-medium py-3 px-6 md:py-4 md:px-8 rounded-lg md:rounded-xl
+                hover:from-primary/90 hover:to-primary/70 
+                transition-all duration-300
+                hover:-translate-y-[1px] hover:shadow-lg hover:shadow-primary/20
+                group">
+                Contact Support
+                <FaChevronDown className="ml-2 w-3 h-3 md:w-4 md:h-4 transform group-hover:translate-y-1 transition-transform duration-300" />
+              </button>
+            </Link>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </div>
   );
 };
 
