@@ -77,6 +77,24 @@ import ResendVerification from "./components/Auth/ResendEmailVerification";
 import ResetPasswordForce from "./components/Auth/ResetPasswordForce";
 import Join from "./pages/NavbarPages/Join";
 import AllTests from "./pages/TestPackges/AllTests";
+import MenHealthPage from "./pages/HealthConcernTest/MenHealthPage";
+import TestByHConcern from "./pages/Home/TestByHConcern";
+import { Test } from "../../SERVER/models/testpackage.model";
+import TestHealthConcern from "./pages/HealthConcernTest/TestHealthConcern";
+import HealthLayout from "./pages/HealthConcernTest/HealthLayout"
+import DiabetesCarePage from "./pages/HealthConcernTest/DiabetesCarePage";
+import HeartHealthPage from "./pages/HealthConcernTest/HeartHealthPage";
+import WomensHealthPage from "./pages/HealthConcernTest/WomensHealthPage";
+import SeniorCarePage from "./pages/HealthConcernTest/SeniorCareHealthPage";
+import ChildHealthPage from "./pages/HealthConcernTest/ChildHealthPage";
+
+import MostUsedLayout from "./pages/MostUsed/MostUsedLayout";
+import CBC from "./pages/MostUsed/CBC";
+import DiabetesScreening from "./pages/MostUsed/DiabetesScreening";
+import LipidProfile from "./pages/MostUsed/LipidProfile";
+import ThyroidProfile from "./pages/MostUsed/ThyroidProfile";
+import MostUsed from "./pages/MostUsed/MostUsed";
+
 
 
 
@@ -169,6 +187,28 @@ const App = () => {
             <Route path="services" element={<Hero />} />
           </Route>
 
+
+          {/* Public routes ( Test by Health Concern) */}
+          <Route path="/" element={<HealthLayout />}>
+            <Route path="tests-by-concern" element={<TestHealthConcern />} />
+            <Route path="men's-health" element={<MenHealthPage />} />
+            <Route path="diabetes-care" element={<DiabetesCarePage />} />
+            <Route path="heart-health" element={<HeartHealthPage />} />
+            <Route path="women's-health" element={<WomensHealthPage />} />
+            <Route path="senior-care" element={<SeniorCarePage />} />
+            <Route path="child-health" element={<ChildHealthPage />} />
+          </Route>
+
+
+           {/* Public routes ( Most Used Test) */}
+           <Route path="tests" element={<MostUsed />} />
+           <Route path="/most-used" element={<MostUsedLayout />}>
+             <Route path="cbc" element={<CBC />} />
+             <Route path="diabetes-screening" element={<DiabetesScreening />} />
+             <Route path="thyroid-profile" element={<ThyroidProfile />} />
+            <Route path="lipid-profile" element={<LipidProfile />} />
+          </Route>
+
           {/* Protected User Routes */}
           <Route path="/" element={<ProtectedRoute><UserLayout /> </ProtectedRoute>}>
             <Route path="ai-recommendations-test" element={<AIRecommendation />} />
@@ -182,6 +222,8 @@ const App = () => {
             <Route path="payment/failure" element={<Failure />} />
             <Route path="/user/inbox" element={<UserInbox />} />
 
+
+            
 
             {/*All Test/package */}
             <Route path="all-tests-packages" element={<AllTests />} />
