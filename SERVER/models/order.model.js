@@ -35,9 +35,10 @@ const OrderSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
-
-
-  name: { type: String, required: true },
+  name: { 
+    type: String, 
+    required: true 
+  },
   email: {
     type: String,
     required: true,
@@ -53,10 +54,23 @@ const OrderSchema = new mongoose.Schema({
     enum: ["Male", "Female", "Other"],
     required: true,
   },
-  age: { type: Number, required: true, min: 0 },
-  address: { type: String, required: true },
-  state: { type: String, required: true },
-  country: { type: String, required: true },
+  age: { 
+    type: Number, 
+    required: true, 
+    min: 0 
+  },
+  address: { 
+    type: String, 
+    required: true 
+  },
+  state: { 
+    type: String, 
+    required: true 
+  },
+  country: { 
+    type: String, 
+    required: true 
+  },
   paymentStatus: {
     type: String,
     enum: ["pending", "paid", "unpaid"],
@@ -71,7 +85,6 @@ const OrderSchema = new mongoose.Schema({
     date: { type: Date, required: true },
     time: { type: String, trim: true, required: true },
   },
-
   status: {
     type: String,
     enum: ["Pending", "In Progress", "Completed", "Approved", "Cancelled"],
@@ -81,16 +94,25 @@ reportFile: {
   type: String,
   default: null,
 },
-  subtotal: { type: Number, required: true, default: 0 },
-  deliveryCharge: { type: Number, default: 0 },
-  totalPrice: { type: Number, required: true, default: 0 },
+  subtotal: { 
+    type: Number, 
+    required: true, 
+    default: 0 
+  },
+  deliveryCharge: { 
+    type: Number, 
+    default: 0 
+  },
+  totalPrice: { 
+    type: Number, 
+    required: true, 
+    default: 0 
+  },
   resultId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Result",
     default: null,
   },
-
-
   items: [
     {
       testOrPackageId: {
@@ -102,6 +124,15 @@ reportFile: {
       price: { type: Number, required: true },
       type: { type: String, enum: ["Test", "Package"], required: true },
       labId: { type: mongoose.Schema.Types.ObjectId, ref: "Lab" },
+      status: {
+        type: String,
+        enum: ["Pending", "In Progress", "Completed", "Cancelled"],
+        default: "Pending"
+      },
+      reportFile: {
+        type: String,
+        default: null
+      }
     },
   ],
 }, { timestamps: true });
@@ -151,12 +182,12 @@ const ResultSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Pending", "Completed"],
+      enum: ["Pending", "In Progress", "Completed", "Cancelled"],
       default: "Pending",
     },
     uploadedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "LabAdmin", 
+      ref: "labadmin", 
       required: true,
     },
   },
