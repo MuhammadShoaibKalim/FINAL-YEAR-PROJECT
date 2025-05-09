@@ -1,21 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { FiTrash2, FiPlus, FiMinus } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-
-
+import { setCart, updateQuantity, deleteItem } from "../../redux/CartSlice";
 
 const CartSection = () => {
-  const [cartItems, setCartItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
-
+  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const currentLabId = useSelector((state) => state.lab?.currentLabId);
+  const cartItems = useSelector((state) => state.cart.items);
   const labCartItems = cartItems.filter((item) => item.labId === currentLabId);
+  const total = labCartItems.reduce((sum, item) => sum + (Number(item.price) * item.quantity), 0);
 
   const fetchCart = async () => {
     setLoading(true);
@@ -28,32 +28,22 @@ const CartSection = () => {
 
       const data = await res.json();
       if (data.success && Array.isArray(data.cartItems)) {
-        const itemsWithQty = data.cartItems.map((item) => ({ ...item, quantity: 1 }));
-        setCartItems(itemsWithQty);
-        calculateTotal(itemsWithQty);
+        dispatch(setCart(data.cartItems));
       } else {
         toast.error(data.message || "Failed to load cart");
-        setCartItems([]);
-        setTotal(0);
       }
     } catch (err) {
       console.error("Cart fetch error:", err);
       toast.error("Failed to fetch cart");
-      setCartItems([]);
-      setTotal(0);
     } finally {
       setLoading(false);
     }
   };
 
-  const calculateTotal = (items) => {
-    const totalPrice = items
-      .filter((item) => item.labId === currentLabId)
-      .reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    setTotal(totalPrice);
-  };
-
   const handleRemove = async (id) => {
+    if (isDeleting) return;
+    setIsDeleting(true);
+    
     try {
       const res = await fetch(`/api/cart/remove/${id}`, {
         method: "DELETE",
@@ -64,29 +54,62 @@ const CartSection = () => {
 
       const data = await res.json();
       if (data.success) {
+        dispatch(deleteItem(id));
         toast.success("Item removed from cart");
-        const updatedItems = cartItems.filter((item) => item._id !== id);
-        setCartItems(updatedItems);
-        calculateTotal(updatedItems);
       } else {
         toast.error(data.message || "Failed to remove item");
       }
     } catch (error) {
       console.error("Remove item error:", error);
       toast.error("Error removing item");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
-  const updateQuantity = (id, type) => {
-    const updated = cartItems.map((item) => {
-      if (item._id === id) {
-        const newQty = type === "inc" ? item.quantity + 1 : Math.max(1, item.quantity - 1);
-        return { ...item, quantity: newQty };
+  const handleQuantityChange = async (id, type) => {
+    const item = cartItems.find((i) => i._id === id);
+    if (!item) {
+      console.error("Item not found in cart:", id);
+      return;
+    }
+
+    const newQty = type === "inc" ? item.quantity + 1 : Math.max(1, item.quantity - 1);
+
+    try {
+      const requestBody = {
+        quantity: newQty
+      };
+
+      const res = await fetch(`/api/cart/quantity/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("Server response:", {
+          status: res.status,
+          statusText: res.statusText,
+          body: errorText
+        });
+        throw new Error(`Server returned ${res.status}: ${errorText}`);
       }
-      return item;
-    });
-    setCartItems(updated);
-    calculateTotal(updated);
+
+      const data = await res.json();
+      if (data.success) {
+        dispatch(updateQuantity({ _id: id, quantity: newQty }));
+      } else {
+        toast.error(data.message || "Failed to update quantity");
+      }
+    } catch (err) {
+      console.error("Update quantity error:", err);
+      toast.error("Failed to update quantity");
+    }
   };
 
   useEffect(() => {
@@ -113,26 +136,29 @@ const CartSection = () => {
                 <div>
                   <p className="font-semibold">{item.name}</p>
                   <p className="text-sm text-gray-500">
-                    PKR {item.price} x {item.quantity} = PKR {item.price * item.quantity}
+                    PKR {item.price} x {item.quantity} = PKR {(Number(item.price) * item.quantity).toFixed(2)}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => updateQuantity(item._id, "dec")}
+                    onClick={() => handleQuantityChange(item._id, "dec")}
                     className="p-1 text-primary hover:bg-gray-100 rounded"
+                    disabled={isDeleting}
                   >
                     <FiMinus />
                   </button>
                   <span className="w-6 text-center">{item.quantity}</span>
                   <button
-                    onClick={() => updateQuantity(item._id, "inc")}
+                    onClick={() => handleQuantityChange(item._id, "inc")}
                     className="p-1 text-primary hover:bg-gray-100 rounded"
+                    disabled={isDeleting}
                   >
                     <FiPlus />
                   </button>
                   <button
                     onClick={() => handleRemove(item._id)}
                     className="p-1 text-red-500 hover:bg-red-50 rounded"
+                    disabled={isDeleting}
                   >
                     <FiTrash2 />
                   </button>
@@ -143,7 +169,7 @@ const CartSection = () => {
 
           <div className="mt-4 flex justify-between items-center">
             <span className="font-bold text-lg">Total:</span>
-            <span className="text-primary font-bold text-xl">PKR {total}</span>
+            <span className="text-primary font-bold text-xl">PKR {total.toFixed(2)}</span>
           </div>
 
           <button
@@ -151,17 +177,16 @@ const CartSection = () => {
               setIsLoading(true);
               navigate("/place-order");
             }}
-            disabled={isLoading}
+            disabled={isLoading || isDeleting}
             className={`mt-4 w-full py-2 rounded transition 
-        ${isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-primary hover:bg-primary-dark text-white"}`}
+              ${(isLoading || isDeleting) ? "bg-gray-400 cursor-not-allowed" : "bg-primary hover:bg-primary-dark text-white"}`}
           >
             {isLoading ? "Loading..." : "Proceed to Order"}
           </button>
-
         </>
       )}
     </div>
   );
 };
 
-export default CartSection;
+export default CartSection; 
