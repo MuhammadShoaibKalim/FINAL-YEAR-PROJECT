@@ -182,7 +182,7 @@ const AIRecommendation = () => {
       {/* First Div - Title */}
       <div className="text-center mb-10">
         <h1 className="text-3xl font-bold text-text-primary mb-3">Describe Your Symptoms</h1>
-        <p className="text-text-secondary max-w-2xl mx-auto text-justify">
+        <p className="text-text-secondary max-w-5xl mx-auto text-justify">
           Select your symptoms from the options below or type them manually. Our AI will analyze and recommend the most appropriate medical tests.
         </p>
       </div>
