@@ -74,3 +74,47 @@ export const clearCart = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error", error: error.message });
   }
 };
+
+export const updateCartItem = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { quantity } = req.body;
+    const userId = req.user.id;
+
+
+    if (!quantity || isNaN(quantity) || quantity < 1) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Quantity must be a number greater than 0" 
+      });
+    }
+
+  
+    const updatedItem = await Cart.findOneAndUpdate(
+      { _id: id, userId }, 
+      { quantity },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedItem) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Cart item not found or doesn't belong to user" 
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Quantity updated successfully",
+      updatedItem
+    });
+
+  } catch (error) {
+    console.error("Update cart item error:", error.message);
+    res.status(500).json({ 
+      success: false, 
+      message: "Internal server error",
+      error: error.message 
+    });
+  }
+};
