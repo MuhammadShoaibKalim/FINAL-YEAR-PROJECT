@@ -1,4 +1,4 @@
-// ✅ controllers/order.controller.js
+
 import { Order, Cart } from '../models/order.model.js';
 import {Test, Package} from "../models/testpackage.model.js"
 export const createOrder = async (req, res) => {
@@ -107,8 +107,10 @@ export const getAllOrders = async (req, res) => {
 export const getLabOrders = async (req, res) => {
   try {
     const labId = req.user.labId;
-    // const orders = await Order.find({ "items.labId": labId });
-    const orders = await Order.find({ "items.labId": labId }).sort({ updatedAt: -1 });
+    const orders = await Order.find({ "items.labId": labId })
+      .populate("userId", "firstName lastName email")
+      .populate("items.labId", "name")
+      .sort({ updatedAt: -1 });
 
     res.status(200).json({ message: "Orders for this lab", orders });
   } catch (error) {
@@ -118,7 +120,6 @@ export const getLabOrders = async (req, res) => {
 
 export const updateOrderStatus = async (req, res) => {
   try {
-    // Ensure form-data fields are strings
     const status = req.body.status?.toString();
     const paymentStatus = req.body.paymentStatus?.toString();
     const completionDate = req.body.completionDate;
@@ -171,8 +172,6 @@ export const updateOrderStatus = async (req, res) => {
   }
 };
 
-
-
 export const cancelOrder = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
@@ -195,5 +194,173 @@ export const deleteOrder = async (req, res) => {
     res.status(200).json({ message: "Order deleted" });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+export const updateLabOrderStatus = async (req, res) => {
+  try {
+    const { orderId, labId } = req.params;
+    const { status, paymentStatus, reportFile } = req.body;
+
+    if (req.user.role !== 'labadmin' || req.user.labId.toString() !== labId) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to update this lab's orders"
+      });
+    }
+
+    // Find the order
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found"
+      });
+    }
+
+    // Update status for items belonging to this lab
+    let updated = false;
+    order.items = order.items.map(item => {
+      if (item.labId && item.labId.toString() === labId) {
+        updated = true;
+        return {
+          ...item.toObject(),
+          status: status,
+          reportFile: reportFile || item.reportFile
+        };
+      }
+      return item;
+    });
+
+    if (!updated) {
+      return res.status(404).json({
+        success: false,
+        message: "No items found for this lab in the order"
+      });
+    }
+
+    // Update main order status based on all items' statuses
+    const allItemsCompleted = order.items.every(item => item.status === "Completed");
+    const allItemsCancelled = order.items.every(item => item.status === "Cancelled");
+    const someItemsInProgress = order.items.some(item => item.status === "In Progress");
+
+    if (allItemsCompleted) {
+      order.status = "Completed";
+    } else if (allItemsCancelled) {
+      order.status = "Cancelled";
+    } else if (someItemsInProgress) {
+      order.status = "In Progress";
+    } else {
+      order.status = "Pending";
+    }
+
+    // Update payment status if provided
+    if (paymentStatus) {
+      order.paymentStatus = paymentStatus;
+    }
+
+    // Update report file if provided
+    if (reportFile) {
+      order.reportFile = reportFile;
+    }
+
+    await order.save();
+
+    // Populate the lab information before sending response
+    await order.populate("items.labId", "name");
+
+    res.status(200).json({
+      success: true,
+      message: "Order status updated successfully",
+      order
+    });
+
+  } catch (error) {
+    console.error("Error updating lab order status:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating order status",
+      error: error.message
+    });
+  }
+};
+
+export const cancelLabOrder = async (req, res) => {
+  try {
+    const { orderId, labId } = req.params;
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found"
+      });
+    }
+
+    // Only allow cancellation if user owns the order or is the lab admin
+    if (order.userId.toString() !== req.user.id && 
+        (req.user.role !== 'labadmin' || req.user.labId.toString() !== labId)) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to cancel this order"
+      });
+    }
+
+    // Update status only for items belonging to this lab
+    order.items = order.items.map(item => {
+      if (item.labId.toString() === labId && item.status === "Pending") {
+        return { ...item.toObject(), status: "Cancelled" };
+      }
+      return item;
+    });
+
+    // Check if all items are cancelled to update main order status
+    if (order.items.every(item => item.status === "Cancelled")) {
+      order.status = "Cancelled";
+    }
+
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Lab order cancelled successfully",
+      order
+    });
+
+  } catch (error) {
+    console.error("Error cancelling lab order:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error cancelling order",
+      error: error.message
+    });
+  }
+};
+
+export const uploadReport = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const orderId = req.params.id;
+    const reportFile = req.file.path;
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    // Update the order with the report file
+    order.reportFile = reportFile;
+    await order.save();
+
+    res.status(200).json({
+      message: "Report uploaded successfully",
+      reportFile: reportFile
+    });
+  } catch (error) {
+    console.error("Report upload error:", error);
+    res.status(500).json({ message: "Error uploading report" });
   }
 };
