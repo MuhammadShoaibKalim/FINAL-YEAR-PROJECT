@@ -60,7 +60,15 @@ const labSchema = new mongoose.Schema({
     },
     updatedAt: { 
         type: Date
-    }
+    },
+    rating: {
+    type: Number,
+    default: 0 
+  },
+  ratingCount: {
+    type: Number,
+    default: 0 
+  }
 });
 
 const Lab = mongoose.model("Lab", labSchema);
