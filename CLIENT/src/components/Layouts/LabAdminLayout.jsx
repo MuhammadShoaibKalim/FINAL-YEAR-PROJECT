@@ -9,7 +9,7 @@ const LabAdminLayout = () => {
       <main className="min-h-screen">
         <Outlet />
       </main>
-      <Footer />
+      {/* <Footer /> */}
     </>
   );
 };
