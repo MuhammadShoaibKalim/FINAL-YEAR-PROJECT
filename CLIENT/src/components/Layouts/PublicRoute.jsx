@@ -21,7 +21,7 @@ const PublicRoute = () => {
     if (role === 'superadmin') {
       return <Navigate to="/admin/super/overview" replace />;
     } else if (role === 'labadmin') {
-      return <Navigate to="/labadmin/lab/overview" replace />;
+      return <Navigate to="/labadmin/lab/labdashboard" replace />;
     } else if (role === 'user') {
       return <Navigate to="/user" replace />;
     } else {
