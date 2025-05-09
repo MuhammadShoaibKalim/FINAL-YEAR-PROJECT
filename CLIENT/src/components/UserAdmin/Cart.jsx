@@ -8,6 +8,7 @@ import {
   removeItem,
   updateQuantity,
   setCart,
+  deleteItem
 } from "../../redux/CartSlice";
 
 const Cart = () => {
@@ -17,6 +18,7 @@ const Cart = () => {
   const cartItems = useSelector((state) => state.cart.items);
   const total = useSelector((state) => state.cart.totalAmount);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [isDeleting, setIsDeleting] = React.useState(false);
 
   const handleNavigate = () => {
     setIsLoading(true);
@@ -46,36 +48,71 @@ const Cart = () => {
     if (user) fetchCart();
   }, [dispatch, user]);
 
-  const handleQuantityChange = (id, type) => {
+  const handleQuantityChange = async (id, type) => {
     const item = cartItems.find((i) => i._id === id);
     if (!item) return;
 
     const newQty = type === "inc" ? item.quantity + 1 : Math.max(1, item.quantity - 1);
-    dispatch(updateQuantity({ _id: id, quantity: newQty }));
+    
+    try {
+      const res = await fetch(`/api/cart/update/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+        body: JSON.stringify({
+          testOrPackageId: id,
+          quantity: newQty,
+          type: item.type || "Test",
+          name: item.name,
+          price: item.price,
+          labId: item.labId
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        dispatch(updateQuantity({ _id: id, quantity: newQty }));
+      } else {
+        toast.error(data.message || "Failed to update quantity");
+      }
+    } catch (err) {
+      console.error("Update quantity error:", err);
+      toast.error("Failed to update quantity");
+    }
   };
 
   const handleRemove = async (id) => {
+    if (isDeleting) return;
+    setIsDeleting(true);
+
     try {
       const res = await fetch(`/api/cart/remove/${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
+        headers: { 
+          Authorization: `Bearer ${localStorage.getItem("authToken")}` 
+        },
       });
+      
       const data = await res.json();
       if (data.success) {
-        dispatch(removeItem(id));
+        dispatch(deleteItem(id));
         toast.success("Item removed");
       } else {
-        toast.error("Remove failed");
+        toast.error("Failed to remove item");
       }
     } catch (err) {
       console.error("Remove error:", err);
-      toast.error("Remove failed");
+      toast.error("Failed to remove item");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   if (!cartItems || cartItems.length === 0) {
     return (
-       <div className="bg-white shadow-md rounded-xl p-6 max-w-4xl mx-auto ">
+      <div className="bg-white shadow-md rounded-xl p-6 max-w-4xl mx-auto">
         <h2 className="text-xl font-bold text-primary mb-4">Your Cart</h2>
         <p className="text-gray-500">No items in cart.</p>
       </div>
@@ -91,13 +128,14 @@ const Cart = () => {
             <div>
               <p className="font-semibold">{item.name}</p>
               <p className="text-sm text-gray-500">
-                PKR {item.price} x {item.quantity} = PKR {item.price * item.quantity}
+                PKR {item.price} x {item.quantity} = PKR {(item.price * item.quantity).toFixed(2)}
               </p>
             </div>
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => handleQuantityChange(item._id, "dec")}
                 className="p-1 rounded text-primary hover:bg-gray-100"
+                disabled={isDeleting}
               >
                 <FiMinus />
               </button>
@@ -105,12 +143,14 @@ const Cart = () => {
               <button
                 onClick={() => handleQuantityChange(item._id, "inc")}
                 className="p-1 rounded text-primary hover:bg-gray-100"
+                disabled={isDeleting}
               >
                 <FiPlus />
               </button>
               <button
                 onClick={() => handleRemove(item._id)}
                 className="p-1 rounded text-red-500 hover:bg-red-50"
+                disabled={isDeleting}
               >
                 <FiTrash2 />
               </button>
@@ -121,14 +161,14 @@ const Cart = () => {
 
       <div className="mt-4 flex justify-between items-center">
         <span className="font-bold text-lg">Total:</span>
-        <span className="text-primary font-bold text-xl">PKR {total}</span>
+        <span className="text-primary font-bold text-xl">PKR {total.toFixed(2)}</span>
       </div>
 
       <button
         onClick={handleNavigate}
-        disabled={isLoading}
+        disabled={isLoading || isDeleting}
         className={`mt-4 w-full py-2 rounded transition 
-        ${isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-primary text-white hover:bg-primary-dark"}`}
+        ${(isLoading || isDeleting) ? "bg-gray-400 cursor-not-allowed" : "bg-primary text-white hover:bg-primary-dark"}`}
       >
         {isLoading ? "Loading..." : "Proceed to Order"}
       </button>
@@ -136,4 +176,4 @@ const Cart = () => {
   );
 };
 
-export default Cart;
+export default Cart; 
