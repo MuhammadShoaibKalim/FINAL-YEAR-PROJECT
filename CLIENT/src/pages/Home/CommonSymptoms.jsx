@@ -54,7 +54,7 @@ const MostAskedSymptoms = () => {
 
         {/* Description Section */}
         <div className="mb-8">
-          <p className="text-lg text-text-secondary max-w-2xl">
+          <p className="text-lg text-text-secondary max-w-2xl text-justify">
             Track and monitor your health with our comprehensive symptom database. Learn about common symptoms, 
             their potential causes, and when to seek medical attention.
           </p>
