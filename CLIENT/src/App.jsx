@@ -270,15 +270,17 @@ const App = () => {
             }
           >
             <Route index element={<LabOverview />} />
+            <Route path="overview" element={<LabOverview />} />
             <Route path="labdashboard" element={<LabOverview />} />
             <Route path="profile" element={<LabProfile />} />
             <Route path="orders" element={<Orders />} />
             <Route path="orders/edit/:orderId" element={<OrderEdit />} />
-            {/* <Route path="orders/:orderId" element={<OrderEdit />} /> */}
+                        {/* <Route path="orders/:orderId" element={<OrderEdit />} /> */}
             <Route path="tests" element={<OfferedTest />} />
             <Route path="messages" element={<Messages />} />
             <Route path="settings" element={<LabAdminProfileSettings />} />
           </Route>
+
 
           {/* 404 Not Found */}
           <Route path="*" element={<NotFound />} />
