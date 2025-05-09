@@ -724,13 +724,50 @@ export const updateLabDetails = async (req, res) => {
 export const getLabAdminInbox = async (req, res) => {
   try {
     const labAdminId = req.user.id;
-    const inboxMessages = await Query.find({ receiverType: "labadmin", labId: req.user.labId })
-      .populate("userId", "firstName lastName email")
-      .sort({ createdAt: -1 });
+    if (!labAdminId) {
+      return res.status(401).json({ 
+        success: false,
+        message: "Unauthorized: No user ID found" 
+      });
+    }
 
-    res.status(200).json({ success: true, inboxMessages });
+    if (!req.user.labId) {
+      return res.status(400).json({ 
+        success: false,
+        message: "No lab associated with this admin" 
+      });
+    }
+
+    const inboxMessages = await Query.find({ 
+      receiverType: "labadmin", 
+      labId: req.user.labId 
+    })
+    .populate("userId", "firstName lastName email")
+    .sort({ createdAt: -1 })
+    .lean()
+    .catch(err => {
+      console.error("Database query error:", err);
+      throw new Error("Failed to fetch inbox messages");
+    });
+
+    if (!inboxMessages) {
+      return res.status(200).json({ 
+        success: true,
+        inboxMessages: [] 
+      });
+    }
+
+    res.status(200).json({ 
+      success: true, 
+      inboxMessages 
+    });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching inbox messages", error: error.message });
+    console.error("Error in getLabAdminInbox:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Error fetching inbox messages", 
+      error: error.message 
+    });
   }
 };
 export const respondToLabAdminInbox = async (req, res) => {
