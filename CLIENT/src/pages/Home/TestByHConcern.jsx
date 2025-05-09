@@ -7,8 +7,12 @@ import {
   FaUserAlt, 
   FaChild 
 } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+
 
 export const TestByHConcern = () => {
+  const navigate = useNavigate(); 
+
   const healthConcerns = [
     {
       name: "Heart Health",
@@ -121,6 +125,11 @@ export const TestByHConcern = () => {
     }
   };
 
+  const handleCardClick = (concernName) => {
+    const path = concernName.toLowerCase().replace(/\s+/g, '-');
+    navigate(`/${path}`);
+  };
+
   return (
     <section className="relative py-16 bg-gradient-to-b from-bg-primary to-bg-secondary overflow-hidden">
       {/* Decorative background elements */}
@@ -144,9 +153,11 @@ export const TestByHConcern = () => {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {healthConcerns.map((concern, index) => (
             <div 
-              key={index}
-              className={getCardStyle(concern.style, concern)}
-            >
+            key={index}
+            className={getCardStyle(concern.style, concern)}
+            onClick={() => handleCardClick(concern.name)} 
+            style={{ cursor: 'pointer' }}
+          >
               {/* Hover effect overlay */}
               <div className={`absolute inset-0 bg-gradient-to-br ${concern.color} 
                 opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
