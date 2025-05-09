@@ -61,14 +61,25 @@ const AllTests = () => {
     const handleAddToCart = async (item) => {
         try {
             setAddingItemId(item._id);
+            
+            // Calculate the final price
+            const finalPrice = item.discount 
+                ? Math.round(item.price * (1 - (item.discount / 100))) 
+                : Number(item.price);
+
+            // Check if item already exists in cart
+            const existingItem = cartItems.find(cartItem => cartItem._id === item._id);
+            const newQuantity = existingItem ? existingItem.quantity + 1 : 1;
+
             const response = await axios.post(
                 "/api/cart/add",
                 {
                     testOrPackageId: item._id,
-                    type: item.type || "un",
+                    type: item.type || "Test",
                     name: item.name,
-                    price: item.discount || item.price,
+                    price: finalPrice,
                     labId: item.lab?._id || item.lab || "Unknown",
+                    quantity: newQuantity
                 },
                 {
                     headers: {
@@ -76,23 +87,26 @@ const AllTests = () => {
                     },
                 }
             );
+
             if (response.data.success) {
-                dispatch(
-                    addItem({
-                        _id: response.data.itemId || item._id,
-                        name: item.name,
-                        price: item.discountedPrice || item.price,
-                        type: item.type || "Test",
-                        labId: item.lab || " Lab Name",
-                        quantity: 1,
-                    })
-                );
+                const cartItem = {
+                    _id: response.data.itemId || item._id,
+                    name: item.name,
+                    price: finalPrice,
+                    type: item.type || "Test",
+                    labId: item.lab?._id || item.lab || "Unknown",
+                    labName: item.lab?.name || labsMap[item.lab]?.name || "Unknown Lab",
+                    quantity: 1
+                };
+
+                dispatch(addItem(cartItem));
                 toast.success("Added to cart successfully");
             } else {
-                toast.error(response.data.message);
+                toast.error(response.data.message || "Failed to add to cart");
             }
         } catch (err) {
-            toast.error("Failed to add to cart");
+            console.error("Cart error:", err);
+            toast.error(err.response?.data?.message || "Failed to add to cart");
         } finally {
             setAddingItemId(null);
         }
@@ -366,3 +380,4 @@ const AllTests = () => {
 };
 
 export default AllTests;
+   
