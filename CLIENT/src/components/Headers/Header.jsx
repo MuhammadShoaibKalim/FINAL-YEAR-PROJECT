@@ -76,7 +76,7 @@ const Header = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center justify-between h-20">
             <Link to="/" className="flex items-center gap-2">
-              <img src={logo} alt="LabCore Logo" className="h-14 w-auto rounded-full object-contain" />
+              <img src={logo} alt="LabCore Logo" className="h-20 w-auto rounded-full object-cover" />
             </Link>
 
             {/* Center: Explore, Search */}
