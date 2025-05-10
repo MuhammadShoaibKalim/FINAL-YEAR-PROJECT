@@ -1,51 +1,39 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import { FaEye, FaTrashAlt, FaReply, FaBell, FaComments, FaInbox } from "react-icons/fa";
-import { AuthContext } from "../context/AuthContext";
 
 const LabAdminInbox = () => {
-  const { user } = useContext(AuthContext);
-  const currentLabId = user?.labId; // Get labId from authenticated user
-
   // State management
   const [activeTab, setActiveTab] = useState('userQueries');
   const [userQueries, setUserQueries] = useState([]);
   const [chatMessages, setChatMessages] = useState([]);
-  const [unreadCounts, setUnreadCounts] = useState({ 
-    userQueries: 0, 
-    superAdmin: 0 
-  });
-  const [loading, setLoading] = useState({ 
-    userQueries: false, 
-    superAdmin: false 
-  });
+  const [unreadCounts, setUnreadCounts] = useState({ userQueries: 0, superAdmin: 0 });
+  const [loading, setLoading] = useState({ userQueries: false, superAdmin: false });
   const [replyingTo, setReplyingTo] = useState(null);
   const [newMessage, setNewMessage] = useState("");
 
-  // Fetch data when tab changes or component mounts
+  // Fetch data
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(prev => ({ ...prev, [activeTab]: true }));
         
-        const endpoint = activeTab === 'userQueries' 
-          ? "/api/query/user-queries" 
-          : "/api/query/superadmin-chat";
-        
-        const res = await fetch(endpoint, {
-          headers: { 
-            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-            'Lab-ID': currentLabId // Send labId in headers
+        const res = await fetch(
+          activeTab === 'userQueries' 
+            ? "/api/query/user-queries" 
+            : "/api/query/superadmin-chat",
+          {
+            headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` }
           }
-        });
+        );
         
         const data = await res.json();
         
         if (data.success) {
           if (activeTab === 'userQueries') {
-            setUserQueries(data.messages);
+            setUserQueries(data.queries);
             setUnreadCounts(prev => ({
               ...prev,
-              userQueries: data.messages.filter(m => m.status === 'unviewed').length
+              userQueries: data.queries.filter(q => q.status === 'unviewed').length
             }));
           } else {
             setChatMessages(data.messages);
@@ -62,21 +50,21 @@ const LabAdminInbox = () => {
       }
     };
 
-    if (currentLabId) { // Only fetch if labId exists
-      fetchData();
-    }
-  }, [activeTab, currentLabId]); // Add currentLabId to dependencies
+    fetchData();
+    const intervalId = setInterval(fetchData, 10000);
+    return () => clearInterval(intervalId);
+  }, [activeTab]);
 
+  // Message handlers
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !currentLabId) return;
+    if (!newMessage.trim()) return;
     
     try {
-      const res = await fetch("/api/query/send-to-superadmin", {
+      const res = await fetch("/api/query/send-message", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-          'Lab-ID': currentLabId
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`
         },
         body: JSON.stringify({
           message: newMessage,
@@ -90,118 +78,38 @@ const LabAdminInbox = () => {
         setChatMessages(prev => [...prev, data.message]);
         setNewMessage("");
         setReplyingTo(null);
-        // Refresh messages
-        if (activeTab === 'superAdmin') {
-          const res = await fetch("/api/query/superadmin-chat", {
-            headers: { 
-              Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-              'Lab-ID': currentLabId
-            }
-          });
-          const newData = await res.json();
-          if (newData.success) {
-            setChatMessages(newData.messages);
-          }
-        }
       }
     } catch (error) {
       console.error("Error sending message:", error);
     }
   };
 
-  // ... rest of your component code (UserQueriesTable, SuperAdminChat, etc.)
-
-  return (
-    <div className="bg-white rounded-lg shadow p-6">
-      {/* Tab Navigation */}
-      <div className="flex border-b mb-6">
-        <button
-          className={`flex items-center px-4 py-2 ${
-            activeTab === 'userQueries' 
-              ? 'border-b-2 border-primary text-primary' 
-              : 'text-gray-600 hover:text-gray-800'
-          }`}
-          onClick={() => setActiveTab('userQueries')}
-        >
-          <FaInbox className="mr-2" />
-          User Queries
-          {unreadCounts.userQueries > 0 && (
-            <span className="ml-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-              {unreadCounts.userQueries}
-            </span>
-          )}
-        </button>
-        <button
-          className={`flex items-center px-4 py-2 ${
-            activeTab === 'superAdmin' 
-              ? 'border-b-2 border-primary text-primary' 
-              : 'text-gray-600 hover:text-gray-800'
-          }`}
-          onClick={() => {
-            setActiveTab('superAdmin');
-            // Force refresh when switching to chat tab
-            if (currentLabId) {
-              fetch("/api/query/superadmin-chat", {
-                headers: { 
-                  Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-                  'Lab-ID': currentLabId
-                }
-              })
-                .then(res => res.json())
-                .then(data => {
-                  if (data.success) setChatMessages(data.messages);
-                });
-            }
-          }}
-        >
-          <FaComments className="mr-2" />
-          Super Admin Chat
-          {unreadCounts.superAdmin > 0 && (
-            <span className="ml-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-              {unreadCounts.superAdmin}
-            </span>
-          )}
-        </button>
-      </div>
-
-      {/* Content Area */}
-      {!currentLabId ? (
-        <div className="text-red-500 p-4">
-          Error: Lab ID not found. Please ensure you're properly authenticated as a lab admin.
-        </div>
-      ) : loading[activeTab] ? (
-        <div className="flex justify-center p-10">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary"></div>
-        </div>
-      ) : (
-        <>
-          {activeTab === 'userQueries' ? (
-            <UserQueriesTable 
-              queries={userQueries} 
-              onReply={setReplyingTo} 
-            />
-          ) : (
-            <SuperAdminChat 
-              messages={chatMessages} 
-              newMessage={newMessage}
-              onMessageChange={setNewMessage}
-              onSend={handleSendMessage}
-            />
-          )}
-          
-          {/* Reply Modal */}
-          {replyingTo && (
-            <ReplyModal 
-              message={replyingTo}
-              onClose={() => setReplyingTo(null)}
-              onSend={handleSendMessage}
-            />
-          )}
-        </>
-      )}
-    </div>
-  );
-}
+  const handleReplyToQuery = async (queryId, response) => {
+    try {
+      const res = await fetch(`/api/query/respond/${queryId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`
+        },
+        body: JSON.stringify({ response })
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        setUserQueries(prev => 
+          prev.map(q => 
+            q._id === queryId 
+              ? { ...q, response: data.response, status: 'responded' } 
+              : q
+          )
+        );
+        setReplyingTo(null);
+      }
+    } catch (error) {
+      console.error("Error replying to query:", error);
+    }
+  };
 
   // UI Components
   const UserQueriesTable = () => (
