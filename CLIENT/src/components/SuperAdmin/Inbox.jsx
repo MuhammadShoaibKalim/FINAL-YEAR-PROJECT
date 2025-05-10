@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaEye, FaTrashAlt, FaReply } from "react-icons/fa";
 
-const AdminDashboard = () => {
+const AdminInbox = () => {
   const [messages, setMessages] = useState([]);
   const [editMessage, setEditMessage] = useState(null);
 
@@ -60,19 +60,21 @@ const AdminDashboard = () => {
       });
       const data = await res.json();
       if (res.ok) {
-        setMessages(
-          messages.map((msg) =>
+        // Update the message in the state directly after response is sent
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) =>
             msg._id === messageId
               ? { ...msg, response: data.query.response, status: "responded" }
               : msg
           )
         );
-        setEditMessage(null);
+        setEditMessage(null); // Reset the edit message state after sending the reply
       }
     } catch (error) {
       console.error("Error replying to message:", error);
     }
   };
+  
 
   const handleViewMessage = async (messageId) => {
     try {
@@ -187,4 +189,4 @@ const AdminDashboard = () => {
   );
 };
 
-export default AdminDashboard;
+export default AdminInbox;
