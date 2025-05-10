@@ -68,47 +68,98 @@ export const respondToQuery = async (req, res) => {
     const { response } = req.body;
     const query = await Query.findByIdAndUpdate(
       req.params.id,
-      { response, status: "responded" },
+      { 
+        response,
+        status: "responded",
+        respondedBy: req.user._id,
+      },
       { new: true }
-    ).select("name email subject message response status createdAt updatedAt");
+    ).populate("labId", "name"); 
 
     if (!query) return res.status(404).json({ message: "Query not found" });
+
+    if (query.receiverType === "labadmin") {
+
+    }
 
     res.status(200).json({ success: true, message: "Response sent successfully", query });
   } catch (error) {
     res.status(500).json({ message: "Error responding to query", error: error.message });
   }
 };
-
 export const getUserQueries = async (req, res) => {
   try {
     const userId = req.user._id;
     const queries = await Query.find({ userId: userId })
       .sort({ createdAt: -1 })
-      .select("name email subject message response status createdAt updatedAt")
+      .populate({
+        path: "labId",
+        select: "name"
+      })
+      .select("name email subject message response status createdAt updatedAt receiverType labId")
       .lean();
 
-    res.status(200).json({ success: true, queries });
+    const queriesWithResponder = queries.map(query => {
+      let responder = "Support Team";
+      if (query.receiverType === "labadmin" && query.labId) {
+        responder = query.labId.name + " (Lab Admin)";
+      }
+      return { ...query, responder };
+    });
+
+    res.status(200).json({ success: true, queries: queriesWithResponder });
   } catch (error) {
     res.status(500).json({ message: "Error fetching user queries", error: error.message });
   }
 };
+// export const getInboxMessages = async (req, res) => {
+//   try {
+//     const userId = req.user._id; 
+
+//     const inboxMessages = await Query.find({ userId: userId })
+//       .sort({ createdAt: -1 })
+//       .select("name email subject message response status createdAt updatedAt")
+//       .lean();
+
+//     res.status(200).json({ success: true, inboxMessages });
+//   } catch (error) {
+//     console.error("Error fetching inbox messages:", error);
+//     res.status(500).json({ success: false, message: "Failed to fetch inbox messages." });
+//   }
+// };
 export const getInboxMessages = async (req, res) => {
   try {
-    const userId = req.user._id; 
+    const user = req.user;
+    let queryConditions;
 
-    const inboxMessages = await Query.find({ userId: userId })
+    if (user.role === "labadmin") {
+
+      queryConditions = {
+        $or: [
+          { receiverType: "labadmin", labId: user.labId },
+          { userId: user._id, response: { $exists: true } }
+        ]
+      };
+    } else if (user.role === "user") {
+
+      queryConditions = { userId: user._id };
+    } else {
+      queryConditions = { receiverType: "support" };
+    }
+
+    const messages = await Query.find(queryConditions)
       .sort({ createdAt: -1 })
-      .select("name email subject message response status createdAt updatedAt")
-      .lean();
+      .populate({
+        path: "userId labId",
+        select: "name email"
+      });
 
-    res.status(200).json({ success: true, inboxMessages });
+    res.status(200).json({ success: true, messages });
   } catch (error) {
     console.error("Error fetching inbox messages:", error);
-    res.status(500).json({ success: false, message: "Failed to fetch inbox messages." });
+    res.status(500).json({ success: false, message: "Failed to fetch messages" });
   }
 };
-
 
 
 
