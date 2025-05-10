@@ -19,7 +19,7 @@ const querySchema = new mongoose.Schema(
     },
     receiverType: {
       type: String,
-      enum: ["support", "labadmin"],
+      enum: ["support", "labadmin", "superadmin"],
       default: "support",
     },
     labId: {
