@@ -123,6 +123,7 @@ const App = () => {
     const checkUser = async () => {
       try {
         const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        // const token = localStorage.getItem('authToken') 
         if (!token) {
           console.log('No token found');
           return;
