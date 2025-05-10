@@ -23,9 +23,7 @@ const UserInbox = () => {
   }, []);
 
   return (
-    // <div className="p-6 bg-white rounded shadow-md mt-4">
-       <div className="bg-white shadow-md rounded-xl p-6 max-w-5xl mx-auto ">
-
+    <div className="bg-white shadow-md rounded-xl p-6 max-w-5xl mx-auto">
       <h2 className="text-2xl font-bold mb-4">Your Submitted Queries</h2>
       {queries.length === 0 ? (
         <p>No queries submitted yet.</p>
@@ -38,6 +36,7 @@ const UserInbox = () => {
                 <th className="px-4 py-2 text-left">Message</th>
                 <th className="px-4 py-2 text-left">Response</th>
                 <th className="px-4 py-2 text-left">Status</th>
+                <th className="px-4 py-2 text-left">Sent To</th>
               </tr>
             </thead>
             <tbody>
@@ -56,6 +55,9 @@ const UserInbox = () => {
                     `}>
                       {q.status}
                     </span>
+                  </td>
+                  <td className="px-4 py-2">
+                    {q.responder || "Unknown"}
                   </td>
                 </tr>
               ))}
