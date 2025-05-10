@@ -1,342 +1,392 @@
-import React, { useState, useEffect } from "react";
-import { FaEye, FaTrashAlt, FaReply } from "react-icons/fa";
+import React, { useState, useEffect, useContext } from "react";
+import { FaEye, FaTrashAlt, FaReply, FaBell, FaComments, FaInbox } from "react-icons/fa";
+import { AuthContext } from "../context/AuthContext";
 
 const LabAdminInbox = () => {
-  const [messages, setMessages] = useState([]);
-  const [editMessage, setEditMessage] = useState(null);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [showContactForm, setShowContactForm] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [contactFormData, setContactFormData] = useState({
-    name: "",
-    email: "",
-    subject: "",
-    description: "",
+  const { user } = useContext(AuthContext);
+  const currentLabId = user?.labId; // Get labId from authenticated user
+
+  // State management
+  const [activeTab, setActiveTab] = useState('userQueries');
+  const [userQueries, setUserQueries] = useState([]);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [unreadCounts, setUnreadCounts] = useState({ 
+    userQueries: 0, 
+    superAdmin: 0 
   });
+  const [loading, setLoading] = useState({ 
+    userQueries: false, 
+    superAdmin: false 
+  });
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [newMessage, setNewMessage] = useState("");
 
+  // Fetch data when tab changes or component mounts
   useEffect(() => {
-    fetchInbox();
-  
-    const intervalId = setInterval(() => {
-      fetchInbox();
-    }, 10000); 
-  
-    return () => clearInterval(intervalId); 
-  }, []);
-  
-
-  const fetchInbox = async () => {
-    try {
-      setLoading(true); // Start loading
-      const res = await fetch("/api/labadmin/inbox", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-        },
-      });
-      const data = await res.json();
-      if (data.success) {
-        setMessages(data.inboxMessages);
-        const unread = data.inboxMessages.filter(msg => msg.status === "unviewed").length;
-        setUnreadCount(unread);
+    const fetchData = async () => {
+      try {
+        setLoading(prev => ({ ...prev, [activeTab]: true }));
+        
+        const endpoint = activeTab === 'userQueries' 
+          ? "/api/query/user-queries" 
+          : "/api/query/superadmin-chat";
+        
+        const res = await fetch(endpoint, {
+          headers: { 
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+            'Lab-ID': currentLabId // Send labId in headers
+          }
+        });
+        
+        const data = await res.json();
+        
+        if (data.success) {
+          if (activeTab === 'userQueries') {
+            setUserQueries(data.messages);
+            setUnreadCounts(prev => ({
+              ...prev,
+              userQueries: data.messages.filter(m => m.status === 'unviewed').length
+            }));
+          } else {
+            setChatMessages(data.messages);
+            setUnreadCounts(prev => ({
+              ...prev,
+              superAdmin: data.messages.filter(m => !m.viewedByLabAdmin).length
+            }));
+          }
+        }
+      } catch (error) {
+        console.error(`Error fetching ${activeTab}:`, error);
+      } finally {
+        setLoading(prev => ({ ...prev, [activeTab]: false }));
       }
-    } catch (error) {
-      console.error("Error fetching inbox:", error);
-    } finally {
-      setLoading(false); // Always stop loading
-    }
-  };
-  
+    };
 
-  const handleReplyMessage = async (messageId, response) => {
-    try {
-      const res = await fetch(`/api/labadmin/respond/${messageId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-        },
-        body: JSON.stringify({ response }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setMessages(
-          messages.map((msg) =>
-            msg._id === messageId ? { ...msg, response: data.query.response, status: "responded" } : msg
-          )
-        );
-        setEditMessage(null);
-      }
-    } catch (error) {
-      console.error("Error replying:", error);
+    if (currentLabId) { // Only fetch if labId exists
+      fetchData();
     }
-  };
+  }, [activeTab, currentLabId]); // Add currentLabId to dependencies
 
-  const handleDeleteMessage = async (messageId) => {
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !currentLabId) return;
+    
     try {
-      const res = await fetch(`/api/query/delete/${messageId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-        },
-      });
-      if (res.ok) {
-        setMessages(messages.filter((msg) => msg._id !== messageId));
-      }
-    } catch (error) {
-      console.error("Error deleting message:", error);
-    }
-  };
-
-  const handleViewMessage = async (messageId) => {
-    try {
-      const res = await fetch(`/api/query/view/${messageId}`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-        },
-      });
-      if (res.ok) {
-        setMessages(
-          messages.map((msg) =>
-            msg._id === messageId ? { ...msg, status: "viewed" } : msg
-          )
-        );
-        setUnreadCount(prev => Math.max(prev - 1, 0));
-      }
-    } catch (error) {
-      console.error("Error marking as viewed:", error);
-    }
-  };
-
-  const handleContactSubmit = async (e) => {
-    if (e) e.preventDefault();
-    try {
-      const res = await fetch("/api/query/submit", {
+      const res = await fetch("/api/query/send-to-superadmin", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          'Lab-ID': currentLabId
         },
         body: JSON.stringify({
-          name: contactFormData.name,
-          email: contactFormData.email,
-          subject: contactFormData.subject,
-          message: contactFormData.description,
-          receiverType: "support", // Always sending to Super Admin (support)
-          labId: "", // No labId needed when contacting Super Admin
-        }),
+          message: newMessage,
+          labId: currentLabId,
+          isReplyTo: replyingTo?._id
+        })
       });
-  
+      
       const data = await res.json();
-      if (res.ok) {
-        alert("Message sent to Super Admin!");
-        setContactFormData({
-          name: "",
-          email: "",
-          subject: "",
-          description: "",
-        });
-        setShowContactForm(false);
-      } else {
-        alert(data.message || "Failed to send message.");
+      if (data.success) {
+        setChatMessages(prev => [...prev, data.message]);
+        setNewMessage("");
+        setReplyingTo(null);
+        // Refresh messages
+        if (activeTab === 'superAdmin') {
+          const res = await fetch("/api/query/superadmin-chat", {
+            headers: { 
+              Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+              'Lab-ID': currentLabId
+            }
+          });
+          const newData = await res.json();
+          if (newData.success) {
+            setChatMessages(newData.messages);
+          }
+        }
       }
     } catch (error) {
-      console.error("Error contacting super admin:", error);
+      console.error("Error sending message:", error);
     }
   };
-  
+
+  // ... rest of your component code (UserQueriesTable, SuperAdminChat, etc.)
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md mt-4 w-full max-w-7xl">
-
-      {/* Contact Super Admin Section */}
-      <div className="flex justify-between items-center mb-6 bg-gray-100 p-4 rounded-lg">
-        <div>
-          <h2 className="text-xl font-semibold">Need Assistance?</h2>
-          <p className="text-gray-600">Contact the Super Admin for any queries or issues you face.</p>
-        </div>
+    <div className="bg-white rounded-lg shadow p-6">
+      {/* Tab Navigation */}
+      <div className="flex border-b mb-6">
         <button
-          onClick={() => {
-            setShowContactForm(true);
-            setEditMessage(null);
-          }}
-          className="bg-primary text-white px-4 py-2 rounded-lg"
+          className={`flex items-center px-4 py-2 ${
+            activeTab === 'userQueries' 
+              ? 'border-b-2 border-primary text-primary' 
+              : 'text-gray-600 hover:text-gray-800'
+          }`}
+          onClick={() => setActiveTab('userQueries')}
         >
-          Contact Super Admin
+          <FaInbox className="mr-2" />
+          User Queries
+          {unreadCounts.userQueries > 0 && (
+            <span className="ml-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+              {unreadCounts.userQueries}
+            </span>
+          )}
+        </button>
+        <button
+          className={`flex items-center px-4 py-2 ${
+            activeTab === 'superAdmin' 
+              ? 'border-b-2 border-primary text-primary' 
+              : 'text-gray-600 hover:text-gray-800'
+          }`}
+          onClick={() => {
+            setActiveTab('superAdmin');
+            // Force refresh when switching to chat tab
+            if (currentLabId) {
+              fetch("/api/query/superadmin-chat", {
+                headers: { 
+                  Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+                  'Lab-ID': currentLabId
+                }
+              })
+                .then(res => res.json())
+                .then(data => {
+                  if (data.success) setChatMessages(data.messages);
+                });
+            }
+          }}
+        >
+          <FaComments className="mr-2" />
+          Super Admin Chat
+          {unreadCounts.superAdmin > 0 && (
+            <span className="ml-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+              {unreadCounts.superAdmin}
+            </span>
+          )}
         </button>
       </div>
 
-      {/* Contact Form (Updated) */}
-{showContactForm ? (
-  <div className="bg-white p-6 shadow-lg rounded-lg mt-4">
-    <h3 className="text-xl font-semibold mb-4">Contact Super Admin</h3>
-    <form onSubmit={handleContactSubmit} className="space-y-4">
-      <input
-        type="text"
-        name="name"
-        placeholder="Your Name"
-        value={contactFormData.name}
-        onChange={(e) =>
-          setContactFormData({ ...contactFormData, name: e.target.value })
-        }
-        required
-        className="w-full p-3 border border-gray-300 rounded-lg"
-      />
-      <input
-        type="email"
-        name="email"
-        placeholder="Your Email"
-        value={contactFormData.email}
-        onChange={(e) =>
-          setContactFormData({ ...contactFormData, email: e.target.value })
-        }
-        required
-        className="w-full p-3 border border-gray-300 rounded-lg"
-      />
-      <input
-        type="text"
-        name="subject"
-        placeholder="Subject"
-        value={contactFormData.subject}
-        onChange={(e) =>
-          setContactFormData({ ...contactFormData, subject: e.target.value })
-        }
-        required
-        className="w-full p-3 border border-gray-300 rounded-lg"
-      />
-      <textarea
-        name="description"
-        placeholder="Message"
-        value={contactFormData.description}
-        onChange={(e) =>
-          setContactFormData({ ...contactFormData, description: e.target.value })
-        }
-        required
-        rows="5"
-        className="w-full p-3 border border-gray-300 rounded-lg"
-      ></textarea>
-
-      <button
-        type="submit"
-        className="bg-primary text-white px-4 py-2 rounded-lg w-full"
-      >
-        Send Message
-      </button>
-    </form>
-  </div>
-) : (
+      {/* Content Area */}
+      {!currentLabId ? (
+        <div className="text-red-500 p-4">
+          Error: Lab ID not found. Please ensure you're properly authenticated as a lab admin.
+        </div>
+      ) : loading[activeTab] ? (
+        <div className="flex justify-center p-10">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      ) : (
         <>
-          {/* Inbox Section */}
-          <div className="flex justify-between items-center mb-4">
-            {/* <h2 className="text-2xl font-semibold">
-              Lab Admin Inbox
-              {unreadCount > 0 && (
-                <span className="ml-3 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                  {unreadCount} Unread
-                </span>
-              )}
-            </h2> */}
-            <div>
-  Inbox
-  {unreadCount > 0 && (
-    <span className="ml-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-      {unreadCount} Unread
-    </span>
-  )}
-</div>
-          </div>
-
-          <div className="overflow-auto max-w-full">
-            { loading ? (
-    <div className="flex justify-center items-center p-10">
-      <svg className="animate-spin h-10 w-10 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-      </svg>
-    </div>
-   ):(
-    <div className="min-w-[800px]">
-              <table className="w-full table-fixed border-collapse">
-                <thead>
-                  <tr className="bg-primary text-white text-left">
-                    <th className="px-4 py-2 w-[150px]">Name</th>
-                    <th className="px-4 py-2 w-[200px]">Subject</th>
-                    <th className="px-4 py-2 w-[300px]">Message</th>
-                    <th className="px-4 py-2 w-[300px]">Response</th>
-                    <th className="px-4 py-2 w-[150px]">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {messages.map((msg) => (
-                    <tr
-                      key={msg._id}
-                      className={`border-b hover:bg-gray-100 ${msg.status === "responded" ? "bg-green-100" : ""
-                        }`}
-                    >
-                      <td className="px-4 py-2 break-words">{msg.name}</td>
-                      <td className="px-4 py-2 break-words">{msg.subject}</td>
-                      <td className="px-4 py-2 break-words">{msg.message}</td>
-                      <td className="px-4 py-2 break-words">{msg.response || "No response yet"}</td>
-                      <td className="px-4 py-2 flex gap-2">
-                        <button
-                          className="text-green-500"
-                          onClick={() => handleViewMessage(msg._id)}
-                          title="Mark as Viewed"
-                        >
-                          <FaEye />
-                        </button>
-                        {msg.status === "responded" && (
-                          <button
-                            className="text-red-500"
-                            onClick={() => handleDeleteMessage(msg._id)}
-                            title="Delete Message"
-                          >
-                            <FaTrashAlt />
-                          </button>
-                        )}
-                        <button
-                          className="text-blue-500"
-                          onClick={() => {
-                            setEditMessage(msg);
-                            setShowContactForm(false);
-                          }}
-                          title="Reply"
-                        >
-                          <FaReply />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            )}
+          {activeTab === 'userQueries' ? (
+            <UserQueriesTable 
+              queries={userQueries} 
+              onReply={setReplyingTo} 
+            />
+          ) : (
+            <SuperAdminChat 
+              messages={chatMessages} 
+              newMessage={newMessage}
+              onMessageChange={setNewMessage}
+              onSend={handleSendMessage}
+            />
+          )}
           
-          </div>
+          {/* Reply Modal */}
+          {replyingTo && (
+            <ReplyModal 
+              message={replyingTo}
+              onClose={() => setReplyingTo(null)}
+              onSend={handleSendMessage}
+            />
+          )}
+        </>
+      )}
+    </div>
+  );
+}
 
-          {editMessage && (
-            <div className="bg-white p-6 shadow-lg rounded-lg mt-4">
-              <h3 className="text-xl font-semibold mb-4">Reply to {editMessage.name}</h3>
-              <textarea
-                value={editMessage.response || ""}
-                className="w-full p-3 border border-gray-300 rounded-lg mb-4"
-                placeholder="Type your reply here"
-                onChange={(e) =>
-                  setEditMessage({ ...editMessage, response: e.target.value })
-                }
-              />
-              <button
-                onClick={() => handleReplyMessage(editMessage._id, editMessage.response)}
-                className="bg-primary text-white px-4 py-2 rounded-lg"
-              >
-                Send Reply
-              </button>
+  // UI Components
+  const UserQueriesTable = () => (
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse">
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="p-3 text-left">User</th>
+            <th className="p-3 text-left">Subject</th>
+            <th className="p-3 text-left">Query</th>
+            <th className="p-3 text-left">Response</th>
+            <th className="p-3 text-left">Status</th>
+            <th className="p-3 text-left">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {userQueries.map(query => (
+            <tr 
+              key={query._id} 
+              className={`border-b ${query.status === 'unviewed' ? 'bg-blue-50' : ''}`}
+            >
+              <td className="p-3">{query.user?.name || 'Unknown'}</td>
+              <td className="p-3">{query.subject}</td>
+              <td className="p-3 max-w-xs truncate">{query.message}</td>
+              <td className="p-3 max-w-xs truncate">
+                {query.response || (
+                  <span className="text-gray-400">No response yet</span>
+                )}
+              </td>
+              <td className="p-3">
+                <span className={`px-2 py-1 rounded-full text-xs ${
+                  query.status === 'responded' ? 'bg-green-100 text-green-800' :
+                  query.status === 'viewed' ? 'bg-blue-100 text-blue-800' :
+                  'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {query.status}
+                </span>
+              </td>
+              <td className="p-3 flex space-x-2">
+                <button 
+                  onClick={() => setReplyingTo(query)}
+                  className="text-blue-500 hover:text-blue-700"
+                  title="Reply"
+                >
+                  <FaReply />
+                </button>
+                <button 
+                  onClick={() => handleViewQuery(query._id)}
+                  className="text-green-500 hover:text-green-700"
+                  title="Mark as viewed"
+                >
+                  <FaEye />
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  const SuperAdminChat = () => (
+    <div className="space-y-4">
+      <div className="bg-gray-50 p-4 rounded-lg h-96 overflow-y-auto">
+        {chatMessages.map(msg => (
+          <div 
+            key={msg._id} 
+            className={`p-3 mb-3 rounded-lg max-w-xs ${msg.sender === 'labadmin' 
+              ? 'bg-blue-100 ml-auto' 
+              : 'bg-gray-200 mr-auto'}`}
+            onClick={() => markChatAsRead(msg._id)}
+          >
+            <div className="font-medium">{msg.sender === 'labadmin' ? 'You' : 'Super Admin'}</div>
+            <div className="whitespace-pre-wrap">{msg.message}</div>
+            <div className="text-xs text-gray-500 mt-1">
+              {new Date(msg.createdAt).toLocaleString()}
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      <div className="flex space-x-2">
+        <input
+          type="text"
+          value={newMessage}
+          onChange={(e) => setNewMessage(e.target.value)}
+          placeholder="Type your message..."
+          className="flex-1 p-2 border rounded"
+          onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+        />
+        <button 
+          onClick={handleSendMessage}
+          className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark"
+        >
+          Send
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="bg-white rounded-lg shadow p-6">
+      {/* Tab Navigation */}
+      <div className="flex border-b mb-6">
+        <button
+          className={`flex items-center px-4 py-2 ${activeTab === 'userQueries' 
+            ? 'border-b-2 border-primary text-primary' 
+            : 'text-gray-600 hover:text-gray-800'}`}
+          onClick={() => setActiveTab('userQueries')}
+        >
+          <FaInbox className="mr-2" />
+          User Queries
+          {unreadCounts.userQueries > 0 && (
+            <span className="ml-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+              {unreadCounts.userQueries}
+            </span>
+          )}
+        </button>
+        <button
+          className={`flex items-center px-4 py-2 ${activeTab === 'superAdmin' 
+            ? 'border-b-2 border-primary text-primary' 
+            : 'text-gray-600 hover:text-gray-800'}`}
+          onClick={() => setActiveTab('superAdmin')}
+        >
+          <FaComments className="mr-2" />
+          Super Admin Chat
+          {unreadCounts.superAdmin > 0 && (
+            <span className="ml-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+              {unreadCounts.superAdmin}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Content Area */}
+      {loading[activeTab] ? (
+        <div className="flex justify-center p-10">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      ) : (
+        <>
+          {activeTab === 'userQueries' ? <UserQueriesTable /> : <SuperAdminChat />}
+          
+          {/* Reply Modal */}
+          {replyingTo && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white p-6 rounded-lg w-full max-w-md">
+                <h3 className="text-lg font-medium mb-4">
+                  {activeTab === 'userQueries' 
+                    ? `Reply to ${replyingTo.user?.name || 'User'}`
+                    : "Message Super Admin"}
+                </h3>
+                <textarea
+                  className="w-full p-3 border rounded mb-4"
+                  rows={4}
+                  placeholder="Type your response..."
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                />
+                <div className="flex justify-end space-x-2">
+                  <button 
+                    onClick={() => {
+                      setReplyingTo(null);
+                      setNewMessage("");
+                    }}
+                    className="px-4 py-2 border rounded hover:bg-gray-100"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={() => activeTab === 'userQueries' 
+                      ? handleReplyToQuery(replyingTo._id, newMessage)
+                      : handleSendMessage()}
+                    className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark"
+                  >
+                    Send
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </>
       )}
     </div>
   );
-      }
+};
 
 export default LabAdminInbox;
