@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   FaUserCircle, FaSignInAlt, FaSignOutAlt, FaShoppingCart,
-  FaChartLine, FaBars, FaTimes, FaChevronDown
+  FaChartLine, FaBars, FaTimes, FaChevronDown, FaSearch
 } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 import { logoutUser } from '../../redux/AuthSlice';
@@ -13,6 +13,7 @@ const HeaderUser = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isExploreOpen, setIsExploreOpen] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const dropdownRef = useRef(null);
   const profileRef = useRef(null);
   const dispatch = useDispatch();
@@ -28,6 +29,13 @@ const HeaderUser = () => {
       navigate('/login');
     } catch (error) {
       toast.error('Logout failed');
+    }
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 
@@ -102,11 +110,21 @@ const HeaderUser = () => {
               AI Recommendation
             </Link>
 
-            <input
-              type="text"
-              placeholder="Search any test or lab..."
-              className="w-[400px] px-4 py-2 rounded-full text-sm border border-gray-300 focus:ring-primary focus:outline-none"
-            />
+            <form onSubmit={handleSearch} className="relative">
+              <input
+                type="text"
+                placeholder="Search any test or lab..."
+                className="w-[400px] px-4 py-2 rounded-full text-sm border border-gray-300 focus:ring-primary focus:outline-none"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <button
+                type="submit"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary"
+              >
+                <FaSearch />
+              </button>
+            </form>
           </div>
 
           {/* Right side - Cart always shown, profile/login conditional */}
@@ -174,11 +192,21 @@ const HeaderUser = () => {
             )}
           </Link>
 
-          <input
-            type="text"
-            placeholder="Search..."
-            className="w-1/2 px-3 py-1.5 rounded-full text-sm border border-gray-300 focus:ring-primary focus:outline-none"
-          />
+          <form onSubmit={handleSearch} className="relative flex-1 mx-4">
+            <input
+              type="text"
+              placeholder="Search..."
+              className="w-full px-3 py-1.5 rounded-full text-sm border border-gray-300 focus:ring-primary focus:outline-none"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <button
+              type="submit"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary"
+            >
+              <FaSearch />
+            </button>
+          </form>
 
           <button 
             onClick={() => setIsMobileOpen(!isMobileOpen)} 
