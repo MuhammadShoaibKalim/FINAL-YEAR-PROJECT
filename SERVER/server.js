@@ -14,6 +14,7 @@ import queryRoutes from "./routes/query.route.js"
 import recommendationRoutes from "./routes/recommendation.route.js"
 import paymentRoutes from "./routes/payment.route.js"
 import testPackageRoutes from "./routes/testpackage.route.js"
+import searchRoutes from "./routes/search.route.js"
 import cors from "cors";
 
 //load e variables
@@ -46,14 +47,15 @@ app.use("/api/auth", userRoutes);
 app.use("/api/superadmin", superAdminRoutes);
 app.use("/api/labadmin", labAdminRoutes);
 app.use("/api/labs",  labRoutes);
-app.use("/api/tests", testPackageRoutes );
-app.use("/api/packages", testPackageRoutes );
-app.use("/api/users", userRoutes)
-app.use("/api/query", queryRoutes);
-app.use('/api/get-recommendation', recommendationRoutes)
 app.use("/api/cart", cartRoutes);
+app.use("/api/tests", testPackageRoutes);
+app.use("/api/packages", testPackageRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/query", queryRoutes);
+app.use('/api/get-recommendation', recommendationRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/payment", paymentRoutes);
+app.use("/api/search", searchRoutes);
 
 
 
