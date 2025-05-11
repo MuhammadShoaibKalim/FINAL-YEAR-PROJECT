@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaUsers, FaFlask, FaClipboardList, FaCog, FaEnvelope, FaHospitalUser, FaSignOutAlt } from "react-icons/fa";
+import { FaUsers, FaFlask, FaClipboardList, FaCog, FaEnvelope, FaHospitalUser, FaSignOutAlt, FaUser } from "react-icons/fa";
 import { MdOutlineDashboard, MdOutlineMarkUnreadChatAlt } from "react-icons/md";
 import { GoSidebarExpand } from "react-icons/go";
 import { useDispatch } from "react-redux";
-import { logoutUser } from "../../redux/AuthSlice"; // Adjust path if needed
+import { logoutUser } from "../../redux/AuthSlice"; 
+import { FaUserCircle } from "react-icons/fa";
 
 const Sidebar = ({ links, title, unreadCount = 0 }) => {
   const [isOpen, setIsOpen] = useState(() => window.innerWidth > 768);
@@ -92,6 +93,7 @@ export const SuperAdminSidebar = ({ unreadCount = 0 }) => {
 
   const links = [
     { to: "/admin/super/overview", Icon: MdOutlineDashboard, label: "Overview" },
+    { to: "/admin/super/profile", Icon: FaUserCircle, label: "Profile" },
     { to: "/admin/super/users", Icon: FaUsers, label: "Users" },
     { to: "/admin/super/labs", Icon: FaFlask, label: "Labs" },
     { to: "/admin/super/inbox", Icon: MdOutlineMarkUnreadChatAlt, label: "Inbox" },
