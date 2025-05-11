@@ -1,30 +1,50 @@
-
 import { Cart } from '../models/order.model.js';
 
 export const addToCart = async (req, res) => {
   try {
-    const { testOrPackageId, type, name, price, labId } = req.body;
+    const { testOrPackageId, type, name, price, labId, quantity = 1 } = req.body;
     const userId = req.user.id;
 
+    // Find existing item
     const existing = await Cart.findOne({ userId, testOrPackageId });
+    
     if (existing) {
-      return res.status(400).json({ success: false, message: "Item already in cart" });
+      // Update quantity if item exists
+      existing.quantity += quantity;
+      await existing.save();
+      return res.status(200).json({ 
+        success: true, 
+        itemId: existing._id, 
+        cartItem: existing,
+        message: "Item quantity updated in cart"
+      });
     }
 
+    // Create new cart item if it doesn't exist
     const newCartItem = new Cart({
       userId,
       labId,
       testOrPackageId,
       type,
       name,
-      price
+      price,
+      quantity
     });
 
     await newCartItem.save();
-    res.status(201).json({ success: true, itemId: newCartItem._id, cartItem: newCartItem });
+    res.status(201).json({ 
+      success: true, 
+      itemId: newCartItem._id, 
+      cartItem: newCartItem,
+      message: "Item added to cart"
+    });
   } catch (error) {
     console.error("Add to cart error:", error.message);
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({ 
+      success: false, 
+      message: "Server error",
+      error: error.message 
+    });
   }
 };
 
