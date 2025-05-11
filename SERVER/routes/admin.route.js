@@ -58,7 +58,7 @@ router.get("/labadmins", isAuthenticated, isSuperAdmin, getLabAdmins);
 router.get("/", isAuthenticated, isSuperAdmin, getInbox);
 router.post("/:id", isAuthenticated, isSuperAdmin, respondToInbox);
 router.get("/get-settings", isAuthenticated, isSuperAdmin, getSettings);
-router.put("/update-settings", isAuthenticated, isSuperAdmin, upload.single("profileImage"), updateSettings);
+router.put("/update-settings", isAuthenticated, isSuperAdmin, upload.single("image"), updateSettings);
 router.put("/password", isAuthenticated, isSuperAdmin, changePassword);
 
 
