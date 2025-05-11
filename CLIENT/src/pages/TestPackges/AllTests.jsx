@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-hot-toast";
-import { FaStar, FaMapMarkerAlt, FaFilter } from "react-icons/fa";
+import { FaStar, FaMapMarkerAlt, FaFilter, FaEye } from "react-icons/fa";
 import { addItem } from "../../redux/CartSlice";
 
 const AllTests = () => {
@@ -19,37 +19,58 @@ const AllTests = () => {
     });
     const [showFilters, setShowFilters] = useState(false);
     const [addingItemId, setAddingItemId] = useState(null);
+    const [showAll, setShowAll] = useState(false);
+    const [displayCount, setDisplayCount] = useState(9); 
+    const [showBackToTop, setShowBackToTop] = useState(false);
+    const ITEMS_PER_LOAD = 9; 
+    const [selectedItem, setSelectedItem] = useState(null);
+
     const fetchAllTests = async () => {
         try {
             const res = await axios.get("/api/tests/public-tests");
-            setTests(res.data.tests || []);
+            if (res.data.success) {
+                setTests(res.data.tests || []);
+            } else {
+                toast.error(res.data.message || "Failed to load tests");
+            }
         } catch (err) {
-            toast.error("Failed to load tests");
+            console.error("Error fetching tests:", err);
+            toast.error(err.response?.data?.message || "Failed to load tests. Please try again later.");
         }
     };
     const fetchAllPackages = async () => {
         try {
             const res = await axios.get("/api/packages/public-packages");
-            const packageData = (res.data.packages || []).map(pkg => ({
-                ...pkg,
-                type: "Package",
-                lab: pkg.lab?._id || pkg.lab
-            }));
-            setTests(prev => [...prev, ...packageData]);
+            if (res.data.success) {
+                const packageData = (res.data.packages || []).map(pkg => ({
+                    ...pkg,
+                    type: "Package",
+                    lab: pkg.lab?._id || pkg.lab
+                }));
+                setTests(prev => [...prev, ...packageData]);
+            } else {
+                toast.error(res.data.message || "Failed to load packages");
+            }
         } catch (err) {
-            toast.error("Failed to load packages");
+            console.error("Error fetching packages:", err);
+            toast.error(err.response?.data?.message || "Failed to load packages. Please try again later.");
         }
     };
     const fetchLabs = async () => {
         try {
             const res = await axios.get("/api/labs/get-all");
-            const labData = {};
-            res.data.labs.forEach((lab) => {
-                labData[lab._id] = lab;
-            });
-            setLabsMap(labData);
+            if (res.data.success) {
+                const labData = {};
+                res.data.labs.forEach((lab) => {
+                    labData[lab._id] = lab;
+                });
+                setLabsMap(labData);
+            } else {
+                toast.error(res.data.message || "Failed to load labs");
+            }
         } catch (err) {
-            toast.error("Failed to load labs");
+            console.error("Error fetching labs:", err);
+            toast.error(err.response?.data?.message || "Failed to load labs. Please try again later.");
         }
     };
     useEffect(() => {
@@ -58,16 +79,34 @@ const AllTests = () => {
         fetchLabs();
     }, []);
 
+    useEffect(() => {
+        const handleScroll = () => {
+            if (window.scrollY > 300) {
+                setShowBackToTop(true);
+            } else {
+                setShowBackToTop(false);
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    const scrollToTop = () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    };
+
     const handleAddToCart = async (item) => {
         try {
             setAddingItemId(item._id);
             
-            // Calculate the final price
             const finalPrice = item.discount 
                 ? Math.round(item.price * (1 - (item.discount / 100))) 
                 : Number(item.price);
 
-            // Check if item already exists in cart
             const existingItem = cartItems.find(cartItem => cartItem._id === item._id);
             const newQuantity = existingItem ? existingItem.quantity + 1 : 1;
 
@@ -111,41 +150,14 @@ const AllTests = () => {
             setAddingItemId(null);
         }
     };
-    const renderStars = (rating) => {
+    const renderStars = (rating, bookedCount) => {
         return (
-            <div className="flex items-center">
-                {[...Array(5)].map((_, i) => (
-                    <FaStar
-                        key={i}
-                        className={`${i < Math.floor(rating)
-                            ? "text-yellow-400"
-                            : "text-gray-300"
-                            } ${i === Math.floor(rating) && rating % 1 >= 0.5 ? "text-yellow-400 opacity-70" : ""}`}
-                        size={14}
-                    />
-                ))}
-                <span className="text-xs text-gray-500 ml-1">({rating.toFixed(1)})</span>
+            <div className="flex items-center gap-1">
+                <FaEye className="text-gray-500" />
+                <span className="text-sm text-gray-500">{bookedCount || 0}</span>
             </div>
         );
     };
-    // const filteredTests = tests
-    //     .filter((test) => {
-    //         const finalPrice = test.price - (test.discount || 0)
-    //         const matchesSearch = test.name.toLowerCase().includes(searchQuery.toLowerCase());
-    //         const matchesPrice = finalPrice >= filters.priceRange[0] && finalPrice <= filters.priceRange[1];
-    //         const testLabId = typeof test.lab === 'object' ? test.lab?._id : test.lab;
-    //         const matchesLab = !filters.lab || testLabId === filters.lab;
-    //         const matchesType = !filters.type || test.type === filters.type;
-    //         return matchesSearch && matchesPrice && matchesLab && matchesType;
-    //     })
-    //     .sort((a, b) => {
-    //         const priceA = a.price - (a.discount || 0);
-    //         const priceB = b.price - (b.discount || 0);
-    //         if (filters.sort === "low") return priceA - priceB;
-    //         if (filters.sort === "high") return priceB - priceA;
-    //         if (filters.sort === "rating") return (b.rating || 0) - (a.rating || 0);
-    //         return (b.popularity || 0) - (a.popularity || 0);
-    //     });
     const filteredTests = tests
         .filter((test) => {
             const finalPrice = test.price - (test.discount || 0);
@@ -170,7 +182,10 @@ const AllTests = () => {
         (lab, index, self) => index === self.findIndex((t) => t._id === lab._id)
     );
     const testTypes = [...new Set(tests.map((test) => test.type))];
-    // const testTypes = ["Test", "Package", ...new Set(tests.map((test) => test.type).filter(Boolean)];
+
+    const handleLoadMore = () => {
+        setDisplayCount(prev => prev + ITEMS_PER_LOAD);
+    };
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -242,16 +257,6 @@ const AllTests = () => {
                             </div>
                             <div>
                                 <h3 className="font-medium mb-2">Type</h3>
-                                {/* <select
-                                    value={filters.type}
-                                    onChange={(e) => setFilters({ ...filters, type: e.target.value })}
-                                    className="w-full p-2 border border-gray-300 rounded-lg"
-                                >
-                                    <option value="">All Types</option>
-                                    {testTypes.map((type) => (
-                                        <option key={type} value={type}>{type}</option>
-                                    ))}
-                                </select> */}
                                 <select
                                     value={filters.type}
                                     onChange={(e) => setFilters({ ...filters, type: e.target.value })}
@@ -282,13 +287,43 @@ const AllTests = () => {
                     </div>
                 )}
             </div>
-            <div className="mb-4">
-                <p className="text-gray-600">
-                    {filteredTests.length} {filteredTests.length === 1 ? 'test' : 'tests'} found
-                </p>
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
+                <div className="flex items-center gap-2">
+                    <span className="text-lg font-semibold text-primary">Total Tests Found:</span>
+                    <span className="text-lg font-bold bg-primary/10 text-primary px-3 py-1 rounded-full">
+                        {filteredTests.length} {filteredTests.length === 1 ? 'Test' : 'Tests'}
+                    </span>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                    {filteredTests.length > displayCount && !showAll && (
+                        <button
+                            onClick={handleLoadMore}
+                            className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                        >
+                            Load More
+                        </button>
+                    )}
+                    {filteredTests.length > displayCount && (
+                        <button
+                            onClick={() => {
+                                if (showAll) {
+                                    setDisplayCount(9);
+                                    setShowAll(false);
+                                    scrollToTop();
+                                } else {
+                                    setDisplayCount(filteredTests.length);
+                                    setShowAll(true);
+                                }
+                            }}
+                            className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+                        >
+                            {showAll ? "Show Less" : "View All"}
+                        </button>
+                    )}
+                </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredTests.map((test) => {
+                {filteredTests.slice(0, displayCount).map((test) => {
                     const lab = labsMap[test.lab];
                     const hasDiscount = test.discount && test.discount < test.price;
                     const discountPercentage = hasDiscount
@@ -302,12 +337,11 @@ const AllTests = () => {
                                         {test.type ? test.type : (test.name?.toLowerCase().includes("package") ? "Package" : "Test")}
                                     </span>
                                     <div>
-                                        {renderStars(test.rating || 0)}
+                                        {renderStars(test.rating, test.bookedCount)}
                                     </div>
                                 </div>
                                 <div className="flex justify-between items-center mb-3">
                                     <h2 className="font-bold text-lg text-gray-800">{test.name}</h2>
-
                                     <div className="text-sm text-gray-600">
                                         <span >LAB : </span>
                                         <span className="italic">
@@ -337,7 +371,10 @@ const AllTests = () => {
                                     )}
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
-                                    <button className="px-3 py-2 border border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition-colors">
+                                    <button 
+                                        className="px-3 py-2 border border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition-colors"
+                                        onClick={() => setSelectedItem(test)}
+                                    >
                                         View Details
                                     </button>
                                     <button
@@ -373,6 +410,47 @@ const AllTests = () => {
                     >
                         Reset Filters
                     </button>
+                </div>
+            )}
+            {/* View Details Modal */}
+            {selectedItem && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                    <div className="bg-white p-8 rounded-lg max-w-md w-full relative shadow-lg space-y-4">
+                        <div className="flex justify-between items-start mb-2">
+                            <h2 className="text-xl font-bold text-gray-900">{selectedItem.name}</h2>
+                            <button onClick={() => setSelectedItem(null)} className="text-red-500 hover:underline">Close</button>
+                        </div>
+                          {/* Price Section */}
+                          <div className="flex items-center gap-2 mb-2">
+                             <h3 className="font-semibold mb-1">Price :</h3>
+                            <span className="text-lg font-bold text-primary">PKR {selectedItem.price}</span>
+                            {selectedItem.discount > 0 && (
+                                <span className="text-sm text-gray-500 line-through">PKR {selectedItem.price / (1 - (selectedItem.discount || 0) / 100)}</span>
+                            )}
+                            {selectedItem.discount > 0 && (
+                                <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">{selectedItem.discount}% OFF</span>
+                            )}
+                        </div>
+                        {/* Description Section */}
+                        <div className="mb-2">
+                            <h3 className="font-semibold mb-1">Description:</h3>
+                            <div className="text-gray-700">{selectedItem.description}</div>
+                        </div>
+                      
+                        {/* Included Tests Section (for packages) */}
+                        <h3 className="font-semibold mb-1">Included Tests:</h3>
+
+                        {selectedItem.type === "Package" && (selectedItem.includedTests || selectedItem.tests) && (
+                            <div className="mt-4">
+                                <h3 className="font-semibold mb-2">Included Tests:</h3>
+                                <ul className="list-disc list-inside text-gray-700 space-y-1">
+                                    {(selectedItem.includedTests || selectedItem.tests).map((test, idx) => (
+                                        <li key={idx}>{test.name || test}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
         </div>
