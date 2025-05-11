@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaUsers, FaFlask, FaSignOutAlt } from "react-icons/fa";
+import { FaUsers, FaFlask, FaSignOutAlt, FaUserCircle } from "react-icons/fa";
 import { GoSidebarExpand } from "react-icons/go";
 import { MdOutlineDashboard, MdOutlineMarkUnreadChatAlt } from "react-icons/md";
 import { FiSettings } from "react-icons/fi";
@@ -63,11 +63,11 @@ const SuperAdminSidebar = () => {
 
       {/* Sidebar Menu */}
       <ul className="space-y-2 py-4 font-medium">
+       <SidebarItem to="/admin/super/profile" icon={FaUserCircle} label="Profile" isOpen={isOpen} />
         <SidebarItem to="/admin/super/overview" icon={MdOutlineDashboard} label="Overview" isOpen={isOpen} />
         <SidebarItem to="/admin/super/labs" icon={FaFlask} label="Labs" isOpen={isOpen} />
         <SidebarItem to="/admin/super/users" icon={FaUsers} label="Users" isOpen={isOpen} />
         <SidebarItem to="/admin/super/inbox" icon={MdOutlineMarkUnreadChatAlt} label="Inbox" isOpen={isOpen} unreadCount={unreadCount} />
-        <SidebarItem to="/admin/super/settings" icon={FiSettings} label="Settings" isOpen={isOpen} />
 
         {/* Logout Button */}
         <li>
