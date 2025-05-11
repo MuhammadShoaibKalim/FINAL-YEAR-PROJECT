@@ -88,8 +88,6 @@ export const logoutSuperAdmin = (req, res) => {
     res.status(500).json({ message: "Error logging out", error: error.message });
   }
 };
-
-
 export const superAdminOverview = async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
@@ -219,8 +217,6 @@ export const superAdminOverview = async (req, res) => {
     res.status(500).json({ message: "Error fetching overview data", error: error.message });
   }
 };
-
-
 export const createUser = async (req, res) => {
   try {
     if (!req.user || req.user.role !== "superadmin") {
@@ -311,10 +307,15 @@ export const updateUser = async (req, res) => {
       const hashedPassword = await bcrypt.hash(password, salt);
       user.password = hashedPassword;  
     }
-    
 
+    // Handle image upload
     if (req.file) {
-      user.image = req.file.path; 
+      // If there's an existing image, you might want to delete it
+      if (user.image) {
+        // Delete old image file if needed
+        // You can implement file deletion logic here if required
+      }
+      user.image = req.file.path;
     }
 
     await user.save();
@@ -429,7 +430,7 @@ export const updateSettings = async (req, res) => {
     };
 
     if (req.file) {
-      updateData.profileImage = req.file.path;  
+      updateData.image = req.file.path; 
     }
 
     const updatedUser = await User.findByIdAndUpdate(
