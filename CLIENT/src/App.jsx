@@ -21,6 +21,7 @@ import Labs from "./components/SuperAdmin/Labs";
 import Overview from "./components/SuperAdmin/Overview";
 import Inbox from "./components/SuperAdmin/Inbox";
 import Settings from "./components/SuperAdmin/Settings";
+import SuperadminProfile from "./components/SuperAdmin/SuperadminProfile";
 
 // User components
 import Home from "./pages/NavbarPages/Home";
@@ -94,6 +95,7 @@ import DiabetesScreening from "./pages/MostUsed/DiabetesScreening";
 import LipidProfile from "./pages/MostUsed/LipidProfile";
 import ThyroidProfile from "./pages/MostUsed/ThyroidProfile";
 import MostUsed from "./pages/MostUsed/MostUsed";
+import SearchResults from './components/Search/SearchResults';
 
 
 
@@ -258,7 +260,7 @@ const App = () => {
             <Route path="users" element={<Users />} />
             <Route path="labs" element={<Labs />} />
             <Route path="inbox" element={<Inbox />} />
-            <Route path="settings" element={<Settings />} />
+            <Route path="profile" element={<SuperadminProfile />} />
           </Route>
 
           {/* Lab Admin Routes */}
@@ -282,6 +284,8 @@ const App = () => {
             <Route path="settings" element={<LabAdminProfileSettings />} />
           </Route>
 
+          {/* Add this route with the other routes */}
+          <Route path="/search" element={<SearchResults />} />
 
           {/* 404 Not Found */}
           <Route path="*" element={<NotFound />} />
