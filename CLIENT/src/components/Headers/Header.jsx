@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   FaUserCircle, FaSignInAlt, FaSignOutAlt, FaShoppingCart,
-  FaChartLine, FaBars, FaTimes, FaChevronDown
+  FaChartLine, FaBars, FaTimes, FaChevronDown, FaSearch
 } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 import { logoutUser } from '../../redux/AuthSlice';
@@ -18,6 +18,7 @@ const Header = () => {
   const exploreDropdownRef = useRef(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { user } = useSelector((state) => state.auth);
   const totalQuantity = useSelector((state) => state.cart.totalQuantity);
@@ -68,6 +69,13 @@ const Header = () => {
     setIsMobileOpen(false);
   };
 
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
   return (
     <>
       {!isMinimal && <Topbar />}
@@ -112,11 +120,21 @@ const Header = () => {
                 <Link to="/ai-recommendations-test" className="text-gray-700 hover:text-primary">
                   AI Recommendation
                 </Link>
-                <input
-                  type="text"
-                  placeholder="Search any test or lab..."
-                  className="w-[350px] px-4 py-2 rounded-full text-sm border border-gray-300 focus:ring-primary focus:outline-none"
-                />
+                <form onSubmit={handleSearch} className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search any test or lab..."
+                    className="w-[350px] px-4 py-2 rounded-full text-sm border border-gray-300 focus:ring-primary focus:outline-none"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  <button
+                    type="submit"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary"
+                  >
+                    <FaSearch />
+                  </button>
+                </form>
               </div>
             )}
 
