@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { AiOutlineArrowRight } from "react-icons/ai";
-import { FaStar, FaEye, FaMapMarkerAlt } from "react-icons/fa";
+import { FaStar, FaEye, FaMapMarkerAlt, FaStarHalfAlt, FaRegStar, FaPhoneAlt, FaEnvelope } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import CartSection from "../../components/Cart/CartSection";
 import { setCurrentLabId } from "../../redux/LabSlice";
@@ -92,22 +92,14 @@ const TestPackages = () => {
     }
   };
 
-  const renderStars = (rating) => {
-    const fullStars = Math.floor(rating);
-    const halfStar = rating % 1 >= 0.5;
-    const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
+  function renderBookedCount(bookedCount) {
     return (
-      <>
-        {[...Array(fullStars)].map((_, i) => (
-          <span key={`full-${i}`} className="text-yellow-400">★</span>
-        ))}
-        {halfStar && <span className="text-yellow-400">☆</span>}
-        {[...Array(emptyStars)].map((_, i) => (
-          <span key={`empty-${i}`} className="text-gray-300">★</span>
-        ))}
-      </>
+      <div className="flex items-center gap-1">
+        <FaEye className="text-gray-500" />
+        <span className="text-sm text-gray-500">{bookedCount || 0}</span>
+      </div>
     );
-  };
+  }
 
   useEffect(() => {
     const fetchLabDetails = async () => {
@@ -178,28 +170,38 @@ const TestPackages = () => {
       </button>
 
       {labDetails && (
-        <div className="flex flex-col md:flex-row bg-bg-primary rounded-4xl shadow-primary p-10 border border-border-light mb-12 items-center md:items-start gap-12">
-          <div className="w-full md:w-1/3 flex justify-center">
-            <div className="w-72 h-72 rounded-4xl overflow-hidden border-4 border-primary shadow-lg">
+        <div className="flex flex-col md:flex-row bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 mb-12 items-center md:items-start gap-12">
+          <div className="w-full md:w-1/3 flex justify-center relative">
+            <div className="w-72 h-72 rounded-2xl overflow-hidden border-4 border-primary shadow-lg relative">
               <img src={labDetails.image} alt={labDetails.name} className="w-full h-full object-cover object-center" />
+              <div className="absolute top-4 right-4 flex items-center gap-1 z-10">
+                <span className="font-semibold text-yellow-600 text-lg drop-shadow-md">{labDetails.rating?.toFixed(1) || "New"}</span>
+                {renderBookedCount(labDetails.bookedCount)}
+              </div>
             </div>
           </div>
-          <div className="flex-1 relative">
-            <div className="flex justify-between items-start">
+          <div className="flex-1 relative flex flex-col justify-center">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">
               <h1 className="text-4xl md:text-5xl font-bold text-text-dark">{labDetails.name}</h1>
-              <div className="flex items-center gap-2 bg-warning text-text-dark px-4 py-2 rounded-full shadow-md">
-                <FaStar className="text-lg" />
-                <span className="text-lg font-semibold">{labDetails.rating?.toFixed(1)}</span>
-              </div>
             </div>
             {labDetails.description && (
               <p className="mt-6 text-text-primary text-lg leading-relaxed mb-6">
                 {labDetails.description}
               </p>
             )}
-            <div className="flex items-center gap-2 text-text-secondary">
+            <div className="flex items-center gap-2 text-text-secondary mb-2">
               <FaMapMarkerAlt className="text-primary" />
               <span className="text-md">{labDetails.address || labDetails.location}</span>
+            </div>
+            <div className="flex flex-wrap gap-6 mt-2 text-gray-700 text-sm">
+              <div className="flex items-center gap-2">
+                <FaPhoneAlt className="text-primary" />
+                <span>{labDetails.phone || labDetails.contactNumber || "Not available"}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <FaEnvelope className="text-primary" />
+                <span>{labDetails.email || "Not available"}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -247,38 +249,55 @@ const TestPackages = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {combined.map((item) => (
-          <div key={item._id} className="bg-white rounded-xl shadow-lg p-5 relative flex flex-col justify-between hover:shadow-2xl transition duration-200 border">
-            <div className="flex justify-between items-center text-sm mb-3 text-gray-600">
-              <div className="flex items-center gap-1"><FaEye /> {item.bookedCount || 0}</div>
-              <div className="flex items-center gap-1">{renderStars(item.rating || 0)}</div>
-            </div>
-
-            <h2 className="text-lg font-semibold text-gray-900 text-center mb-2">{item.name}</h2>
-
-            <div className="text-center mb-4">
-              <p className="text-md text-primary font-medium">PKR {item.price}</p>
-              {item.discount && (
-                <span className="inline-block mt-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full font-semibold">
-                  {item.discount}% OFF
-                </span>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-2 mt-auto">
-              <button
-                disabled={addingItemId === item._id}
-                onClick={() => handleAddToCart(item)}
-                className={`bg-primary text-white rounded-md py-2 transition ${addingItemId === item._id ? "opacity-60 cursor-not-allowed" : "hover:bg-primary-hover"}`}
-              >
-                {addingItemId === item._id ? "Adding..." : "Add to Cart"}
-              </button>
-
-              <button
-                className="border border-primary text-primary rounded-md py-2 hover:bg-gray-50 transition"
-                onClick={() => handleViewDetails(item)}
-              >
-                View Details
-              </button>
+          <div key={item._id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+            <div className="p-5">
+                <div className="flex justify-between items-start mb-3">
+                    <span className="inline-block px-2 py-1 text-xs font-semibold bg-blue-100 text-primary/90 rounded-full">
+                        {item.type}
+                    </span>
+                    <div className="text-sm text-gray-500">
+                        {renderBookedCount(item.bookedCount)}
+                    </div>
+                </div>
+                <h2 className="font-bold text-lg text-gray-800 mb-4">{item.name}</h2>
+                <div className="flex items-center gap-2 mb-4">
+                    {item.discount > 0 ? (
+                        <>
+                            <span className="text-xl font-bold text-primary">
+                                PKR {Math.round(item.price * (1 - (item.discount || 0) / 100))}
+                            </span>
+                            <span className="text-sm text-gray-500 line-through">
+                                PKR {item.price}
+                            </span>
+                            <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">
+                                {item.discount}% OFF
+                            </span>
+                        </>
+                    ) : (
+                        <span className="text-xl font-bold text-primary">
+                            PKR {item.price}
+                        </span>
+                    )}
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                    <button 
+                        onClick={() => handleViewDetails(item)}
+                        className="px-3 py-2 border border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition-colors"
+                    >
+                        View Details
+                    </button>
+                    <button
+                        onClick={() => handleAddToCart(item)}
+                        disabled={addingItemId === item._id}
+                        className={`px-3 py-2 rounded-lg transition-colors ${
+                            addingItemId === item._id
+                                ? 'bg-gray-300 text-gray-500'
+                                : 'bg-primary text-white hover:bg-primary-dark'
+                        }`}
+                    >
+                        {addingItemId === item._id ? "Adding..." : "Add to Cart"}
+                    </button>
+                </div>
             </div>
           </div>
         ))}
@@ -289,40 +308,42 @@ const TestPackages = () => {
           <div className="bg-white p-8 rounded-lg max-w-md w-full relative shadow-lg space-y-4">
             <div className="flex justify-between items-start">
               <h2 className="text-xl font-bold text-gray-900">{selectedItem.name}</h2>
-              <div className="text-yellow-400 text-lg">{renderStars(selectedItem.rating || 0)}</div>
             </div>
-            <div className="text-gray-700">{selectedItem.description}</div>
-            <div className="flex flex-col gap-4">
-              <label className="text-sm font-medium">Rate this {selectedItem.type.toLowerCase()}</label>
-              <select
-                value={userRating}
-                onChange={(e) => setUserRating(Number(e.target.value))}
-                className="border p-2 rounded"
-              >
-                <option value={0}>Select rating</option>
-                {[1, 2, 3, 4, 5].map((val) => (
-                  <option key={val} value={val}>{val} Star{val > 1 ? "s" : ""}</option>
-                ))}
-              </select>
-              <textarea
-                value={feedbackText}
-                onChange={(e) => setFeedbackText(e.target.value)}
-                placeholder="Write feedback..."
-                className="border p-2 rounded"
-              />
-              <button
-                onClick={() => submitFeedback(selectedItem._id, selectedItem.type)}
-                className="bg-primary text-white py-2 rounded hover:bg-primary-dark"
-              >
-                Submit Feedback
-              </button>
-              <button
-                onClick={closeModal}
-                className="text-red-500 hover:underline"
-              >
-                Cancel
-              </button>
+            <div className="text-gray-700 mb-2">{selectedItem.description}</div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-lg font-bold text-primary">PKR {selectedItem.price}</span>
+              {selectedItem.discount > 0 && (
+                <span className="text-sm text-gray-500 line-through">PKR {selectedItem.price / (1 - (selectedItem.discount || 0) / 100)}</span>
+              )}
+              {selectedItem.discount > 0 && (
+                <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">{selectedItem.discount}% OFF</span>
+              )}
             </div>
+            {selectedItem.type === "Package" && (selectedItem.includedTests || selectedItem.tests) && (
+              <div className="mt-4">
+                <h3 className="font-semibold mb-2">Included Tests:</h3>
+                <ul className="list-inside text-gray-700">
+                  {(selectedItem.includedTests || selectedItem.tests).map((test, idx) => {
+                    // Alternate bullet styles: disc, circle, square
+                    const bulletStyles = [
+                      'list-disc',
+                      'list-circle',
+                      'list-square'
+                    ];
+                    const bullet = bulletStyles[idx % bulletStyles.length];
+                    return (
+                      <li key={idx} className={bullet + " ml-5"}>{test.name || test}</li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+            <button
+              onClick={closeModal}
+              className="text-red-500 hover:underline mt-4"
+            >
+              Close
+            </button>
           </div>
         </div>
       )}
