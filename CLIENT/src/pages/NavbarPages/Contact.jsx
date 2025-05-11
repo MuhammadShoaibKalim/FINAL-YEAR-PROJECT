@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { FaPaperPlane, FaSpinner } from "react-icons/fa";
+import { get, post } from "../../Services/ApiEndpoints";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -20,9 +21,8 @@ const Contact = () => {
 
   const fetchLabs = async () => {
     try {
-      const res = await fetch("/api/query/labs/all");
-      const data = await res.json();
-      if (res.ok) {
+      const { data } = await get("/api/query/labs/all");
+      if (data) {
         setLabs(data.labs);
       }
     } catch (error) {
@@ -35,18 +35,9 @@ const Contact = () => {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch("/api/query/submit", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-        },
-        body: JSON.stringify(formData),
-      });
+      const { data } = await post("/api/query/submit", formData);
 
-      const data = await res.json();
-
-      if (res.ok) {
+      if (data) {
         toast.success("Message sent successfully!");
         setFormData({
           name: "",
@@ -56,11 +47,9 @@ const Contact = () => {
           subject: "",
           message: "",
         });
-      } else {
-        toast.error(data.message || "Failed to send message.");
       }
     } catch (err) {
-      toast.error("Something went wrong. Please try again.");
+      toast.error(err.response?.data?.message || "Something went wrong. Please try again.");
     }
 
     setIsSubmitting(false);
