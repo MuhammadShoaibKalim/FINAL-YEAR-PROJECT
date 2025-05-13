@@ -688,7 +688,7 @@ export const updateLabAdminProfile = async (req, res) => {
     }
 
     if (req.file) {
-      updates.image = req.file.path;  // Cloudinary URL
+      updates.image = req.file.path;  
     }
 
     const updatedLabAdmin = await User.findByIdAndUpdate(labAdminId, updates, { new: true }).select("-password");
