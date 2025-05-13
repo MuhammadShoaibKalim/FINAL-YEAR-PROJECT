@@ -54,7 +54,7 @@ import ConfirmBookingDetails from "./pages/Labs/ConfirmBookingDetails";
 import Payment from "./components/Payment/Payment";
 import Failure from "./components/Payment/Failure";
 import Success from "./components/Payment/Success";
-import Partners from "./pages/Partners/Partners";
+import Partners from "./pages/Partners/OurPartner";
 import Hero from "./pages/Home/Hero";
 import UserInbox from "./components/UserAdmin/UserInbox";
 import ForgotPassword from "./components/Auth/ForgotPassword";
