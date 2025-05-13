@@ -113,14 +113,24 @@ const ProfileSection = ({ profile, profileForm, setProfileForm, profileImagePrev
 
   const updateProfile = async () => {
     const formData = new FormData();
-    Object.keys(profileForm).forEach(key => {
-      if (profileForm[key]) formData.append(key, profileForm[key]);
-    });
+    
+    // Add all form fields
+    formData.append('firstName', profileForm.firstName);
+    formData.append('lastName', profileForm.lastName);
+    formData.append('email', profileForm.email);
+    formData.append('phoneNo', profileForm.phoneNo);
+    
+    // Add image if it exists and is a File object
+    if (profileForm.profileImage instanceof File) {
+      formData.append('profileImage', profileForm.profileImage);
+    }
 
     try {
       const res = await fetch("/api/labadmin/profile", {
         method: "PUT",
-        headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
+        headers: { 
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
         body: formData,
       });
       const data = await res.json();
@@ -183,14 +193,24 @@ const LabSection = ({ lab, labForm, setLabForm, labImagePreview, setLabImagePrev
 
   const updateLab = async () => {
     const formData = new FormData();
-    Object.keys(labForm).forEach(key => {
-      if (labForm[key]) formData.append(key, labForm[key]);
-    });
+    
+    // Add all form fields
+    formData.append('name', labForm.name);
+    formData.append('location', labForm.location);
+    formData.append('address', labForm.address);
+    formData.append('isActive', labForm.isActive);
+    
+    // Add image if it exists and is a File object
+    if (labForm.profileImage instanceof File) {
+      formData.append('profileImage', labForm.profileImage);
+    }
 
     try {
       const res = await fetch("/api/labadmin/lab", {
         method: "PUT",
-        headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
+        headers: { 
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
         body: formData,
       });
       const data = await res.json();
@@ -212,7 +232,7 @@ const LabSection = ({ lab, labForm, setLabForm, labImagePreview, setLabImagePrev
     <div className="flex flex-col items-center">
       <div className="flex items-center gap-4">
         <label className="cursor-pointer">
-          <input type="file" name="labImage" accept="image/*" className="hidden" onChange={handleChange} />
+          <input type="file" name="profileImage" accept="image/*" className="hidden" onChange={handleChange} />
           <img src={labImagePreview || "https://via.placeholder.com/300x200"} alt="Lab" className="w-32 h-32 rounded-lg object-cover border-4 border-primary" />
         </label>
         <div className="flex items-center">
