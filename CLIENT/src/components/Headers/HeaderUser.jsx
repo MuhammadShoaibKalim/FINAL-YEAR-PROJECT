@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   FaUserCircle, FaSignInAlt, FaSignOutAlt, FaShoppingCart,
@@ -9,13 +9,29 @@ import { logoutUser } from '../../redux/AuthSlice';
 import toast from 'react-hot-toast';
 import logo from '../../assets/logo.png';
 
+const SUGGESTIONS = [
+  'CBC',
+  'Diabetes',
+  'Lipid Profile',
+  'Heart Health',
+  'Thyroid',
+  "Women's Health",
+  'Senior Care',
+  'Child Health',
+  'Vitamin D',
+  'Kidney Function',
+];
+
 const HeaderUser = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isExploreOpen, setIsExploreOpen] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchHistory, setSearchHistory] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const dropdownRef = useRef(null);
   const profileRef = useRef(null);
+  const suggestionsRef = useRef(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -32,12 +48,32 @@ const HeaderUser = () => {
     }
   };
 
+  useEffect(() => {
+    const stored = localStorage.getItem('searchHistory');
+    if (stored) setSearchHistory(JSON.parse(stored));
+  }, []);
+
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
+      setSearchHistory((prev) => {
+        const newHistory = [searchQuery.trim(), ...prev.filter((q) => q !== searchQuery.trim())].slice(0, 8);
+        localStorage.setItem('searchHistory', JSON.stringify(newHistory));
+        return newHistory;
+      });
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
+
+  const handleQuickSearch = useCallback((q) => {
+    setSearchQuery(q);
+    setSearchHistory((prev) => {
+      const newHistory = [q, ...prev.filter((item) => item !== q)].slice(0, 8);
+      localStorage.setItem('searchHistory', JSON.stringify(newHistory));
+      return newHistory;
+    });
+    navigate(`/search?q=${encodeURIComponent(q)}`);
+  }, [navigate]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -56,6 +92,20 @@ const HeaderUser = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (!showSuggestions && !searchQuery) return;
+    const handleClick = (e) => {
+      if (
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(e.target)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showSuggestions, searchQuery]);
+
   const handleProfileClick = (e) => {
     e.stopPropagation();
     setIsProfileOpen(!isProfileOpen);
@@ -64,6 +114,12 @@ const HeaderUser = () => {
   const handleMobileLinkClick = () => {
     setIsMobileOpen(false);
   };
+
+  const filteredSuggestions = SUGGESTIONS.filter(s =>
+    s.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const shouldShowDropdown = showSuggestions || searchQuery.length > 0;
 
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-border-dark shadow-sm">
@@ -117,6 +173,7 @@ const HeaderUser = () => {
                 className="w-[400px] px-4 py-2 rounded-full text-sm border border-gray-300 focus:ring-primary focus:outline-none"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setShowSuggestions(true)}
               />
               <button
                 type="submit"
@@ -124,6 +181,41 @@ const HeaderUser = () => {
               >
                 <FaSearch />
               </button>
+              {/* Search History & Suggestions */}
+              {shouldShowDropdown && (searchHistory.length > 0 || filteredSuggestions.length > 0) && (
+                <div
+                  ref={suggestionsRef}
+                  className="absolute left-0 w-[400px] max-w-[90vw] bg-white shadow-2xl rounded-b-xl mt-1 z-50 p-3 border border-t-0 border-gray-200"
+                  style={{ minWidth: 300 }}
+                >
+                  {searchHistory.length > 0 && (
+                    <div className="mb-2 flex flex-wrap gap-2">
+                      {searchHistory.map((item, idx) => (
+                        <button
+                          key={item + idx}
+                          className="px-3 py-1 bg-gray-100 hover:bg-primary/10 text-primary rounded-lg border border-primary/20 text-xs"
+                          onMouseDown={() => handleQuickSearch(item)}
+                          type="button"
+                        >
+                          {item}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex flex-wrap gap-2">
+                    {filteredSuggestions.map((item, idx) => (
+                      <button
+                        key={item + idx}
+                        className="px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg border border-blue-200 text-xs"
+                        onMouseDown={() => handleQuickSearch(item)}
+                        type="button"
+                      >
+                        {item}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </form>
           </div>
 
