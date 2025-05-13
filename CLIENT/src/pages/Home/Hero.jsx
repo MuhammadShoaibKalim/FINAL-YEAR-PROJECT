@@ -20,14 +20,14 @@ const Hero = () => {
           <div className="text-center space-y-8">
             {/* Main heading with gradient text */}
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-text-primary tracking-tight">
-              Revolutionizing Healthcare with
+              Your Health, Our Priority with
               <span className="block mt-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                AI-Powered Diagnostics
+                AI-Powered Recommendations 
               </span>
             </h1>
 
             {/* Enhanced description */}
-            <p className="text-xl md:text-2xl text-text-secondary max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl md:text-2xl text-text-secondary max-w-6xl mx-auto leading-relaxed text-justify">
               Experience the future of healthcare with our advanced AI-driven diagnostic solutions. 
               Precise, personalized, and professional medical insights at your fingertips.
             </p>
