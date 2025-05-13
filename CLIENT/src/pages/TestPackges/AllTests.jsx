@@ -294,11 +294,11 @@ const AllTests = () => {
                         {filteredTests.length} {filteredTests.length === 1 ? 'Test' : 'Tests'}
                     </span>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                <div className="flex flex-row gap-4">
                     {filteredTests.length > displayCount && !showAll && (
                         <button
                             onClick={handleLoadMore}
-                            className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                            className="px-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                         >
                             Load More
                         </button>
@@ -315,7 +315,7 @@ const AllTests = () => {
                                     setShowAll(true);
                                 }
                             }}
-                            className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+                            className="px-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
                         >
                             {showAll ? "Show Less" : "View All"}
                         </button>
