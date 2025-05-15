@@ -1,8 +1,18 @@
-// serverside/routes/recommendation.route.js
+// // serverside/routes/recommendation.route.js
+// import express from "express";
+// import { getTestRecommedation } from "../controllers/recommendation.controller.js";
+// const router = express.Router();
+
+// router.post("/recommend-tests", getTestRecommedation);
+
+// export default router;
+
+
+
 import express from "express";
-import { getTestRecommedation } from "../controllers/recommendation.controller.js";
+import { getTestRecommendation } from "../controllers/recommendation.controller.js";
 const router = express.Router();
 
-router.post("/recommend-tests", getTestRecommedation);
+router.post("/recommend-tests", getTestRecommendation);
 
 export default router;
