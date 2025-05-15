@@ -1,15 +1,24 @@
-// serverside/controllers/recommendation.controller.js
-import getTestRecommendations from "../config/recommendation.js";
+import getTestRecommendations from "../labgchain/langchain.js";
 
-export const getTestRecommedation = async (req, res) => {
-  const { symptoms } = req.body;
+export const getTestRecommendation = async (req, res) => {
+  const { description, symptoms } = req.body;
 
-  if (!Array.isArray(symptoms) || symptoms.length === 0) {
-    return res.status(400).json({ error: "Symptoms must be a non-empty array" });
+  if (
+    (!description || typeof description !== "string" || description.trim().length < 10) &&
+    (!Array.isArray(symptoms) || symptoms.length === 0)
+  ) {
+    return res.status(400).json({
+      success: false,
+      error: "Please provide either selected symptoms or a valid symptom description.",
+    });
   }
 
+  const inputText = description?.trim().length >= 10
+    ? description
+    : `Symptoms: ${symptoms.join(", ")}`;
+
   try {
-    const result = await getTestRecommendations(symptoms);
+    const result = await getTestRecommendations(inputText);
     res.json({ success: true, recommendations: result });
   } catch (error) {
     console.error("AI Error:", error.message);
