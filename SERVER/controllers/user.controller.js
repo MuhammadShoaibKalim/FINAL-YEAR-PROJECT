@@ -63,7 +63,7 @@ export const userRegister = async (req, res) => {
 
     // Generate email verification token
     const verificationToken = crypto.randomBytes(32).toString("hex");
-    const verificationTokenExpires = Date.now() + 60 * 60 * 1000; // 1 hour
+    const verificationTokenExpires = Date.now() + 5 * 60 * 1000; // 5 minutes
 
     const newUser = new User({
       firstName,
