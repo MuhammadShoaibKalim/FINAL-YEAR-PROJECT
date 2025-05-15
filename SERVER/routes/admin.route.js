@@ -25,7 +25,8 @@ import {
   getLabForLabAdmin,
   getLabAdminInbox,
   respondToLabAdminInbox,
-  getLabDashboardOverview
+  getLabDashboardOverview,
+  respondToLabAdmin
 } from "../controllers/admin.controller.js";
 import { 
   isAuthenticated, 
@@ -55,8 +56,9 @@ router.delete("/delete-user/:id", isAuthenticated, isSuperAdmin, deleteUser);
 router.get("/users", isAuthenticated, isSuperAdmin, getAllUsers);
 router.get("/labadmins", isAuthenticated, isSuperAdmin, getLabAdmins);
 
-router.get("/", isAuthenticated, isSuperAdmin, getInbox);
+router.get("/superadmin-inbox", isAuthenticated, isSuperAdmin, getInbox);
 router.post("/:id", isAuthenticated, isSuperAdmin, respondToInbox);
+router.get('/superadmin-responses', isAuthenticated, respondToLabAdmin);
 router.get("/get-settings", isAuthenticated, isSuperAdmin, getSettings);
 router.put("/update-settings", isAuthenticated, isSuperAdmin, upload.single("image"), updateSettings);
 router.put("/password", isAuthenticated, isSuperAdmin, changePassword);
