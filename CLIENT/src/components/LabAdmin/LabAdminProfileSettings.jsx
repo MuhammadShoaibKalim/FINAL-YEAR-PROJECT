@@ -144,7 +144,7 @@ const ProfileSection = ({ profile, profileForm, setProfileForm, profileImagePrev
       }
     } catch (error) {
       console.error(error);
-      toast.error("Something went wrong updating profile");
+      // toast.error("Something went wrong updating profile");
     }
   };
 
