@@ -118,16 +118,15 @@ const SearchResults = () => {
     "partners": "/partners",
     "services": "/services",
     "home": "/",
-    // Add more as needed
   };
 
   const handleResultClick = (result) => {
     switch (result.type) {
       case 'test':
-        navigate(`/test/${result._id}`);
+        navigate(`/labs/${result.lab}/testpackage?type=test&id=${result._id}`);
         break;
       case 'package':
-        navigate(`/package/${result._id}`);
+        navigate(`/labs/${result.lab}/testpackage?type=package&id=${result._id}`);
         break;
       case 'lab':
         navigate(`/labs/${result._id}/details`);
@@ -152,6 +151,35 @@ const SearchResults = () => {
       }
       default:
         break;
+    }
+  };
+
+  const handleAddToCart = async (result) => {
+    try {
+      const res = await axios.post(
+        '/api/cart/add',
+        {
+          testOrPackageId: result._id,
+          type: result.type === 'package' ? 'Package' : 'Test',
+          name: result.displayName,
+          price: result.price,
+          labId: result.lab,
+          quantity: 1
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          },
+        }
+      );
+      if (res.data.success) {
+        toast.success('Added to cart!');
+        navigate('/place-order');
+      } else {
+        toast.error(res.data.message || 'Failed to add to cart');
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to add to cart');
     }
   };
 
@@ -198,6 +226,14 @@ const SearchResults = () => {
               <div className="mt-2 text-sm text-gray-500">
                 {result.address}
               </div>
+            )}
+            {(result.type === 'test' || result.type === 'package') && result.lab && (
+              <button
+                className="mt-4 px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark"
+                onClick={e => { e.stopPropagation(); handleAddToCart(result); }}
+              >
+                Add to Cart
+              </button>
             )}
           </div>
         ))}
