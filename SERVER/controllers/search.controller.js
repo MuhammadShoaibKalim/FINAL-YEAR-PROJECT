@@ -14,7 +14,7 @@ export const searchAll = async (req, res) => {
           { name: { $regex: query, $options: 'i' } },
           { description: { $regex: query, $options: 'i' } }
       ]
-    }).limit(5);
+    }).populate('lab').limit(5);
 
     // Search in packages
     const packages = await Package.find({
@@ -22,7 +22,7 @@ export const searchAll = async (req, res) => {
           { name: { $regex: query, $options: 'i' } },
           { description: { $regex: query, $options: 'i' } }
       ]
-    }).limit(5);
+    }).populate('lab').limit(5);
 
     // Search in labs
     const labs = await Lab.find({
@@ -41,7 +41,8 @@ export const searchAll = async (req, res) => {
         displayName: test.name,
         displayDescription: test.description,
         price: test.price,
-        labName: test.lab?.name || 'Unknown Lab'
+        labName: test.lab?.name || 'Unknown Lab',
+        lab: test.lab?._id ? test.lab._id : test.lab
       })),
       ...packages.map(pkg => ({
         _id: pkg._id,
@@ -49,7 +50,8 @@ export const searchAll = async (req, res) => {
         displayName: pkg.name,
         displayDescription: pkg.description,
         price: pkg.price,
-        labName: pkg.lab?.name || 'Unknown Lab'
+        labName: pkg.lab?.name || 'Unknown Lab',
+        lab: pkg.lab?._id ? pkg.lab._id : pkg.lab
       })),
       ...labs.map(lab => ({
         _id: lab._id,
@@ -148,7 +150,6 @@ export const searchAll = async (req, res) => {
       (item.keywords && item.keywords.toLowerCase().includes(query.toLowerCase()))
     );
 
-    // Add matching health concerns, most used tests, and static pages to results
     const additionalResults = [
       ...matchingHealthConcerns.map(item => ({
         _id: item.path,
