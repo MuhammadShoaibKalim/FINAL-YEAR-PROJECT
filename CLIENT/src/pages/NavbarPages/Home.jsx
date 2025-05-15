@@ -15,11 +15,11 @@ const Home = () => {
         <div className="min-h-screen bg-gradient-to-tb from-white via-gray to-white ">
             <Hero />
             <HeroFeatures />
-            <CommonSymptoms/>
+            {/* <CommonSymptoms/>
             <TestByHConcern />
             <WhyUs/>
             <MostUsed />
-            <FAQ />
+            <FAQ /> */}
             <UserReview/>
             <OurColl />
         </div>  
