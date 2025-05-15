@@ -409,6 +409,21 @@ export const respondToInbox = async (req, res) => {
     res.status(500).json({ message: "Error responding to inbox message", error: error.message });
   }
 };
+export const respondToLabAdmin = async (req, res) => {
+  try {
+    const labAdminId = req.user.id; 
+    const messages = await Query.find({
+      receiverType: 'labadmin',
+      receiverId: labAdminId,
+      senderType: 'superadmin',
+    }).sort({ createdAt: -1 });
+
+    res.json({ success: true, messages });
+  } catch (error) {
+    console.error('Error fetching superadmin responses:', error);
+    res.status(500).json({ success: false, message: 'Server Error' });
+  }
+}
 export const getSettings = async (req, res) => {
   try {
     const superAdmin = await User.findById(req.user.id).select("-password"); 
@@ -647,7 +662,6 @@ export const getLabDashboardOverview = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
-
 export const getLabAdminProfile = async (req, res) => {
 try {
   const labAdminId = req.user.id;
