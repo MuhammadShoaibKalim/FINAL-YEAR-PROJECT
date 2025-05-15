@@ -95,7 +95,6 @@ export default function OfferedTests() {
       toast.success("Item deleted");
     } catch (error) {
       console.error("Error deleting", error);
-      toast.error("Delete failed");
     }
   };
 
