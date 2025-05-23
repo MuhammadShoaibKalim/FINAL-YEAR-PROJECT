@@ -1,96 +1,90 @@
-# Digital LabCore
+# 💉 Digital LabCore
 
 ## 📌 Problem Statement
-In today's fast-paced world, traditional lab test management is inefficient, leading to delays, mismanagement, and inconvenience for both patients and labs. **Digital LabCore** aims to revolutionize lab test bookings by providing an AI-powered platform that streamlines the process for users, lab administrators, and super administrators.
+In today's fast-paced healthcare environment, accessing and managing lab tests remains fragmented and inefficient. **Digital LabCore** solves this by offering a centralized, AI-powered web platform that allows patients to register, search, compare, and book lab tests with ease. The system also empowers lab administrators and super admins with tools for efficient order handling and analytics.
 
-
+---
 
 ## 🚀 Features
- 🔹 **User Authentication** (Login, Registration, Secure Access)
- 
- 🔹 **AI-based Test Recommendations**
- 
- 🔹 **Book Lab Tests & Packages**
- 
- 🔹 **Order Tracking & Status Updates**
- 
- 🔹 **Lab Management for Lab Admins**
- 
- 🔹 **Super Admin Dashboard for Platform Control**
- 
- 🔹 **Report Upload & Download**
- 
- 🔹 **Secure Payment Integration (Stripe payment Gateway)**
+
+🔐 **Secure User Authentication** (Registration, Login, JWT-based Access Control)
+
+🤖 **AI-based Test Recommendations** (via LLMs like Mistral & MedLLaMA2)
+
+🧪 **Search, Compare & Book Lab Tests**
+
+📦 **Order Tracking & Status Updates**
+
+🏥 **Lab Profile & Test Management for Lab Admins**
+
+📊 **Super Admin Dashboard for Analytics & Control**
+
+📄 **Upload/Download Test Reports**
+
+💳 **Integrated Stripe Payment Gateway**
+
+💬 **Planned: Real-time Chat System**
 
 ---
 
 ## 🏢 Roles & Responsibilities
 
 ### 👤 **User (Patient)**
-- Sign up/log in securely.
-- Browse available tests and packages.
-- Get AI-based test recommendations.
-- Book tests and make payments.
-- Track order status.
-- Download reports when available.
+- Register & log in securely.
+- Enter symptoms for AI-based test recommendations.
+- Search, compare, and book lab tests.
+- Make payments and track order status.
+- View/download test results.
+- Submit feedback & contact support.
 
 ### 🏥 **Lab Admin**
-- Manage lab profile.
-- Add and update test details.
-- View and manage orders.
-- Update order status (Pending → Completed).
-- Upload patient reports.
+- Manage lab profile & test listings.
+- View/manage incoming test orders.
+- Update test and payment statuses.
+- Upload test reports for users.
+- Communicate with users and super admin.
 
 ### 🔧 **Super Admin**
-- Manage all labs and users.
-- Monitor orders and reports.
-- Oversee AI-based recommendations.
-- Handle platform-wide settings.
+- Oversee all labs, users, and orders.
+- Manage user roles and lab accounts.
+- Monitor analytics & AI recommendation flow.
+- Moderate platform communication & support.
 
 ---
 
-## 🔄 Workflow
+## 🔄 Workflow Overview
 
-1. **User Registration/Login** → Secure authentication using Redux for state management.
-2. **AI-based Test Recommendation** → Suggests relevant tests based on symptoms or history.
-3. **Test Booking** → Users select tests and place orders.
-4. **Order Management** → Lab Admins manage test requests and update statuses.
-5. **Report Upload** → Lab Admin uploads reports once tests are completed.
-6. **User Access Reports** → Users download their medical reports.
-7. **Super Admin Oversight** → Monitors all activities and ensures platform security.
+1. **Registration/Login** → Patients sign up with secure validation.
+2. **Symptom Input** → AI suggests tests using pretrained LLMs.
+3. **Test Booking** → Patient books test & pays via Stripe.
+4. **Order Handling** → Lab admin manages order & uploads report.
+5. **Dashboard Oversight** → Super admin reviews system analytics.
 
 ---
 
-## 🛠 Tech Stack & Tools
+## 🛠 Tech Stack
 
-### **Frontend**
-- **React.js** - UI development
-- **Redux** - Global state management
-- **React MUI / Bootstrap** - UI components
+### 🌐 Frontend
+- React.js – SPA frontend
+- Redux – State management
+- Material UI / Bootstrap – UI components
 
-### **Backend**
-- **Node.js & Express.js** - Server-side logic
-- **MongoDB** - Database
-- **Mongoose** - ODM for MongoDB
-- **JWT** - Authentication
-- **Bcrypt.js** - Password hashing
+### 🔙 Backend
+- Node.js & Express.js – RESTful API
+- MongoDB 
+- Mongoose – ODM for MongoDB
+- JWT – Auth tokens
+- Bcrypt.js – Password hashing
 
-### **Deployment**
-- 
-- 
-
-### **Development Tools**
-- **Postman** - API testing
-- **GitHub** - Version control
-- **VS Code** - Code editor
+### 🧪 Development Tools
+- Postman – API testing
+- GitHub – Version control
+- VS Code – Code editor
 
 ---
 
-## 📜 License
-This project is open-source and available under the [MIT License](LICENSE).
+## 📦 Deployment
+> Deployment instructions or hosting platform details to be added.
 
-## 🤝 Contributing
-Contributions are welcome! Feel free to fork the repository and submit a pull request.
+---
 
-## 📞 Contact
-For queries, contact **Shoaib** at [mmuhammadshoaibkalim@gmail.com] or visit [shoaib.codes](https://shoaib.codes).
