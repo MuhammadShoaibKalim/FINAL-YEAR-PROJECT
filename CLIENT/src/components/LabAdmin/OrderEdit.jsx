@@ -236,7 +236,7 @@ const OrderEdit = () => {
             <option value="">-- Select Payment Status --</option>
             <option value="pending">Pending</option>
             <option value="paid">Paid</option>
-            <option value="refunded">Refunded</option>
+            <option value="unpaid">Unpaid</option>
           </select>
         </div>
 
