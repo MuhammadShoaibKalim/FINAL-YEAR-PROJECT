@@ -1,6 +1,19 @@
 
 import { Order, Cart } from '../models/order.model.js';
 import {Test, Package} from "../models/testpackage.model.js"
+import fs from 'fs';
+import cloudinary from '../config/cloudinary.js';
+
+function getOrderKey(order) {
+  const userId = order.userId.toString();
+  const bookingDate = new Date(order.bookingDetails.date).toISOString().slice(0, 10); // YYYY-MM-DD
+  const itemsIds = order.items
+    .map(i => i.testOrPackageId.toString())
+    .sort()
+    .join(',');
+  return `${userId}-${bookingDate}-${itemsIds}`;
+}
+
 export const createOrder = async (req, res) => {
   try {
     const {
@@ -63,14 +76,34 @@ export const createOrder = async (req, res) => {
   }
 };
 
+// export const getUserOrders = async (req, res) => {
+//   try {
+//     const orders = await Order.find({ userId: req.user.id }).populate("items.labId", "name");
+//     res.status(200).json({ message: "Orders fetched", orders });
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
 export const getUserOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ userId: req.user.id }).populate("items.labId", "name");
-    res.status(200).json({ message: "Orders fetched", orders });
+    const orders = await Order.find({ userId: req.user.id }).populate("items.labId", "name").lean();
+
+    const uniqueOrdersMap = new Map();
+    orders.forEach(order => {
+      const key = getOrderKey(order);
+      if (!uniqueOrdersMap.has(key)) {
+        uniqueOrdersMap.set(key, order);
+      }
+    });
+
+    const uniqueOrders = Array.from(uniqueOrdersMap.values());
+
+    res.status(200).json({ message: "Orders fetched", orders: uniqueOrders });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 // export const getOrderById = async (req, res) => {
 //   try {
@@ -104,19 +137,54 @@ export const getAllOrders = async (req, res) => {
   }
 };
 
+// export const getLabOrders = async (req, res) => {
+//   try {
+//     const labId = req.user.labId;
+//     const orders = await Order.find({ "items.labId": labId })
+//       .populate("userId", "firstName lastName email")
+//       .populate("items.labId", "name")
+//       .sort({ updatedAt: -1 });
+
+//     res.status(200).json({ message: "Orders for this lab", orders });
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
 export const getLabOrders = async (req, res) => {
   try {
     const labId = req.user.labId;
-    const orders = await Order.find({ "items.labId": labId })
+
+    const allOrders = await Order.find({ "items.labId": labId })
       .populate("userId", "firstName lastName email")
       .populate("items.labId", "name")
-      .sort({ updatedAt: -1 });
+      .sort({ updatedAt: -1 })
+      .lean();
 
-    res.status(200).json({ message: "Orders for this lab", orders });
+    const uniqueOrdersMap = new Map();
+    allOrders.forEach(order => {
+      const key = getOrderKey(order);
+      if (!uniqueOrdersMap.has(key)) {
+        uniqueOrdersMap.set(key, order);
+      }
+    });
+
+    const uniqueOrders = Array.from(uniqueOrdersMap.values());
+
+    // Filter items to only lab's items
+    const filteredOrders = uniqueOrders
+      .map(order => {
+        const labItems = order.items.filter(item => item.labId && item.labId._id.toString() === labId.toString());
+        return { ...order, items: labItems };
+      });
+
+    res.status(200).json({ message: "Orders for this lab", orders: filteredOrders });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
+
+
 
 export const updateOrderStatus = async (req, res) => {
   try {
@@ -344,23 +412,27 @@ export const uploadReport = async (req, res) => {
     }
 
     const orderId = req.params.id;
-    const reportFile = req.file.path;
+
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "default_folder",
+      resource_type: "raw",
+      public_id: req.file.originalname.split(".")[0]
+    });
+
+    const downloadableUrl = result.secure_url.replace("/upload/", "/upload/fl_attachment/");
 
     const order = await Order.findById(orderId);
-    if (!order) {
-      return res.status(404).json({ message: "Order not found" });
-    }
+    if (!order) return res.status(404).json({ message: "Order not found" });
 
-    // Update the order with the report file
-    order.reportFile = reportFile;
+    order.reportFile = downloadableUrl;
     await order.save();
 
-    res.status(200).json({
-      message: "Report uploaded successfully",
-      reportFile: reportFile
-    });
+    fs.unlinkSync(req.file.path); 
+
+    res.status(200).json({ message: "Report uploaded", reportFile: downloadableUrl });
   } catch (error) {
-    console.error("Report upload error:", error);
-    res.status(500).json({ message: "Error uploading report" });
+    console.error("Manual report upload error:", error);
+    res.status(500).json({ message: "Upload failed" });
   }
 };
+
