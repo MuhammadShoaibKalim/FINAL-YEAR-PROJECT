@@ -89,7 +89,7 @@ import ThyroidProfile from "./pages/MostUsed/ThyroidProfile";
 import MostUsed from "./pages/MostUsed/MostUsed";
 import SearchResults from './components/Search/SearchResults';
 
-// --- Move all logic that uses useNavigate into this component ---
+
 const AppRoutes = () => {
   const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
