@@ -42,7 +42,7 @@
     "sonner": "^1.7.4",
     "stripe": "^17.7.0",
     "styled-components": "^6.1.14",
-    "swiper": "^11.2.1",
+    "swiper": "^11.2.8",
     "yup": "^1.6.1"
   },
   "devDependencies": {
