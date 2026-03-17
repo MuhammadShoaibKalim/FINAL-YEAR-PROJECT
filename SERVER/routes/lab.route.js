@@ -13,7 +13,8 @@ import {
   getLabApplications,
   updateLabApplicationStatus,
   addReview,
-  getLabReviews
+  getLabReviews,
+  updateMyLab
 } from "../controllers/lab.controller.js";
 import {  isAuthenticated, isLabAdmin, isSuperAdmin, protect } from "../middlewares/auth.middleware.js";
 import upload from "../middlewares/upload.middleware.js";
@@ -26,6 +27,7 @@ router.get("/", isAuthenticated, isSuperAdmin, getLab);
 router.get("/all", isAuthenticated, isSuperAdmin, getAllLabs);
 // router.get("/:id", isAuthenticated, isSuperAdmin, isLabAdmin, getLabById);
 router.put("/:id",isAuthenticated, protect, upload.single("image"), updateLab);
+router.put("/update-my-lab/profile", isAuthenticated, isLabAdmin, upload.single("image"), updateMyLab);
 router.delete("/:id", protect, deleteLab);
 
 // Public routes - no authentication required
