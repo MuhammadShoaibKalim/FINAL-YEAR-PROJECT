@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { FaEye, FaTrashAlt, FaReply } from "react-icons/fa";
+import { FaEye, FaTrashAlt, FaReply, FaEnvelopeOpenText, FaPaperPlane, FaClock, FaCheckCircle, FaExclamationCircle, FaUserShield, FaInbox, FaArrowRight } from "react-icons/fa";
+import { ImSpinner2 } from "react-icons/im";
+import { toast } from "react-hot-toast";
 
 const LabAdminInbox = () => {
   const [messages, setMessages] = useState([]);
@@ -9,6 +11,7 @@ const LabAdminInbox = () => {
   const [showContactForm, setShowContactForm] = useState(false);
   const [editMessage, setEditMessage] = useState(null);
   const [replyText, setReplyText] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [contactFormData, setContactFormData] = useState({
     name: "",
     email: "",
@@ -42,7 +45,6 @@ const LabAdminInbox = () => {
     } else {
       setMessages([]);
       setUnreadCount(0);
-      console.warn("Invalid inbox messages");
     }
     setLoading(false);
   };
@@ -51,9 +53,6 @@ const LabAdminInbox = () => {
     const data = await fetchData("/api/query/superadmin-responses");
     if (data?.success && Array.isArray(data.messages)) {
       setSuperAdminMessages(data.messages);
-    } else {
-      setSuperAdminMessages([]);
-      console.warn("Invalid superadmin messages");
     }
   };
 
@@ -63,268 +62,331 @@ const LabAdminInbox = () => {
     const interval = setInterval(() => {
       fetchInbox();
       fetchSuperAdminResponses();
-    }, 10000);
+    }, 15000);
     return () => clearInterval(interval);
   }, []);
 
   const handleViewMessage = async (id) => {
-    await fetchData(`/api/inbox/view/${id}`, { method: "PATCH" });
-    setMessages((prev) =>
-      prev.map((m) => (m._id === id ? { ...m, status: "viewed" } : m))
-    );
-    setUnreadCount((c) => Math.max(c - 1, 0));
+    const res = await fetchData(`/api/inbox/view/${id}`, { method: "PATCH" });
+    if (res?.success) {
+      setMessages((prev) =>
+        prev.map((m) => (m._id === id ? { ...m, status: "viewed" } : m))
+      );
+      setUnreadCount((c) => Math.max(c - 1, 0));
+    }
   };
 
   const handleDeleteMessage = async (id) => {
-    await fetchData(`/api/inbox/delete/${id}`, { method: "DELETE" });
-    setMessages((prev) => prev.filter((m) => m._id !== id));
+    if (!window.confirm("CRITICAL: Purge this transmission from archives?")) return;
+    const res = await fetchData(`/api/inbox/delete/${id}`, { method: "DELETE" });
+    if (res) {
+      toast.success("Transmission purged successfully");
+      setMessages((prev) => prev.filter((m) => m._id !== id));
+    }
   };
 
   const handleReplyMessage = async (id, response) => {
-    const res = await fetch(`/api/inbox/reply/${id}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...authHeader,
-      },
-      body: JSON.stringify({ response }),
-    });
+    if (!response.trim()) return toast.error("Response message body is required");
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/inbox/reply/${id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeader,
+        },
+        body: JSON.stringify({ response }),
+      });
 
-    if (res.ok) {
-      setMessages((prev) =>
-        prev.map((m) =>
-          m._id === id ? { ...m, response, status: "responded" } : m
-        )
-      );
-      setEditMessage(null);
-      setReplyText("");
-    } else {
-      const data = await res.json();
-      alert(data.message || "Failed to send reply.");
+      if (res.ok) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m._id === id ? { ...m, response, status: "responded" } : m
+          )
+        );
+        toast.success("Clinical response transmitted");
+        setEditMessage(null);
+        setReplyText("");
+      } else {
+        const data = await res.json();
+        toast.error(data.message || "Transmission failure");
+      }
+    } catch (err) {
+      toast.error("Network protocol fault");
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleContactSubmit = async (e) => {
     e.preventDefault();
-    const res = await fetch("/api/query/submit", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...authHeader,
-      },
-      body: JSON.stringify({
-        ...contactFormData,
-        message: contactFormData.description,
-        receiverType: "support",
-        labId: "",
-      }),
-    });
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/query/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeader,
+        },
+        body: JSON.stringify({
+          ...contactFormData,
+          message: contactFormData.description,
+          receiverType: "support",
+          labId: "",
+        }),
+      });
 
-    const data = await res.json();
-    if (res.ok) {
-      alert("Message sent to Super Admin!");
-      setContactFormData({ name: "", email: "", subject: "", description: "" });
-      setShowContactForm(false);
-    } else {
-      alert(data.message || "Failed to send message.");
+      const data = await res.json();
+      if (res.ok) {
+        toast.success("Secure inquiry sent to Super Admin");
+        setContactFormData({ name: "", email: "", subject: "", description: "" });
+        setShowContactForm(false);
+      } else {
+        toast.error(data.message || "Inquiry transmission failure");
+      }
+    } catch (err) {
+      toast.error("Security handshake failed");
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const ContactForm = (
-    <div className="bg-white p-6 shadow-lg rounded-lg mt-4">
-      <h3 className="text-xl font-semibold mb-4">Contact Super Admin</h3>
-      <form onSubmit={handleContactSubmit} className="space-y-4">
-        {["name", "email", "subject"].map((field) => (
-          <input
-            key={field}
-            type={field === "email" ? "email" : "text"}
-            name={field}
-            placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
-            value={contactFormData[field]}
-            onChange={(e) =>
-              setContactFormData((prev) => ({ ...prev, [field]: e.target.value }))
-            }
-            required
-            className="w-full p-3 border border-gray-300 rounded-lg"
-          />
-        ))}
-        <textarea
-          name="description"
-          placeholder="Message"
-          value={contactFormData.description}
-          onChange={(e) =>
-            setContactFormData((prev) => ({
-              ...prev,
-              description: e.target.value,
-            }))
-          }
-          required
-          rows="5"
-          className="w-full p-3 border border-gray-300 rounded-lg"
-        />
-        <button type="submit" className="bg-primary text-white px-4 py-2 rounded-lg w-full">
-          Send Message
-        </button>
-      </form>
-    </div>
-  );
-
-  const ReplyForm = (
-    <div className="bg-white p-6 shadow-lg rounded-lg mt-4">
-      <h3 className="text-xl font-semibold mb-4">
-        Reply to: {editMessage?.subject || "No Subject"}
-      </h3>
-      <textarea
-        className="w-full p-3 border border-gray-300 rounded-lg"
-        rows="5"
-        placeholder="Type your reply..."
-        value={replyText}
-        onChange={(e) => setReplyText(e.target.value)}
-      />
-      <div className="flex gap-4 mt-4">
-        <button
-          onClick={() => handleReplyMessage(editMessage._id, replyText)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg"
-        >
-          Send Reply
-        </button>
-        <button
-          onClick={() => setEditMessage(null)}
-          className="bg-gray-400 text-white px-4 py-2 rounded-lg"
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
-  );
-
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md mt-4 w-full max-w-8xl">
-      <div className="flex justify-between items-center mb-6 bg-gray-100 p-4 rounded-lg">
-        <div>
-          <h2 className="text-xl font-semibold">Need Assistance?</h2>
-          <p className="text-gray-600">
-            Contact the Super Admin for any queries or issues you face.
-          </p>
+    <div className="space-y-10 animate-in fade-in duration-700">
+      {/* Dynamic Header Overlay */}
+      <div className="bg-slate-900 rounded-[3rem] p-10 sm:p-16 text-white relative overflow-hidden shadow-2xl shadow-slate-200">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-3xl -mr-32 -mt-32"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-secondary/10 rounded-full blur-3xl -ml-32 -mb-32"></div>
+        
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-10">
+          <div className="space-y-4">
+            <div className="inline-block px-4 py-1 bg-white/10 rounded-full border border-white/5 backdrop-blur-md">
+               <p className="text-[9px] font-black text-primary uppercase tracking-[0.3em] leading-none">Security Environment</p>
+            </div>
+            <h2 className="text-4xl sm:text-5xl font-black tracking-tighter leading-none italic">Medical <span className="text-white/40 not-italic">Inbox.</span></h2>
+            <p className="text-white/60 font-bold uppercase text-[10px] tracking-[0.4em] max-w-xl leading-loose">Managed secure communication channel for clinical inquiries and administrative synchronization.</p>
+          </div>
+          <button
+            onClick={() => { setShowContactForm(!showContactForm); setEditMessage(null); }}
+            className={`px-8 py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-3 active:scale-95 shadow-2xl ${showContactForm ? 'bg-white text-slate-900' : 'bg-primary text-white shadow-primary/20'}`}
+          >
+            {showContactForm ? <FaInbox /> : <FaUserShield />} {showContactForm ? "View Active Inbox" : "Contact Super Admin"}
+          </button>
         </div>
-        <button
-          onClick={() => {
-            setShowContactForm(true);
-            setEditMessage(null);
-          }}
-          className="bg-primary text-white px-4 py-2 rounded-lg"
-        >
-          Contact Super Admin
-        </button>
       </div>
 
-      {showContactForm ? (
-        ContactForm
-      ) : editMessage ? (
-        ReplyForm
-      ) : (
-        <>
-          <div className="flex justify-between items-center mb-4">
-            <div>
-              Inbox
-              {unreadCount > 0 && (
-                <span className="ml-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                  {unreadCount} Unread
-                </span>
-              )}
+      <div className="bg-white rounded-[3rem] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden min-h-[500px]">
+        {showContactForm ? (
+          <div className="p-10 sm:p-20 max-w-4xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
+            <div className="space-y-2 text-center">
+               <h3 className="text-3xl font-black text-slate-800 tracking-tight">System Inquiry <span className="italic text-primary">Protocol.</span></h3>
+               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Escalate operational issues directly to global administration.</p>
             </div>
-          </div>
-
-          <div className="overflow-auto max-w-full">
-            {loading ? (
-              <div className="flex justify-center items-center p-10">
-                <svg
-                  className="animate-spin h-10 w-10 text-primary"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
+            <form onSubmit={handleContactSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-2">
+                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Identity Name</label>
+                 <input
+                   type="text"
+                   placeholder="John Doe"
+                   value={contactFormData.name}
+                   onChange={(e) => setContactFormData(prev => ({ ...prev, name: e.target.value }))}
+                   required
+                   className="w-full bg-slate-50 border-2 border-slate-50 focus:border-primary focus:bg-white p-5 rounded-2xl outline-none text-sm font-bold text-slate-700 transition-all"
+                 />
+              </div>
+              <div className="space-y-2">
+                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Official Email</label>
+                 <input
+                   type="email"
+                   placeholder="admin@lab.com"
+                   value={contactFormData.email}
+                   onChange={(e) => setContactFormData(prev => ({ ...prev, email: e.target.value }))}
+                   required
+                   className="w-full bg-slate-50 border-2 border-slate-50 focus:border-primary focus:bg-white p-5 rounded-2xl outline-none text-sm font-bold text-slate-700 transition-all"
+                 />
+              </div>
+              <div className="md:col-span-2 space-y-2">
+                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Subject Matter</label>
+                 <input
+                   type="text"
+                   placeholder="Security/Operational/Billing..."
+                   value={contactFormData.subject}
+                   onChange={(e) => setContactFormData(prev => ({ ...prev, subject: e.target.value }))}
+                   required
+                   className="w-full bg-slate-50 border-2 border-slate-50 focus:border-primary focus:bg-white p-5 rounded-2xl outline-none text-sm font-bold text-slate-700 transition-all"
+                 />
+              </div>
+              <div className="md:col-span-2 space-y-2">
+                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Detailed Description</label>
+                 <textarea
+                   placeholder="Describe your inquiry protocol requirements..."
+                   value={contactFormData.description}
+                   onChange={(e) => setContactFormData(prev => ({ ...prev, description: e.target.value }))}
+                   required
+                   rows="6"
+                   className="w-full bg-slate-50 border-2 border-slate-50 focus:border-primary focus:bg-white p-6 rounded-[2rem] outline-none text-sm font-bold text-slate-700 transition-all resize-none"
+                 />
+              </div>
+              <div className="md:col-span-2 pt-6">
+                <button 
+                  type="submit" 
+                  disabled={submitting}
+                  className="w-full bg-slate-900 hover:bg-primary text-white py-6 rounded-3xl text-[11px] font-black uppercase tracking-[0.3em] shadow-2xl transition-all active:scale-[0.98] flex items-center justify-center gap-4 disabled:opacity-50"
                 >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                  ></path>
-                </svg>
+                  {submitting ? <ImSpinner2 className="animate-spin text-lg" /> : <FaPaperPlane className="text-xs" />} Initialize Inquiry Transmission
+                </button>
+              </div>
+            </form>
+          </div>
+        ) : editMessage ? (
+          <div className="p-10 sm:p-20 max-w-4xl mx-auto space-y-10 animate-in fade-in slide-in-from-right-8 duration-700">
+             <div className="space-y-2">
+                <button onClick={() => setEditMessage(null)} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-primary transition-all flex items-center gap-2 mb-8">
+                   <FaArrowRight className="rotate-180" /> Back to Archives
+                </button>
+                <div className="flex items-center gap-4">
+                   <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary border border-primary/10">
+                      <FaReply />
+                   </div>
+                   <div>
+                      <h3 className="text-2xl font-black text-slate-800 tracking-tight leading-tight">Response <span className="italic text-primary">Deployment.</span></h3>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Responding to: {editMessage.subject}</p>
+                   </div>
+                </div>
+             </div>
+
+             <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100 space-y-4">
+                <div className="flex justify-between items-center text-[10px] font-black text-slate-300 uppercase tracking-widest border-b border-slate-200/50 pb-4">
+                   <span>Originating Transmission</span>
+                   <span>From: {editMessage.name}</span>
+                </div>
+                <p className="text-sm font-bold text-slate-600 leading-relaxed italic">"{editMessage.message}"</p>
+             </div>
+
+             <div className="space-y-4 pt-6">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Official Response Payload</label>
+                <textarea
+                  className="w-full bg-slate-50 border-2 border-slate-50 focus:border-primary focus:bg-white p-8 rounded-[2rem] outline-none text-sm font-bold text-slate-700 transition-all resize-none"
+                  rows="8"
+                  placeholder="Type your clinical response deployment here..."
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                />
+                <div className="flex gap-4 pt-6">
+                  <button
+                    onClick={() => handleReplyMessage(editMessage._id, replyText)}
+                    disabled={submitting}
+                    className="flex-1 bg-slate-900 hover:bg-primary text-white py-6 rounded-3xl text-[11px] font-black uppercase tracking-[0.3em] shadow-2xl transition-all active:scale-[0.98] flex items-center justify-center gap-4 disabled:opacity-50"
+                  >
+                    {submitting ? <ImSpinner2 className="animate-spin text-lg" /> : <FaPaperPlane className="text-xs" />} Confirm & Deploy Response
+                  </button>
+                  <button
+                    onClick={() => setEditMessage(null)}
+                    className="px-10 py-6 bg-white border border-slate-200 text-slate-400 hover:text-slate-900 rounded-3xl text-[10px] font-black uppercase tracking-widest transition-all"
+                  >
+                    Cancel
+                  </button>
+                </div>
+             </div>
+          </div>
+        ) : (
+          <div className="p-0 border-none">
+            {loading ? (
+              <div className="flex flex-col gap-6 justify-center items-center min-h-[400px]">
+                <ImSpinner2 className="text-primary text-4xl animate-spin" />
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Decrypting Transmissions</p>
               </div>
             ) : (
-              <div className="min-w-[800px]">
-                <table className="w-full text-left border border-gray-300 rounded-md overflow-hidden">
-                  <thead className="bg-primary text-white">
-                    <tr>
-                      <th className="px-3 py-2">Name</th>
-                      <th className="px-3 py-2">Email</th>
-                      <th className="px-3 py-2">Subject</th>
-                      <th className="px-3 py-2">Message</th>
-                      <th className="px-3 py-2">Status</th>
-                      <th className="px-3 py-2">Actions</th>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-slate-900 text-white">
+                      <th className="px-8 py-6 text-left text-[10px] font-black uppercase tracking-[0.3em]">Origin Source</th>
+                      <th className="px-8 py-6 text-left text-[10px] font-black uppercase tracking-[0.3em]">Subject Matter</th>
+                      <th className="px-8 py-6 text-left text-[10px] font-black uppercase tracking-[0.3em]">Transmission Payload</th>
+                      <th className="px-8 py-6 text-left text-[10px] font-black uppercase tracking-[0.3em]">Protocol Status</th>
+                      <th className="px-8 py-6 text-right text-[10px] font-black uppercase tracking-[0.3em]">Action Hub</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-slate-50">
                     {messages.length === 0 ? (
                       <tr>
-                        <td colSpan="6" className="text-center p-6 text-gray-500">
-                          No Messages Found
+                        <td colSpan="5" className="px-8 py-20 text-center space-y-4">
+                           <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-200 mx-auto">
+                              <FaEnvelopeOpenText className="text-2xl" />
+                           </div>
+                           <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 italic">Global Inbox Synchronized (0 Active)</p>
                         </td>
                       </tr>
                     ) : (
                       messages.map((msg) => (
                         <tr
                           key={msg._id}
-                          className={`border-b ${
-                            msg.status === "unviewed" ? "font-semibold" : ""
-                          }`}
+                          className={`hover:bg-slate-50 transition-colors group ${msg.status === "unviewed" ? "bg-primary/[0.02]" : ""}`}
                         >
-                          <td className="px-3 py-2">{msg.name}</td>
-                          <td className="px-3 py-2">{msg.email}</td>
-                          <td className="px-3 py-2">{msg.subject}</td>
-                          <td className="px-3 py-2">{msg.message}</td>
-                          <td className="px-3 py-2 capitalize">{msg.status}</td>
-                          <td className="px-3 py-2 flex gap-2">
-                            <button
-                              title="Mark as Viewed"
-                              onClick={() => handleViewMessage(msg._id)}
-                              disabled={msg.status !== "unviewed"}
-                              className="text-primary hover:text-primary-dark disabled:opacity-50"
-                            >
-                              <FaEye />
-                            </button>
-                            <button
-                              title="Reply"
-                              onClick={() => {
-                                setEditMessage(msg);
-                                setReplyText(msg.response || "");
-                                setShowContactForm(false);
-                              }}
-                              className="text-blue-600 hover:text-blue-800"
-                            >
-                              <FaReply />
-                            </button>
-                            <button
-                              title="Delete Message"
-                              onClick={() => {
-                                if (
-                                  window.confirm("Are you sure you want to delete this message?")
-                                ) {
-                                  handleDeleteMessage(msg._id);
-                                }
-                              }}
-                              className="text-red-600 hover:text-red-800"
-                            >
-                              <FaTrashAlt />
-                            </button>
+                          <td className="px-8 py-6">
+                            <div className="space-y-1">
+                               <p className={`text-sm tracking-tight ${msg.status === "unviewed" ? "font-black text-slate-900" : "font-bold text-slate-600"}`}>{msg.name}</p>
+                               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">{msg.email}</p>
+                            </div>
+                          </td>
+                          <td className="px-8 py-6">
+                             <p className={`text-xs uppercase tracking-widest ${msg.status === "unviewed" ? "font-black text-primary" : "font-bold text-slate-400"}`}>{msg.subject}</p>
+                          </td>
+                          <td className="px-8 py-6">
+                             <p className="text-[11px] font-medium text-slate-500 leading-relaxed max-w-xs">{msg.message}</p>
+                          </td>
+                          <td className="px-8 py-6 capitalize">
+                            <div className="flex">
+                              {msg.status === "unviewed" && (
+                                <div className="flex items-center gap-2 px-3 py-1 bg-amber-50 text-amber-600 rounded-lg">
+                                  <FaExclamationCircle className="text-[10px]" />
+                                  <span className="text-[9px] font-black uppercase tracking-widest">Pending</span>
+                                </div>
+                              )}
+                              {msg.status === "viewed" && (
+                                <div className="flex items-center gap-2 px-3 py-1 bg-sky-50 text-sky-600 rounded-lg">
+                                  <FaEnvelopeOpenText className="text-[10px]" />
+                                  <span className="text-[9px] font-black uppercase tracking-widest">Archived</span>
+                                </div>
+                              )}
+                              {msg.status === "responded" && (
+                                <div className="flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-lg">
+                                  <FaCheckCircle className="text-[10px]" />
+                                  <span className="text-[9px] font-black uppercase tracking-widest">Responded</span>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-8 py-6">
+                            <div className="flex justify-end gap-2">
+                              <button
+                                title="Sync View Protocol"
+                                onClick={() => handleViewMessage(msg._id)}
+                                disabled={msg.status !== "unviewed"}
+                                className="p-3 bg-white border border-slate-100 text-slate-400 hover:text-primary hover:border-primary/20 hover:shadow-xl rounded-xl transition-all disabled:opacity-20 disabled:grayscale"
+                              >
+                                <FaEye />
+                              </button>
+                              <button
+                                title="Initialize Response"
+                                onClick={() => {
+                                  setEditMessage(msg);
+                                  setReplyText(msg.response || "");
+                                  setShowContactForm(false);
+                                }}
+                                className="p-3 bg-white border border-slate-100 text-slate-400 hover:text-secondary hover:border-secondary/20 hover:shadow-xl rounded-xl transition-all"
+                              >
+                                <FaReply />
+                              </button>
+                              <button
+                                title="Purge Transmission"
+                                onClick={() => handleDeleteMessage(msg._id)}
+                                className="p-3 bg-white border border-slate-100 text-slate-300 hover:text-rose-500 hover:border-rose-100 hover:shadow-xl rounded-xl transition-all"
+                              >
+                                <FaTrashAlt />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))
@@ -334,7 +396,33 @@ const LabAdminInbox = () => {
               </div>
             )}
           </div>
-        </>
+        )}
+      </div>
+
+      {/* SuperAdmin Responses Section - Visual Tweak */}
+      {!showContactForm && !editMessage && superAdminMessages.length > 0 && (
+        <div className="bg-slate-50 border border-slate-100 rounded-[3rem] p-10 sm:p-16 space-y-10 animate-in fade-in duration-1000">
+           <div className="space-y-2">
+              <h3 className="text-2xl font-black text-slate-800 tracking-tight">Support <span className="italic text-primary">Intelligence.</span></h3>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Archived responses from Super Administrative Hub.</p>
+           </div>
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+             {superAdminMessages.map((m) => (
+               <div key={m._id} className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/50 hover:shadow-2xl transition-all group">
+                  <div className="flex justify-between items-start mb-6">
+                     <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white text-xs group-hover:bg-primary transition-colors">
+                        <FaUserShield />
+                     </div>
+                     <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-50 px-3 py-1 rounded-lg">Status: Deployed</span>
+                  </div>
+                  <div className="space-y-3">
+                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-300">Subject: {m.subject}</p>
+                     <p className="text-sm font-bold text-slate-700 leading-relaxed italic">"{m.response || 'Deployment Pending'}"</p>
+                  </div>
+               </div>
+             ))}
+           </div>
+        </div>
       )}
     </div>
   );

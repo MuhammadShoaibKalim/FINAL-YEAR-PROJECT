@@ -3,12 +3,15 @@ import { useSelector } from "react-redux";
 import AddCustomTest from "./AddCustomTest";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import { FaFlask, FaPlus, FaEdit, FaTrash, FaCheckCircle, FaTag, FaBookmark } from "react-icons/fa";
+import { ImSpinner2 } from "react-icons/im";
 
 export default function OfferedTests() {
   const [showAddCustomTest, setShowAddCustomTest] = useState(false);
   const [tests, setTests] = useState([]);
   const [editingTestId, setEditingTestId] = useState(null);
   const [editForm, setEditForm] = useState({ name: "", price: "", discount: "" });
+  const [loading, setLoading] = useState(true);
 
   const user = useSelector((state) => state.auth?.user);
 
@@ -22,14 +25,15 @@ export default function OfferedTests() {
 
       const json = await res.json();
       if (json.success) {
-        const dashboardTests = json.data.testPackages || [];
-        setTests(dashboardTests);
+        setTests(json.data.testPackages || []);
       } else {
-        toast.error(json.message || "Failed to load test/packages");
+        toast.error(json.message || "Failed to load facility catalog");
       }
     } catch (error) {
       console.error("Error fetching dashboard tests/packages", error);
-      toast.error("Error fetching your lab's test/package data");
+      toast.error("Telemetry sync error: Catalog unreachable");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -72,14 +76,16 @@ export default function OfferedTests() {
 
       fetchTestsAndPackages();
       setEditingTestId(null);
-      toast.success("Item updated successfully");
+      toast.success("Protocol updated successfully");
     } catch (error) {
       console.error("Error updating", error);
-      toast.error("Update failed");
+      toast.error("Protocol update failure");
     }
   };
 
   const handleDelete = async (test) => {
+    if (!window.confirm("CRITICAL: Purge this test protocol from the active catalog?")) return;
+    
     try {
       const endpoint =
         test.type === "Test"
@@ -92,119 +98,167 @@ export default function OfferedTests() {
         },
       });
       fetchTestsAndPackages();
-      toast.success("Item deleted");
+      toast.success("Protocol purged from catalog");
     } catch (error) {
       console.error("Error deleting", error);
+      toast.error("Protocol purge fault");
     }
   };
+
+  if (loading) return (
+    <div className="flex flex-col gap-6 justify-center items-center min-h-[400px]">
+      <ImSpinner2 className="text-primary text-4xl animate-spin" />
+      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Syncing Facility Catalog</p>
+    </div>
+  );
 
   return (
     <>
       {showAddCustomTest ? (
         <AddCustomTest onClose={() => setShowAddCustomTest(false)} />
       ) : (
-        <div className="flex flex-col bg-white shadow-lg rounded-lg p-6 mt-12 w-full max-w-8xl">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-            <div>
-              <h2 className="text-2xl font-bold text-text-dark">Offered Tests & Packages</h2>
-              <p className="text-text-secondary">Manage your lab's tests and packages</p>
+        <div className="space-y-10 animate-in fade-in duration-700">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="space-y-2">
+               <div className="inline-block px-4 py-1 bg-primary/5 rounded-full border border-primary/10">
+                  <p className="text-[9px] font-black text-primary uppercase tracking-[0.3em] leading-none">Resource Management</p>
+               </div>
+               <h2 className="text-4xl font-black text-slate-800 tracking-tighter">Test <span className="italic text-primary">Catalog.</span></h2>
+               <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.4em]">Manage Active Diagnostic Protocols & Pricing</p>
             </div>
             <button
               onClick={() => setShowAddCustomTest(true)}
-              className="bg-primary hover:bg-primary-hover text-white px-6 py-2 rounded-md"
+              className="px-8 py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-primary transition-all flex items-center gap-3 shadow-2xl shadow-slate-200"
             >
-              Add New Test/Package
+              <FaPlus /> Initialize New Protocol
             </button>
           </div>
 
-          <div className="bg-white p-4 shadow-md rounded-lg">
-            <div className="hidden md:grid grid-cols-6 bg-primary text-white font-semibold text-lg rounded-t-md py-3 px-6">
-              <span>Name</span>
-              <span>Type</span>
-              <span>Price</span>
-              <span>Discount</span>
-              <span>Booked</span>
-              <span>Actions</span>
-            </div>
+          <div className="bg-white border border-slate-100 rounded-[3rem] shadow-2xl shadow-slate-200/50 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-slate-900 text-white">
+                    <th className="px-8 py-6 text-left text-[10px] font-black uppercase tracking-[0.3em]">Protocol Identity</th>
+                    <th className="px-8 py-6 text-left text-[10px] font-black uppercase tracking-[0.3em]">Classification</th>
+                    <th className="px-8 py-6 text-left text-[10px] font-black uppercase tracking-[0.3em]">Valuation (PKR)</th>
+                    <th className="px-8 py-6 text-left text-[10px] font-black uppercase tracking-[0.3em]">Discount Yield</th>
+                    <th className="px-8 py-6 text-left text-[10px] font-black uppercase tracking-[0.3em]">Booking Freq</th>
+                    <th className="px-8 py-6 text-right text-[10px] font-black uppercase tracking-[0.3em]">Action Hub</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50 text-sm font-bold text-slate-700">
+                  {tests.map((item) => (
+                    <tr key={item._id} className="hover:bg-slate-50 transition-colors group">
+                      <td className="px-8 py-6">
+                        {editingTestId === item._id ? (
+                          <div className="flex items-center bg-white border-2 border-primary rounded-xl px-4 py-2">
+                            <input
+                              type="text"
+                              name="name"
+                              value={editForm.name}
+                              onChange={handleEditChange}
+                              className="bg-transparent outline-none w-full text-xs font-black uppercase tracking-tight"
+                            />
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
+                               <FaFlask className="text-xs" />
+                            </div>
+                            <span>{item.name}</span>
+                          </div>
+                        )}
+                      </td>
 
-            {tests.map((item) => (
-              <div
-                key={item._id}
-                className="grid grid-cols-1 md:grid-cols-6 gap-2 md:gap-0 py-4 px-6 border-b items-center text-sm"
-              >
-                {/* Name */}
-                {editingTestId === item._id ? (
-                  <input
-                    type="text"
-                    name="name"
-                    value={editForm.name}
-                    onChange={handleEditChange}
-                    className="border p-2 rounded"
-                  />
-                ) : (
-                  <span>{item.name}</span>
-                )}
+                      <td className="px-8 py-6">
+                        <span className="px-3 py-1 bg-slate-100 text-[10px] font-black uppercase tracking-widest rounded-lg text-slate-400">
+                          {item.type}
+                        </span>
+                      </td>
 
-                {/* Type */}
-                <span>{item.type}</span>
+                      <td className="px-8 py-6">
+                        {editingTestId === item._id ? (
+                          <div className="flex items-center bg-white border-2 border-primary rounded-xl px-4 py-2 w-32">
+                            <input
+                              type="number"
+                              name="price"
+                              value={editForm.price}
+                              onChange={handleEditChange}
+                              className="bg-transparent outline-none w-full text-xs font-black"
+                            />
+                          </div>
+                        ) : (
+                          <span className="font-black italic text-primary">PKR {item.price}</span>
+                        )}
+                      </td>
 
-                {/* Price */}
-                {editingTestId === item._id ? (
-                  <input
-                    type="number"
-                    name="price"
-                    value={editForm.price}
-                    onChange={handleEditChange}
-                    className="border p-2 rounded"
-                  />
-                ) : (
-                  <span>PKR {item.price}</span>
-                )}
+                      <td className="px-8 py-6">
+                        {editingTestId === item._id ? (
+                          <div className="flex items-center bg-white border-2 border-primary rounded-xl px-4 py-2 w-24">
+                            <input
+                              type="number"
+                              name="discount"
+                              value={editForm.discount}
+                              onChange={handleEditChange}
+                              className="bg-transparent outline-none w-full text-xs font-black"
+                              min="0"
+                              max="100"
+                            />
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                             <FaTag className="text-[10px] text-emerald-400" />
+                             <span className={item.discount ? "text-emerald-600" : "text-slate-300"}>{item.discount ? `${item.discount}%` : "0%"}</span>
+                          </div>
+                        )}
+                      </td>
 
-                {/* Discount */}
-                {editingTestId === item._id ? (
-                  <input
-                    type="number"
-                    name="discount"
-                    value={editForm.discount}
-                    onChange={handleEditChange}
-                    className="border p-2 rounded"
-                    min="0"
-                    max="100"
-                  />
-                ) : (
-                  <span>{item.discount ? `${item.discount}%` : "-"}</span>
-                )}
+                      <td className="px-8 py-6">
+                        <div className="flex items-center gap-2">
+                           <FaBookmark className="text-[10px] text-slate-300" />
+                           <span className="text-slate-500 font-black">{item.bookedCount || "0"}</span>
+                        </div>
+                      </td>
 
-                {/* Booked Count */}
-                <span>{item.bookedCount || "0"}</span>
-
-                {/* Actions */}
-                <div className="flex space-x-2">
-                  {editingTestId === item._id ? (
-                    <button
-                      onClick={() => handleSaveEdit(item)}
-                      className="bg-primary/90 text-white px-3 py-1 rounded"
-                    >
-                      Save
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => handleEdit(item)}
-                      className="bg-primary text-white px-3 py-1 rounded"
-                    >
-                      Edit
-                    </button>
-                  )}
-                  <button
-                    onClick={() => handleDelete(item)}
-                    className="bg-red-500 text-white px-3 py-1 rounded"
-                  >
-                    Delete
-                  </button>
+                      <td className="px-8 py-6">
+                        <div className="flex justify-end gap-2">
+                          {editingTestId === item._id ? (
+                            <button
+                              onClick={() => handleSaveEdit(item)}
+                              className="p-3 bg-primary text-white rounded-xl shadow-lg shadow-primary/20 hover:scale-105 transition-all"
+                            >
+                              <FaCheckCircle />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleEdit(item)}
+                              className="p-3 bg-white border border-slate-100 text-slate-400 hover:text-primary hover:border-primary/20 hover:shadow-xl rounded-xl transition-all"
+                            >
+                              <FaEdit />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleDelete(item)}
+                            className="p-3 bg-white border border-slate-100 text-slate-300 hover:text-rose-500 hover:border-rose-100 hover:shadow-xl rounded-xl transition-all"
+                          >
+                            <FaTrash />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {tests.length === 0 && (
+                <div className="p-20 text-center space-y-4">
+                   <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-200 mx-auto">
+                      <FaFlask className="text-2xl" />
+                   </div>
+                   <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 italic">Facility Catalog Empty</p>
                 </div>
-              </div>
-            ))}
+              )}
+            </div>
           </div>
         </div>
       )}
