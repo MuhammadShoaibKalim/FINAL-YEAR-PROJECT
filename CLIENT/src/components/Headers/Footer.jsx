@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import logo from "../../assets/logo.png";
 import {
-  FaFacebook, FaTwitter, FaLinkedin, FaInstagram, FaArrowUp, FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaClock, FaWhatsapp
+  FaFacebookF, FaTwitter, FaLinkedinIn, FaInstagram, FaArrowUp, FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaWhatsapp, FaShieldAlt
 } from "react-icons/fa";
 
 const Footer = () => {
@@ -21,120 +21,146 @@ const Footer = () => {
   };
 
   return (
-    <footer className="relative bg-gradient-to-b from-bg-primary to-bg-secondary text-text-primary pt-16 pb-0">
-      {/* Main Panel */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-bg-primary/90 rounded-4xl shadow-2xl p-10 md:p-16 flex flex-col md:flex-row md:justify-between gap-12 md:gap-20 -mt-20 relative z-10 border border-border">
-          {/* Left: Brand & Newsletter */}
-          <div className="flex-1 flex flex-col gap-8">
-            <div className="flex items-center gap-4">
-              <img src={logo} alt="TestSahulat Logo" aria-label="TestSahulat Logo" className="w-14 h-14 rounded-2xl bg-white p-1 shadow" />
-              <div>
-                <span className="text-3xl font-extrabold text-primary">TestSahulat</span>
-                <p className="text-base text-text-secondary mt-1">Your trusted digital healthcare partner</p>
+    <footer className="bg-slate-900 pt-24 pb-12 relative overflow-hidden font-sans">
+      {/* Decorative background Elements */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -mr-64 -mt-64 animate-pulse"></div>
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-secondary/5 rounded-full blur-[120px] -ml-64 -mb-64 animate-pulse"></div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 mb-20">
+          {/* Brand Section */}
+          <div className="lg:col-span-4 space-y-8">
+            <Link to="/" className="flex items-center gap-4 group">
+              <div className="w-16 h-16 bg-white rounded-[1.5rem] flex items-center justify-center p-2 shadow-2xl group-hover:scale-105 transition-transform border-4 border-slate-800">
+                <img src={logo} alt="TestSahulat" className="w-full h-full object-contain" />
               </div>
-            </div>
-            <div>
-            </div>
-            <div className="flex gap-3 ">
+              <div>
+                <span className="text-3xl font-black text-white tracking-tighter">Test<span className="text-primary italic">Sahulat</span></span>
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 -mt-1">Healthcare Reimagined</p>
+              </div>
+            </Link>
+            <p className="text-slate-400 text-sm leading-relaxed font-medium">
+              Empowering patients with AI-driven diagnostic insights and connecting them with certified laboratories across Pakistan for a seamless healthcare journey.
+            </p>
+            <div className="flex gap-3">
               {[
-                { href: "https://facebook.com", icon: <FaFacebook /> },
-                { href: "https://twitter.com", icon: <FaTwitter /> },
-                { href: "https://linkedin.com", icon: <FaLinkedin /> },
-                { href: "https://instagram.com", icon: <FaInstagram /> },
-              ].map(({ href, icon }, idx) => (
-                <a
+                { icon: <FaFacebookF />, color: 'hover:bg-blue-600' },
+                { icon: <FaTwitter />, color: 'hover:bg-sky-500' },
+                { icon: <FaLinkedinIn />, color: 'hover:bg-blue-700' },
+                { icon: <FaInstagram />, color: 'hover:bg-pink-600' },
+              ].map((social, idx) => (
+                <button
                   key={idx}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-full p-2 transition-all duration-300 shadow focus:outline-none focus:ring-2 focus:ring-primary"
-                  aria-label={`Visit our ${href.split('.')[1]} page`}
+                  className={`w-10 h-10 rounded-xl bg-slate-800 text-slate-400 flex items-center justify-center transition-all duration-300 hover:text-white hover:scale-110 shadow-lg ${social.color}`}
                 >
-                  {icon}
-                </a>
+                  {social.icon}
+                </button>
               ))}
             </div>
           </div>
-          {/* Right: Links & Contact */}
-          <div className="flex-[2] grid grid-cols-1 sm:grid-cols-2 gap-8">
-            {/* Quick Links */}
-            <div>
-              <h5 className="text-lg font-bold mb-4 text-primary">Quick Links</h5>
-              <ul className="space-y-3">
-                {[
-                  { text: "AI Recommendations", path: "/ai-recommendations-test" },
-                  { text: "Most Used Tests", path: "/tests" },
-                  { text: "Our Partners", path: "/our-partners" },
-                ].map(({ text, path }, idx) => (
-                  <li key={idx}>
-                    <Link
-                      to={path}
-                      className="text-text-secondary hover:text-primary font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary"
-                    >
-                      {text}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-  
-            {/* Contact */}
-            <div>
-              <h5 className="text-lg font-bold mb-4 text-primary">Contact Us</h5>
-              <div className="space-y-3 text-text-secondary">
-                <div className="flex items-center gap-3">
-                  <FaMapMarkerAlt className="text-primary" />
-                  <a
-                    href="https://maps.google.com/?q=123+Lab+Street,+Science+City,+Country"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    University of Education Lahore, Multan Campus
-                  </a>
-                </div>
-                {/* <div className="flex items-center gap-3">
-                  <FaPhoneAlt className="text-primary" />
-                  <a href="tel:+1234567890" className="hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary">+123 456 7890</a>
-                </div> */}
-                <div className="flex items-center gap-3">
-                  <FaEnvelope className="text-primary" />
-                  <a href="mailto:support@TestSahulat.com" className="hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary">support@TestSahulat.com</a>
-                </div>
-                <div className="flex items-center gap-3">
-                  <FaWhatsapp className="text-primary" />
-                  <a href="https://wa.me/1234567890" target="_blank" rel="noopener noreferrer" className="hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary">+123 456 7890</a>
-                </div>
+
+          {/* Quick Links */}
+          <div className="lg:col-span-2 space-y-8">
+            <h5 className="text-sm font-black text-white uppercase tracking-[0.3em]">Services</h5>
+            <ul className="space-y-4">
+              {[
+                { name: "Diagnostic Tests", path: "/all-tests-packages" },
+                { name: "Lab Partners", path: "/labs" },
+                { name: "AI Health Assistant", path: "/ai-recommendations-test" },
+                { name: "Join Laboratory", path: "/join" },
+              ].map((link, idx) => (
+                <li key={idx}>
+                  <Link to={link.path} className="text-slate-500 hover:text-primary text-sm font-bold transition-colors block">
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Support Links */}
+          <div className="lg:col-span-2 space-y-8">
+            <h5 className="text-sm font-black text-white uppercase tracking-[0.3em]">Support</h5>
+            <ul className="space-y-4">
+              {[
+                { name: "About Us", path: "/about" },
+                { name: "Contact Support", path: "/contact" },
+                { name: "Privacy Policy", path: "/privacy-policy" },
+                { name: "Terms of Use", path: "/terms" },
+              ].map((link, idx) => (
+                <li key={idx}>
+                  <Link to={link.path} className="text-slate-500 hover:text-primary text-sm font-bold transition-colors block">
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Contact Information */}
+          <div className="lg:col-span-4 space-y-8">
+            <h5 className="text-sm font-black text-white uppercase tracking-[0.3em]">Contact Hub</h5>
+            <div className="space-y-6">
+              <div className="flex gap-4 group">
+                 <div className="w-12 h-12 bg-slate-800 rounded-2xl flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all shadow-lg shrink-0">
+                    <FaMapMarkerAlt />
+                 </div>
+                 <div>
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Our Location</p>
+                    <p className="text-sm text-slate-300 font-bold leading-snug">U.O.E Multan Campus, Bosan Road, Multan, Pakistan</p>
+                 </div>
+              </div>
+              <div className="flex gap-4 group">
+                 <div className="w-12 h-12 bg-slate-800 rounded-2xl flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all shadow-lg shrink-0">
+                    <FaEnvelope />
+                 </div>
+                 <div>
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Email Support</p>
+                    <p className="text-sm text-slate-300 font-bold leading-snug">care@testsahulat.com</p>
+                 </div>
+              </div>
+              <div className="flex gap-4 group">
+                 <div className="w-12 h-12 bg-slate-800 rounded-2xl flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all shadow-lg shrink-0">
+                    <FaWhatsapp />
+                 </div>
+                 <div>
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">WhatsApp Primary</p>
+                    <p className="text-sm text-slate-300 font-bold leading-snug">+92 344 7977457</p>
+                 </div>
               </div>
             </div>
           </div>
         </div>
-        {/* Divider */}
-        <div className="border-t border-border/40 mt-12 mb-0"></div>
+
         {/* Bottom Bar */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4 py-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-text-secondary text-sm">
-            © {new Date().getFullYear()} <span className="font-semibold text-primary">TestSahulat</span>. All Rights Reserved.
+        <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="flex items-center gap-3 bg-slate-800/50 px-6 py-3 rounded-2xl border border-white/5 shadow-inner">
+             <FaShieldAlt className="text-secondary text-xl" />
+             <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Verified Secure</p>
+                <p className="text-[9px] font-bold text-slate-500 uppercase italic">NABL & ISO Lab Certifications Validated</p>
+             </div>
+          </div>
+          <p className="text-slate-500 text-[11px] font-bold uppercase tracking-widest text-center">
+            © {new Date().getFullYear()} <span className="text-primary">TestSahulat</span> Industries Pakistan. All Rights Reserved.
           </p>
-          <div className="flex space-x-6">
-            <Link to="/privacy-policy" className="text-text-secondary hover:text-primary text-sm transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-primary">Privacy Policy</Link>
-            <Link to="/terms" className="text-text-secondary hover:text-primary text-sm transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-primary">Terms of Service</Link>
-            <Link to="/faq" className="text-text-secondary hover:text-primary text-sm transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-primary">FAQ</Link>
-            {/* <Link to="/accessibility" className="text-text-secondary hover:text-primary text-sm transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-primary">Accessibility</Link> */}
+          <div className="flex items-center gap-2">
+             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
+             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">System Status: Optimal</span>
           </div>
         </div>
-        {/* Back to Top Button */}
-        {showTopButton && (
-          <button
-            onClick={scrollToTop}
-            className="fixed bottom-6 right-6 bg-primary text-white p-3 rounded-full shadow-primary hover:bg-secondary transition-all duration-300 hover:scale-110 z-50 focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Back to top"
-          >
-            <FaArrowUp size={20} />
-          </button>
-        )}
       </div>
+
+      {/* Back to Top */}
+      {showTopButton && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-10 right-10 w-14 h-14 bg-primary text-white flex items-center justify-center rounded-2xl shadow-2xl hover:bg-secondary hover:-translate-y-2 transition-all duration-500 z-[100] group active:scale-90"
+          aria-label="Back to top"
+        >
+          <FaArrowUp className="text-xl group-hover:scale-125 transition-transform" />
+        </button>
+      )}
     </footer>
   );
 };
