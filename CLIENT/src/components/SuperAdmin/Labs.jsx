@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import AddLabForm from './AddLabForm';
 import toast from 'react-hot-toast';
+import { FaFlask, FaMapMarkerAlt, FaUserShield, FaPlus, FaEdit, FaTrash, FaCheckCircle, FaTimesCircle, FaRegHospital } from 'react-icons/fa';
+import { ImSpinner2 } from "react-icons/im";
 
 const Labs = () => {
   const [labData, setLabData] = useState([]);
   const [isAddingLab, setIsAddingLab] = useState(false);
   const [editLab, setEditLab] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const fetchLabs = async () => {
     try {
@@ -20,6 +23,9 @@ const Labs = () => {
       }
     } catch (error) {
       console.error("Failed to fetch labs", error);
+      toast.error("Telemetry sync error: Facility network unreachable");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -38,25 +44,17 @@ const Labs = () => {
       });
       const data = await res.json();
       if (res.ok) {
-        toast.success("Lab created successfully");
+        toast.success("Facility integrated successfully");
         setIsAddingLab(false);
         fetchLabs();            
       } else {
-        toast.error(data.message || "Failed to create lab");
+        toast.error(data.message || "Integration protocol failure");
       }
     } catch (err) {
-      toast.error("Server error while creating lab");
+      toast.error("Server handshake error");
     }
   };
 
-  // const editLabDetails = (updatedLab) => {
-  //   const updatedLabData = labData.map((lab) =>
-  //     lab.id === updatedLab.id ? updatedLab : lab
-  //   );
-  //   setLabData(updatedLabData);
-  //   setIsAddingLab(false);
-  //   setEditLab(null);
-  // };
   const editLabDetails = async (updatedLab) => {
     try {
       const formToSend = new FormData();
@@ -84,26 +82,21 @@ const Labs = () => {
       const data = await res.json();
   
       if (res.ok) {
-        toast.success("Lab updated successfully");
+        toast.success("Facility records synchronized");
         fetchLabs();
         setIsAddingLab(false);
         setEditLab(null);
       } else {
-        toast.error(data.message || "Failed to update lab");
+        toast.error(data.message || "Record sync fault");
       }
     } catch (error) {
       console.error("Update lab error:", error);
-      toast.error("Error updating lab");
+      toast.error("Telemetry error");
     }
   };
-  
-  
 
-  // const deleteLab = (labId) => {
-  //   const updatedLabData = labData.filter((lab) => lab._id !== labId);
-  //   setLabData(updatedLabData);
-  // };
   const deleteLab = async (labId) => {
+    if (!window.confirm("CRITICAL: Decommission this facility from the global network?")) return;
     try {
       const res = await fetch(`/api/labs/${labId}`, {
         method: "DELETE",
@@ -113,93 +106,133 @@ const Labs = () => {
       });
       const data = await res.json();
       if (res.ok) {
-        toast.success("Lab deleted successfully");
+        toast.success("Facility decommissioned");
         fetchLabs(); 
       } else {
-        toast.error(data.message || "Failed to delete lab");
+        toast.error(data.message || "Decommission fault");
       }
     } catch (error) {
-      toast.error("Error deleting lab");
+      toast.error("Protocol error during decommission");
     }
   };
-  
-  
 
   const toggleAddLab = () => {
     setIsAddingLab(!isAddingLab);
     setEditLab(null);
   };
 
+  if (loading) return (
+    <div className="flex flex-col gap-6 justify-center items-center min-h-[500px]">
+      <ImSpinner2 className="text-primary text-4xl animate-spin" />
+      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Scanning Global Facility Network</p>
+    </div>
+  );
+
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md mt-4 w-full max-w-7xl">
-      <div className="bg-white shadow-lg rounded-lg p-6 mt-4">
-        <div className="flex flex-col md:flex-row justify-between items-center">
-          <h2 className="text-2xl font-semibold mb-4 md:mb-0">Labs</h2>
-          {!isAddingLab && !editLab && (
-            <button
-              onClick={toggleAddLab}
-              className="bg-primary text-white px-4 py-2 rounded w-full md:w-auto"
-            >
-              Add New Lab
-            </button>
-          )}
+    <div className="space-y-12 animate-in fade-in duration-700">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div className="space-y-2">
+           <div className="inline-block px-4 py-1 bg-primary/5 rounded-full border border-primary/10">
+              <p className="text-[9px] font-black text-primary uppercase tracking-[0.3em] leading-none">Diagnostic Infrastructure</p>
+           </div>
+           <h2 className="text-4xl font-black text-slate-800 tracking-tighter">Facility <span className="italic text-primary">Network.</span></h2>
+           <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.4em]">Oversee and Synchronize Global Laboratory Nodes</p>
         </div>
-        <p className="text-black mb-4 text-center md:text-left">
-          Manage all your existing labs or add a new one
-        </p>
+        {!isAddingLab && !editLab && (
+          <button
+            onClick={toggleAddLab}
+            className="px-8 py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-primary transition-all flex items-center gap-3 shadow-2xl shadow-slate-200 active:scale-95"
+          >
+            <FaPlus /> Initialize New Facility
+          </button>
+        )}
       </div>
 
       {(isAddingLab || editLab) ? (
-        <div className="mt-6 p-4 bg-white shadow-lg rounded-lg">
-          <AddLabForm
-            toggleAddLab={toggleAddLab}
-            addLab={addLab}
-            editLab={editLab}
-            editLabDetails={editLabDetails}
-          />
+        <div className="bg-white rounded-[3rem] border border-slate-100 shadow-2xl shadow-slate-200/50 p-10 sm:p-20 animate-in fade-in slide-in-from-bottom-8 duration-700">
+           <div className="flex items-center gap-4 mb-12">
+              <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary border border-primary/10">
+                 <FaRegHospital />
+              </div>
+              <div>
+                 <h3 className="text-2xl font-black text-slate-800 tracking-tight">{editLab ? "Modify Facility" : "Initialize Facility"}</h3>
+                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">System Integration Protocol</p>
+              </div>
+           </div>
+           <AddLabForm
+             toggleAddLab={toggleAddLab}
+             addLab={addLab}
+             editLab={editLab}
+             editLabDetails={editLabDetails}
+           />
         </div>
       ) : (
-        <div className="bg-white shadow-lg rounded-lg p-6 mt-4">
-          <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-3 gap-6">
-            {labData.map((lab) => (
-              <div key={lab._id} className="bg-white shadow-md rounded-lg p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {labData.map((lab) => (
+            <div key={lab._id} className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden group hover:shadow-2xl hover:-translate-y-2 transition-all duration-500">
+              <div className="h-48 relative overflow-hidden">
                 <img
-                  src={lab.image}
+                  src={lab.image || "https://via.placeholder.com/400x200"}
                   alt={lab.name}
-                  className="w-full h-40 object-cover rounded-md mb-4"
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
-                <h3 className="text-xl font-semibold text-center md:text-left">{lab.name}</h3>
-                <p className="text-gray-600 mt-2 text-center md:text-left">{lab.address}</p>
-                <p className="text-gray-500 text-sm text-center md:text-left">{lab.location}</p>
-                {lab.labAdmin && (<p className="text-sm text-gray-600 text-center md:text-left"> 
-                Assigned Admin: {lab.labAdmin.firstName} {lab.labAdmin.lastName}</p>)}
-                <div className="flex flex-col md:flex-row justify-between items-center mt-4 space-y-2 md:space-y-0">
-                  <button
-                    className={`text-sm px-4 py-2 rounded-lg w-full md:w-auto ${lab.isActive ? 'bg-primary text-white' : 'bg-gray-300 text-gray-700'}`}
-                  >
-                    {lab.isActive ? 'Active' : 'Inactive'}
-                  </button>
-                  <div className="flex space-x-2">
-                    <button
-                      className="bg-primary text-white px-3 py-1 rounded-lg"
-                      onClick={() => {
-                        setEditLab(lab);
-                        setIsAddingLab(true);
-                      }}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="bg-primary text-white px-3 py-1 rounded-lg"
-                      onClick={() => deleteLab(lab._id)}
-                    >
-                      Delete
-                    </button>
-                  </div>
+                <div className="absolute top-4 right-4">
+                   <div className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-2 backdrop-blur-md border ${lab.isActive ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-rose-500/10 text-rose-500 border-rose-500/20'}`}>
+                      {lab.isActive ? <FaCheckCircle /> : <FaTimesCircle />}
+                      {lab.isActive ? 'Operational' : 'Halted'}
+                   </div>
                 </div>
               </div>
-            ))}
-          </div>
+
+              <div className="p-8 space-y-6">
+                 <div>
+                    <h3 className="text-xl font-black text-slate-800 tracking-tight uppercase group-hover:text-primary transition-colors">{lab.name}</h3>
+                    <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 mt-2">
+                       <FaMapMarkerAlt className="text-primary/40" />
+                       <span className="uppercase tracking-widest">{lab.location}</span>
+                    </div>
+                 </div>
+
+                 <div className="bg-slate-50 rounded-2xl p-4 space-y-3">
+                    <div className="flex items-center gap-3">
+                       <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-slate-400 shadow-sm border border-slate-100">
+                          <FaUserShield className="text-xs" />
+                       </div>
+                       <div>
+                          <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest">Facility Administrator</p>
+                          <p className="text-[11px] font-black text-slate-700 tracking-tight">
+                             {lab.labAdmin ? `${lab.labAdmin.firstName} ${lab.labAdmin.lastName}` : "Unassigned"}
+                          </p>
+                       </div>
+                    </div>
+                 </div>
+
+                 <div className="flex gap-2 pt-2">
+                    <button
+                      onClick={() => { setEditLab(lab); setIsAddingLab(true); }}
+                      className="flex-1 px-4 py-3 bg-slate-900 hover:bg-primary text-white text-[9px] font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-slate-200"
+                    >
+                      <FaEdit /> Protocol Opts
+                    </button>
+                    <button
+                      onClick={() => deleteLab(lab._id)}
+                      className="p-3 bg-white border border-slate-100 text-slate-300 hover:text-rose-500 hover:border-rose-200 hover:shadow-xl rounded-xl transition-all"
+                    >
+                      <FaTrash />
+                    </button>
+                 </div>
+              </div>
+            </div>
+          ))}
+
+          {labData.length === 0 && (
+             <div className="col-span-full py-20 text-center space-y-4">
+                <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-200 mx-auto">
+                   <FaFlask className="text-2xl" />
+                </div>
+                <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 italic">Facility Network Synchronized (0 Active)</p>
+             </div>
+          )}
         </div>
       )}
     </div>

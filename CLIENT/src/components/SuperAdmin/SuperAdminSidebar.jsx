@@ -1,33 +1,52 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { FaUsers, FaFlask, FaSignOutAlt, FaUserCircle } from "react-icons/fa";
-import { GoSidebarExpand } from "react-icons/go";
+import { NavLink, useNavigate } from "react-router-dom";
+import { 
+  FaUsers, FaFlask, FaSignOutAlt, FaUserCircle, 
+  FaShieldAlt, FaChartLine, FaEnvelopeOpenText, 
+  FaCog, FaChevronLeft, FaChevronRight, FaDatabase, FaGlobe
+} from "react-icons/fa";
 import { MdOutlineDashboard, MdOutlineMarkUnreadChatAlt } from "react-icons/md";
-import { FiSettings } from "react-icons/fi";
 import { useDispatch } from "react-redux";
-import { Logout } from "../../redux/AuthSlice";
+import { logoutUser } from "../../redux/AuthSlice";
 import toast from "react-hot-toast";
 
+const SidebarItem = ({ to, Icon, label, isOpen, unreadCount = 0 }) => {
+  const baseClasses = "flex items-center gap-4 px-6 py-4 transition-all duration-300 group relative";
+  const activeClasses = "bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02] z-10 rounded-2xl mx-2";
+  const inactiveClasses = "text-slate-400 hover:text-white hover:bg-white/5 rounded-2xl mx-2";
+
+  return (
+    <NavLink 
+      to={to} 
+      className={({ isActive }) => `${baseClasses} ${isActive ? activeClasses : inactiveClasses}`}
+    >
+      <div className={`shrink-0 transition-transform duration-300 ${isOpen ? "group-hover:scale-110" : "mx-auto"}`}>
+        <Icon className={isOpen ? "text-lg" : "text-xl"} />
+      </div>
+      {isOpen && (
+        <span className="text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap opacity-100 transition-opacity duration-300">
+          {label}
+        </span>
+      )}
+      {unreadCount > 0 && (
+        <span className={`absolute ${isOpen ? "right-6" : "right-2 top-2"} flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-black text-white shadow-lg border-2 border-slate-900 group-hover:animate-bounce`}>
+          {unreadCount}
+        </span>
+      )}
+    </NavLink>
+  );
+};
+
 const SuperAdminSidebar = () => {
-  const [isOpen, setIsOpen] = useState(() => {
-    return localStorage.getItem("superSidebarState") === "open";
-  });
+  const [isOpen, setIsOpen] = useState(() => window.innerWidth > 1024);
   const [unreadCount, setUnreadCount] = useState(0);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const toggleSidebar = () => {
-    setIsOpen(!isOpen);
-  };
-
-  useEffect(() => {
-    localStorage.setItem("superSidebarState", isOpen ? "open" : "closed");
-  }, [isOpen]);
-
   const handleLogout = () => {
+    dispatch(logoutUser());
     localStorage.removeItem("authToken");
-    dispatch(Logout());
-    toast.success("Logged out successfully");
+    toast.success("Security Session Terminated");
     navigate("/login", { replace: true });
   };
 
@@ -45,72 +64,66 @@ const SuperAdminSidebar = () => {
           setUnreadCount(unread);
         }
       } catch (error) {
-        console.error("Error fetching unread messages:", error);
+        console.error("Unread fetch fault:", error);
       }
     };
 
     fetchUnread();
-    const interval = setInterval(fetchUnread, 20000); 
+    const interval = setInterval(fetchUnread, 30000); 
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className={`flex flex-col min-h-screen ${isOpen ? "w-[240px]" : "w-16"} transition-all duration-300 bg-primary text-white shadow-lg`}>
+    <div className={`fixed lg:sticky top-0 left-0 h-screen bg-slate-900 text-white flex flex-col transition-all duration-500 ease-in-out z-50 border-r border-white/5 shadow-2xl ${isOpen ? "w-80" : "w-24"}`}>
       {/* Sidebar Header */}
-      <div className="flex items-center justify-between px-4 h-16 border-b border-white">
-        {isOpen && <h1 className="text-xl font-bold text-white">Super Admin</h1>}
+      <div className="h-24 flex items-center px-8 border-b border-white/5 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-24 h-24 bg-primary/20 rounded-full blur-3xl -mr-12 -mt-12"></div>
+        <div className="flex items-center gap-4 relative z-10">
+          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 shrink-0">
+            <FaShieldAlt className="text-white text-lg" />
+          </div>
+          {isOpen && (
+            <div className="animate-in fade-in slide-in-from-left-4 duration-500">
+              <h1 className="text-base font-black tracking-tight leading-none italic">SuperAdmin</h1>
+              <p className="text-[8px] font-black uppercase tracking-[0.3em] text-primary mt-1">Global Intelligence</p>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Sidebar Menu */}
-      <ul className="space-y-2 py-4 font-medium">
-       <SidebarItem to="/admin/super/profile" icon={FaUserCircle} label="Profile" isOpen={isOpen} />
-        <SidebarItem to="/admin/super/overview" icon={MdOutlineDashboard} label="Overview" isOpen={isOpen} />
-        <SidebarItem to="/admin/super/labs" icon={FaFlask} label="Labs" isOpen={isOpen} />
-        <SidebarItem to="/admin/super/users" icon={FaUsers} label="Users" isOpen={isOpen} />
-        <SidebarItem to="/admin/super/inbox" icon={MdOutlineMarkUnreadChatAlt} label="Inbox" isOpen={isOpen} unreadCount={unreadCount} />
+      {/* Navigation */}
+      <div className="flex-1 py-10 overflow-y-auto scrollbar-hide space-y-2">
+        {isOpen && (
+           <p className="px-8 pb-4 text-[9px] font-black uppercase tracking-[0.4em] text-white/20">Administrative Layers</p>
+        )}
+        <SidebarItem to="/admin/super/overview" icon={MdOutlineDashboard} label="System Analytics" isOpen={isOpen} />
+        <SidebarItem to="/admin/super/profile" icon={FaUserCircle} label="Admin Identity" isOpen={isOpen} />
+        <SidebarItem to="/admin/super/labs" icon={FaFlask} label="Facility Network" isOpen={isOpen} />
+        <SidebarItem to="/admin/super/users" icon={FaUsers} label="Patient Population" isOpen={isOpen} />
+        <SidebarItem to="/admin/super/inbox" icon={MdOutlineMarkUnreadChatAlt} label="Global Inbox" isOpen={isOpen} unreadCount={unreadCount} />
+      </div>
 
-        {/* Logout Button */}
-        <li>
-          <button
-            onClick={handleLogout}
-            className="flex items-center space-x-3 px-4 py-2 text-white hover:bg-white hover:text-black transition-all duration-200 w-full text-left"
-          >
-            <FaSignOutAlt className="text-xl" />
-            {isOpen && <span>Logout</span>}
-          </button>
-        </li>
-      </ul>
-
-      {/* Sidebar Toggle Button */}
-      <div className="mt-auto border-t border-white">
-        <button
-          onClick={toggleSidebar}
-          className="flex items-center justify-start w-full py-4 hover:bg-primary/90 hover:text-white transition-all duration-200"
+      {/* Footer Actions */}
+      <div className="mt-auto pt-6 pb-8 space-y-4">
+        <button 
+          onClick={handleLogout}
+          className={`mx-2 flex items-center gap-4 px-6 py-4 rounded-2xl text-rose-500 hover:bg-rose-500/10 transition-all group ${!isOpen && "justify-center"}`}
         >
-          <GoSidebarExpand className="text-2xl ml-4" />
+          <FaSignOutAlt className="shrink-0 transition-transform group-hover:-translate-x-1" />
+          {isOpen && <span className="text-[10px] font-black uppercase tracking-[0.2em]">Secure Logout</span>}
         </button>
+
+        <div className="px-4">
+          <button 
+            onClick={() => setIsOpen(!isOpen)}
+            className="w-full bg-white/5 hover:bg-white/10 text-white/30 hover:text-white py-3 rounded-2xl transition-all flex items-center justify-center gap-2 border border-white/5"
+          >
+            {isOpen ? <FaChevronLeft className="text-xs" /> : <FaChevronRight className="text-xs" />}
+          </button>
+        </div>
       </div>
     </div>
   );
 };
-
-// Sidebar item with unread count on Inbox
-const SidebarItem = ({ to, icon: Icon, label, isOpen, unreadCount = 0 }) => (
-  <li>
-    <Link to={to} className="flex items-center space-x-3 px-4 py-2 text-white hover:bg-white hover:text-black transition-all duration-200">
-      <Icon className="text-xl" />
-      {isOpen && (
-        <span className="flex items-center gap-2">
-          {label}
-          {label === "Inbox" && unreadCount > 0 && (
-            <span className="ml-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
-              {unreadCount}
-            </span>
-          )}
-        </span>
-      )}
-    </Link>
-  </li>
-);
 
 export default SuperAdminSidebar;
