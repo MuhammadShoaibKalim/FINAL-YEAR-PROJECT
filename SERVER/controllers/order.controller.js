@@ -153,32 +153,37 @@ export const getAllOrders = async (req, res) => {
 export const getLabOrders = async (req, res) => {
   try {
     const labId = req.user.labId;
+    if (!labId) {
+      return res.status(400).json({ message: "No lab assigned to this admin" });
+    }
 
-    const allOrders = await Order.find({ "items.labId": labId })
-      .populate("userId", "firstName lastName email")
+    const orders = await Order.find({ "items.labId": labId })
+      .populate("userId", "firstName lastName email phoneNo")
       .populate("items.labId", "name")
-      .sort({ updatedAt: -1 })
+      .sort({ createdAt: -1 })
       .lean();
 
-    const uniqueOrdersMap = new Map();
-    allOrders.forEach(order => {
-      const key = getOrderKey(order);
-      if (!uniqueOrdersMap.has(key)) {
-        uniqueOrdersMap.set(key, order);
-      }
+    const filteredOrders = orders.map(order => {
+      const myItems = order.items.filter(item => 
+        item.labId && item.labId._id.toString() === labId.toString()
+      );
+      
+      const labSubtotal = myItems.reduce((sum, item) => sum + item.price, 0);
+
+      return {
+        ...order,
+        items: myItems,
+        labSubtotal
+      };
     });
 
-    const uniqueOrders = Array.from(uniqueOrdersMap.values());
-
-    // Filter items to only lab's items
-    const filteredOrders = uniqueOrders
-      .map(order => {
-        const labItems = order.items.filter(item => item.labId && item.labId._id.toString() === labId.toString());
-        return { ...order, items: labItems };
-      });
-
-    res.status(200).json({ message: "Orders for this lab", orders: filteredOrders });
+    res.status(200).json({ 
+      success: true,
+      message: "Orders for your lab fetched successfully", 
+      orders: filteredOrders 
+    });
   } catch (error) {
+    console.error("getLabOrders error:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -277,7 +282,6 @@ export const updateLabOrderStatus = async (req, res) => {
       });
     }
 
-    // Find the order
     const order = await Order.findById(orderId);
     if (!order) {
       return res.status(404).json({
@@ -286,14 +290,13 @@ export const updateLabOrderStatus = async (req, res) => {
       });
     }
 
-    // Update status for items belonging to this lab
     let updated = false;
     order.items = order.items.map(item => {
       if (item.labId && item.labId.toString() === labId) {
         updated = true;
         return {
           ...item.toObject(),
-          status: status,
+          status: status || item.status,
           reportFile: reportFile || item.reportFile
         };
       }
@@ -307,34 +310,27 @@ export const updateLabOrderStatus = async (req, res) => {
       });
     }
 
-    // Update main order status based on all items' statuses
-    const allItemsCompleted = order.items.every(item => item.status === "Completed");
-    const allItemsCancelled = order.items.every(item => item.status === "Cancelled");
-    const someItemsInProgress = order.items.some(item => item.status === "In Progress");
-
+    // Logic: If all items in the order are 'Completed' or 'Done', mark the overall order as 'Completed'
+    const allItemsCompleted = order.items.every(i => i.status === "Completed" || i.status === "Done");
+    const allItemsCancelled = order.items.every(i => i.status === "Cancelled");
+    
     if (allItemsCompleted) {
       order.status = "Completed";
     } else if (allItemsCancelled) {
       order.status = "Cancelled";
-    } else if (someItemsInProgress) {
-      order.status = "In Progress";
     } else {
-      order.status = "Pending";
+      order.status = "In Progress";
     }
 
-    // Update payment status if provided
     if (paymentStatus) {
       order.paymentStatus = paymentStatus;
     }
 
-    // Update report file if provided
     if (reportFile) {
       order.reportFile = reportFile;
     }
 
     await order.save();
-
-    // Populate the lab information before sending response
     await order.populate("items.labId", "name");
 
     res.status(200).json({
@@ -428,11 +424,35 @@ export const uploadReport = async (req, res) => {
     await order.save();
 
     fs.unlinkSync(req.file.path); 
-
     res.status(200).json({ message: "Report uploaded", reportFile: downloadableUrl });
   } catch (error) {
     console.error("Manual report upload error:", error);
     res.status(500).json({ message: "Upload failed" });
+  }
+};
+
+export const getOrderInvoice = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const order = await Order.findById(orderId)
+      .populate("userId", "firstName lastName email phoneNo")
+      .populate("items.labId", "name address contactNumber cityProvince");
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    const isOwner = order.userId?._id.toString() === req.user.id;
+    const isSuperAdmin = req.user.role === 'superadmin';
+    const isRelatedLabAdmin = req.user.role === 'labadmin' && order.items.some(item => item.labId?._id.toString() === req.user.labId?.toString());
+
+    if (!isOwner && !isSuperAdmin && !isRelatedLabAdmin) {
+      return res.status(403).json({ success: false, message: "Not authorized to view this invoice" });
+    }
+
+    res.status(200).json({ success: true, data: order });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
