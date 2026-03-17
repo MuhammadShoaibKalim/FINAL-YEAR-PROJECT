@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { FaPaperPlane, FaSpinner } from "react-icons/fa";
+import { FaPaperPlane, FaSpinner, FaMapMarkerAlt, FaEnvelope, FaWhatsapp, FaShieldAlt, FaHistory, FaChevronDown } from "react-icons/fa";
 import { get, post } from "../../Services/ApiEndpoints";
+import { Link } from "react-router-dom";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -38,7 +39,7 @@ const Contact = () => {
       const { data } = await post("/api/query/submit", formData);
 
       if (data) {
-        toast.success("Message sent successfully!");
+        toast.success("Inquiry transmitted successfully!");
         setFormData({
           name: "",
           email: "",
@@ -49,7 +50,7 @@ const Contact = () => {
         });
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Something went wrong. Please try again.");
+      toast.error(err.response?.data?.message || "Communication failure. Please retry.");
     }
 
     setIsSubmitting(false);
@@ -61,198 +62,177 @@ const Contact = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-bg-primary to-bg-secondary">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="text-center mb-16">
-          <h1 className="text-5xl font-bold text-text-primary mb-6">Contact Us</h1>
-          <p className="text-xl text-text-secondary max-w-2xl mx-auto">
-            Get in touch with our team for any inquiries. {`We're`} here to help you with your healthcare needs.
+    <div className="min-h-screen bg-white font-sans overflow-hidden">
+      {/* Header Section */}
+      <div className="bg-slate-900 py-24 relative overflow-hidden">
+        <div className="absolute inset-0 z-0 opacity-20">
+           <div className="absolute top-0 right-0 w-96 h-96 bg-primary rounded-full blur-[100px] -mr-48 -mt-48"></div>
+           <div className="absolute bottom-0 left-0 w-96 h-96 bg-secondary rounded-full blur-[100px] -ml-48 -mb-48"></div>
+        </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-6">
+          <div className="inline-block px-4 py-1.5 bg-white/5 rounded-full border border-white/10">
+             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/80 leading-none">Global Support Hub</p>
+          </div>
+          <h1 className="text-5xl md:text-6xl font-black text-white tracking-tighter leading-tight">
+            Connect with <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Clinical Experts.</span>
+          </h1>
+          <p className="text-xl text-slate-400 max-w-2xl mx-auto font-medium leading-relaxed">
+            Our technical and medical support teams are available 24/7 to assist with your diagnostic requirements and platform navigation.
           </p>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-stretch">
-          {/* Contact Information */}
-          <div className="h-full">
-            <div className="bg-bg-primary/50 backdrop-blur-sm p-10 rounded-2xl shadow-primary border border-border/20 h-full flex flex-col">
-              <div className="flex-1">
-                <h2 className="text-3xl font-semibold text-text-primary mb-6">Get in Touch</h2>
-                <p className="text-lg text-text-secondary mb-8">
-                  Have questions about our services? Need assistance with your healthcare needs? {`We're`} here to help you every step of the way.
-                </p>
-
-                <div className="space-y-8">
-                  <div className="flex items-start space-x-6">
-                    <div className="p-4 bg-primary/10 rounded-xl">
-                      <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                      </svg>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 pb-24 relative z-20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+          {/* Left: Contact Info Cards */}
+          <div className="lg:col-span-4 space-y-6">
+            <div className="grid grid-cols-1 gap-6 h-full">
+              {[
+                { icon: <FaMapMarkerAlt />, title: "Clinical Headquarters", detail: "U.O.E Multan Campus, Bosan Road, Multan, Pakistan", sub: "Operational 09:00 - 18:00 PKT" },
+                { icon: <FaEnvelope />, title: "Electronic Correspondence", detail: "support@testsahulat.com", sub: "Priority Response: < 2 Hours" },
+                { icon: <FaWhatsapp />, title: "Instant Access", detail: "+92 344 7977457", sub: "Verified WhatsApp Business" }
+              ].map((item, idx) => (
+                <div key={idx} className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-100/50 hover:shadow-2xl hover:border-primary/20 transition-all duration-500 group">
+                  <div className="flex items-start gap-6">
+                    <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-primary text-xl border border-slate-100 group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
+                      {item.icon}
                     </div>
-                    <div>
-                      <h3 className="text-xl font-medium text-text-primary mb-1">Quick Response</h3>
-                      <p className="text-text-secondary">Our team typically responds within 24 hours to all inquiries.</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start space-x-6">
-                    <div className="p-4 bg-primary/10 rounded-xl">
-                      <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-medium text-text-primary mb-1">Secure Communication</h3>
-                      <p className="text-text-secondary">Your information is protected with industry-standard encryption.</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start space-x-6">
-                    <div className="p-4 bg-primary/10 rounded-xl">
-                      <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-medium text-text-primary mb-1">24/7 Support</h3>
-                      <p className="text-text-secondary">Emergency support is available around the clock for urgent matters.</p>
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{item.title}</p>
+                      <p className="text-base font-black text-slate-800 tracking-tight leading-snug">{item.detail}</p>
+                      <p className="text-[9px] font-bold text-primary uppercase tracking-tighter">{item.sub}</p>
                     </div>
                   </div>
                 </div>
-              </div>
+              ))}
 
-              <div className="pt-6 mt-auto border-t border-border/20">
-                <h3 className="text-xl font-medium text-text-primary mb-4">Common Questions</h3>
-                <div className="space-y-4">
-                  <div className="flex items-start space-x-3">
-                    <div className="mt-1">
-                      <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
+              <div className="bg-slate-900 p-10 rounded-[2.5rem] text-white space-y-8 relative overflow-hidden">
+                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-3xl -mr-16 -mt-16"></div>
+                 <h3 className="text-2xl font-black tracking-tight leading-tight relative z-10">Patient <br /> Safety Protocol</h3>
+                 <div className="space-y-6 relative z-10">
+                    <div className="flex gap-4">
+                       <FaShieldAlt className="text-primary text-2xl shrink-0" />
+                       <p className="text-sm font-medium text-slate-400">All communications are encrypted using enterprise-grade SSL protocols for patient data sovereignty.</p>
                     </div>
-                    <div>
-                      <p className="text-text-secondary">How quickly will I receive a response?</p>
-                      <p className="text-sm text-text-secondary/70 mt-1">We aim to respond to all inquiries within 24 hours during business days.</p>
+                    <div className="flex gap-4">
+                       <FaHistory className="text-secondary text-2xl shrink-0" />
+                       <p className="text-sm font-medium text-slate-400">Response audit logs are maintained for quality assurance and clinical compliance tracking.</p>
                     </div>
-                  </div>
-                  <div className="flex items-start space-x-3">
-                    <div className="mt-1">
-                      <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-text-secondary">Is my information secure?</p>
-                      <p className="text-sm text-text-secondary/70 mt-1">Yes, we use end-to-end encryption to protect all communications.</p>
-                    </div>
-                  </div>
-                </div>
+                 </div>
+                 <div className="pt-4">
+                    <button className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all">Review Privacy Policy</button>
+                 </div>
               </div>
             </div>
           </div>
 
-          {/* Contact Form */}
-          <div className="h-full">
-            <div className="bg-bg-primary/50 backdrop-blur-sm p-10 rounded-2xl shadow-primary border border-border/20 h-full">
-              <h2 className="text-3xl font-semibold text-text-primary mb-6">Send us a Message</h2>
-              <form onSubmit={handleSubmit} className="space-y-6 h-full flex flex-col">
-                <div className="flex-1 space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label htmlFor="name" className="block text-sm font-medium text-text-secondary mb-2">
-                        Name
-                      </label>
+          {/* Right: Modern Form */}
+          <div className="lg:col-span-8">
+            <div className="bg-white p-10 sm:p-16 rounded-[3rem] border border-slate-100 shadow-2xl shadow-slate-200/50 h-full">
+              <div className="mb-12">
+                <h2 className="text-3xl font-black text-slate-800 tracking-tight mb-2">Transmission Portal</h2>
+                <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.3em]">Fill the clinical inquiry form below for priority routing</p>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
+                    <div className="flex items-center bg-slate-50 border-2 border-slate-50 focus-within:border-primary focus-within:bg-white transition-all duration-300 rounded-2xl px-6 py-4">
                       <input
-                        id="name"
                         name="name"
                         type="text"
                         required
                         value={formData.name}
                         onChange={handleChange}
-                        placeholder="Your name"
-                        className="w-full p-3 border border-border/50 rounded-lg bg-bg-secondary/50 text-text-primary placeholder-text-secondary/70 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all duration-200"
+                        placeholder="John Doe"
+                        className="w-full bg-transparent outline-none text-sm font-bold text-slate-700 placeholder:text-slate-300"
                       />
                     </div>
+                  </div>
 
-                    <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-text-secondary mb-2">
-                        Email
-                      </label>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Verified Email</label>
+                    <div className="flex items-center bg-slate-50 border-2 border-slate-50 focus-within:border-primary focus-within:bg-white transition-all duration-300 rounded-2xl px-6 py-4">
                       <input
-                        id="email"
                         name="email"
                         type="email"
                         required
                         value={formData.email}
                         onChange={handleChange}
-                        placeholder="your.email@example.com"
-                        className="w-full p-3 border border-border/50 rounded-lg bg-bg-secondary/50 text-text-primary placeholder-text-secondary/70 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all duration-200"
+                        placeholder="patient@verify.com"
+                        className="w-full bg-transparent outline-none text-sm font-bold text-slate-700 placeholder:text-slate-300"
                       />
                     </div>
                   </div>
-                  <div>
-                <label htmlFor="receiverType" className="block text-sm text-text-secondary mb-2">Send To</label>
-                <select
-                  id="receiverType"
-                  name="receiverType"
-                  value={formData.receiverType}
-                  onChange={handleChange}
-                  // className="input"
-                  className="input w-full p-3 border border-border/50 rounded-lg bg-bg-secondary/50 text-text-primary placeholder-text-secondary/70 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all duration-200"
-                >
-                  <option value="support">Support Team</option>
-                  <option value="labadmin">Lab Admin</option>
-                </select>
-              </div>
-
-              {formData.receiverType === "labadmin" && (
-                <div>
-                  <label htmlFor="labId" className="block text-sm text-text-secondary mb-2">Select Lab</label>
-                  <select
-                    id="labId"
-                    name="labId"
-                    value={formData.labId}
-                    onChange={handleChange}
-                    required
-                    // className="input"
-                    className="input w-full p-3 border border-border/50 rounded-lg bg-bg-secondary/50 text-text-primary placeholder-text-secondary/70 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all duration-200"
-                  >
-                    <option value="">-- Select a Lab --</option>
-                    {labs.map((lab) => (
-                      <option key={lab._id} value={lab._id}>
-                        {lab.name}
-                      </option>
-                    ))}
-                  </select>
                 </div>
-              )}
 
-                  <div>
-                    <label htmlFor="subject" className="block text-sm font-medium text-text-secondary mb-2">
-                      Subject
-                    </label>
-                    <input
-                      id="subject"
-                      name="subject"
-                      type="text"
-                      required
-                      value={formData.subject}
-                      onChange={handleChange}
-                      placeholder="What is this about?"
-                      className="w-full p-3 border border-border/50 rounded-lg bg-bg-secondary/50 text-text-primary placeholder-text-secondary/70 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all duration-200"
-                    />
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                   <div className="space-y-1">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Routing Department</label>
+                      <div className="relative group">
+                          <select
+                            name="receiverType"
+                            value={formData.receiverType}
+                            onChange={handleChange}
+                            className="w-full bg-slate-50 border-2 border-slate-50 focus:border-primary focus:bg-white transition-all duration-300 rounded-2xl px-6 py-4 outline-none text-sm font-bold text-slate-700 appearance-none cursor-pointer"
+                          >
+                            <option value="support">Central Support Team</option>
+                            <option value="labadmin">Laboratory Administrator</option>
+                          </select>
+                          <FaChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-hover:text-primary transition-colors" />
+                      </div>
+                   </div>
 
-                  <div>
-                    <label htmlFor="message" className="block text-sm font-medium text-text-secondary mb-2">
-                      Message
-                    </label>
+                   {formData.receiverType === "labadmin" && (
+                    <div className="space-y-1 animate-in slide-in-from-left duration-300">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Facility</label>
+                      <div className="relative group">
+                          <select
+                            name="labId"
+                            value={formData.labId}
+                            onChange={handleChange}
+                            required
+                            className="w-full bg-slate-50 border-2 border-slate-50 focus:border-primary focus:bg-white transition-all duration-300 rounded-2xl px-6 py-4 outline-none text-sm font-bold text-slate-700 appearance-none cursor-pointer"
+                          >
+                            <option value="">-- Choose Laboratory --</option>
+                            {labs.map((lab) => (
+                              <option key={lab._id} value={lab._id}>{lab.name}</option>
+                            ))}
+                          </select>
+                          <FaChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                      </div>
+                    </div>
+                  )}
+
+                  {formData.receiverType !== "labadmin" && (
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Subject Matter</label>
+                      <div className="flex items-center bg-slate-50 border-2 border-slate-50 focus-within:border-primary focus-within:bg-white transition-all duration-300 rounded-2xl px-6 py-4">
+                        <input
+                          name="subject"
+                          type="text"
+                          required={formData.receiverType !== "labadmin"}
+                          value={formData.subject}
+                          onChange={handleChange}
+                          placeholder="Technical Support / Billing"
+                          className="w-full bg-transparent outline-none text-sm font-bold text-slate-700 placeholder:text-slate-300"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Message Content</label>
+                  <div className="bg-slate-50 border-2 border-slate-50 focus-within:border-primary focus-within:bg-white transition-all duration-300 rounded-[2rem] px-6 py-6 font-mono">
                     <textarea
-                      id="message"
                       name="message"
                       required
                       value={formData.message}
                       onChange={handleChange}
-                      placeholder="Your message here..."
-                      className="w-full p-3 border border-border/50 rounded-lg bg-bg-secondary/50 text-text-primary placeholder-text-secondary/70 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all duration-200 min-h-[300px] resize-none"
+                      placeholder="Detail your clinical or technical inquiry here..."
+                      className="w-full bg-transparent outline-none text-sm font-bold text-slate-700 placeholder:text-slate-300 min-h-[200px] resize-none scrollbar-hide"
                     />
                   </div>
                 </div>
@@ -260,17 +240,17 @@ const Contact = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-primary hover:bg-primary-dark transition-all duration-300 text-text-white font-medium text-lg py-3 px-6 rounded-lg mt-6 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-primary/20"
+                  className="w-full bg-slate-900 hover:bg-primary text-white py-6 rounded-3xl text-sm font-black uppercase tracking-[0.2em] shadow-2xl shadow-slate-200 transition-all active:scale-[0.98] flex items-center justify-center gap-4 disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <>
                       <FaSpinner className="animate-spin" />
-                      Sending...
+                      Encrypting & Sending...
                     </>
                   ) : (
                     <>
-                      <FaPaperPlane />
-                      Send Message
+                      <FaPaperPlane className="text-xs" />
+                      Transmit Clinical Inquiry
                     </>
                   )}
                 </button>
