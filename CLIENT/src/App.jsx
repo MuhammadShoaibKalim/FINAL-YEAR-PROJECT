@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from 'react-hot-toast';
 import { CartProvider } from "react-use-cart";
 import { useEffect, useState } from "react";
@@ -88,6 +89,7 @@ import LipidProfile from "./pages/MostUsed/LipidProfile";
 import ThyroidProfile from "./pages/MostUsed/ThyroidProfile";
 import MostUsed from "./pages/MostUsed/MostUsed";
 import SearchResults from './components/Search/SearchResults';
+import Terms from "./pages/NavbarPages/Terms";
 
 
 const AppRoutes = () => {
@@ -186,6 +188,7 @@ const AppRoutes = () => {
           <Route path="contact" element={<Contact />} />
           <Route path="join" element={<Join />} />
           <Route path="privacy-policy" element={<Privacy />} />
+          <Route path="terms" element={<Terms />} />
           <Route path="testimonials" element={<UserReview />} />
           <Route path="features" element={<Features />} />
           <Route path="why-us" element={<WhyUs />} />
@@ -293,9 +296,11 @@ const AppRoutes = () => {
 };
 
 const App = () => (
-  <BrowserRouter>
-    <AppRoutes />
-  </BrowserRouter>
+  <HelmetProvider>
+    <BrowserRouter>
+      <AppRoutes />
+    </BrowserRouter>
+  </HelmetProvider>
 );
 
 export default App;
