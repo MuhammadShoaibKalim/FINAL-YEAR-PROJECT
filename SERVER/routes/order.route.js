@@ -11,7 +11,8 @@ import {
   getOrderById,
   updateLabOrderStatus,
   cancelLabOrder,
-  uploadReport
+  uploadReport,
+  getOrderInvoice
 } from "../controllers/order.controller.js";
 
 import { isAuthenticated, isLabAdmin } from "../middlewares/auth.middleware.js";
@@ -30,6 +31,7 @@ router.put("/:id/update-status", isAuthenticated, isLabAdmin, upload.single("rep
 router.put("/:id/cancel", isAuthenticated, cancelOrder);
 router.delete("/:id", isAuthenticated, isLabAdmin, deleteOrder);
 router.get("/:id", isAuthenticated, getOrderById);
+router.get("/:orderId/invoice", isAuthenticated, getOrderInvoice);
 router.post("/review/:id", isAuthenticated, addTestReview);
 router.post("/review/:id", isAuthenticated, addPackageReview);
 router.put("/:orderId/lab/:labId/status", isAuthenticated, isLabAdmin, updateLabOrderStatus);
