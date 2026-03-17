@@ -4,70 +4,129 @@ export const getApplicationApprovedTemplate = (labName, email, password) => `
 <head>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Inter', Arial, sans-serif;
       line-height: 1.6;
-      color: #333;
+      color: #1e293b;
     }
     .container {
       max-width: 600px;
       margin: 0 auto;
-      padding: 20px;
+      padding: 40px 20px;
+      background-color: #f8fafc;
+    }
+    .card {
+      background-color: #ffffff;
+      border-radius: 24px;
+      padding: 40px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e2e8f0;
     }
     .header {
-      background-color: #4CAF50;
-      color: white;
-      padding: 20px;
       text-align: center;
-      border-radius: 5px 5px 0 0;
+      margin-bottom: 32px;
+    }
+    .logo {
+      width: 48px;
+      height: 48px;
+      background-color: #10b981;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 900;
+      font-size: 24px;
+      margin-bottom: 16px;
+    }
+    h1 {
+      color: #0f172a;
+      font-size: 24px;
+      font-weight: 800;
+      margin: 0;
+      letter-spacing: -0.025em;
     }
     .content {
-      padding: 20px;
-      background-color: #f9f9f9;
-      border-radius: 0 0 5px 5px;
-    }
-    .button {
-      display: inline-block;
-      padding: 10px 20px;
-      background-color: #4CAF50;
-      color: white;
-      text-decoration: none;
-      border-radius: 5px;
-      margin-top: 20px;
+      color: #475569;
+      font-size: 16px;
     }
     .credentials {
-      background-color: #fff;
-      padding: 15px;
-      border-radius: 5px;
-      margin: 20px 0;
+      background-color: #f1f5f9;
+      padding: 24px;
+      border-radius: 16px;
+      margin: 24px 0;
+      border: 1px dashed #cbd5e1;
+    }
+    .credential-item {
+      margin-bottom: 8px;
+    }
+    .credential-item:last-child {
+      margin-bottom: 0;
+    }
+    .label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: block;
+    }
+    .value {
+      font-family: monospace;
+      font-size: 16px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .button {
+      display: block;
+      text-align: center;
+      padding: 16px 32px;
+      background-color: #10b981;
+      color: white !important;
+      text-decoration: none;
+      border-radius: 12px;
+      font-weight: 700;
+      margin-top: 32px;
+      box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.2);
+    }
+    .footer {
+      text-align: center;
+      margin-top: 32px;
+      font-size: 12px;
+      color: #94a3b8;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <h1>Lab Application Approved!</h1>
-    </div>
-    <div class="content">
-      <p>Dear Lab Owner,</p>
-      
-      <p>We are pleased to inform you that your application for <strong>${labName}</strong> has been approved!</p>
-      
-      <p>You can now access your lab dashboard using the following credentials:</p>
-      
-      <div class="credentials">
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Password:</strong> ${password}</p>
+    <div class="card">
+      <div class="header">
+        <div class="logo">T</div>
+        <h1>Application Approved</h1>
       </div>
-      
-      <p>For security reasons, we recommend changing your password after your first login.</p>
-      
-      <p>You can access your dashboard by clicking the button below:</p>
-      
-      <a href="${process.env.FRONTEND_URL}/login" class="button">Login to Dashboard</a>
-      
-      <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
-      
-      <p>Best regards,<br>LabCore Team</p>
+      <div class="content">
+        <p>Dear Lab Owner,</p>
+        <p>We are excited to welcome <strong>${labName}</strong> to the TestSahulat partner network. Your application has been verified and approved.</p>
+        
+        <p>You can now access your dedicated lab dashboard using these temporary credentials:</p>
+        
+        <div class="credentials">
+          <div class="credential-item">
+            <span class="label">Admin Email</span>
+            <span class="value">${email}</span>
+          </div>
+          <div class="credential-item" style="margin-top: 12px;">
+            <span class="label">Temporary Password</span>
+            <span class="value">${password}</span>
+          </div>
+        </div>
+        
+        <p style="font-size: 14px; color: #64748b;">For security, please change your password immediately after your first login.</p>
+        
+        <a href="${process.env.FRONTEND_URL}/login" class="button">Access Lab Dashboard</a>
+      </div>
+      <div class="footer">
+        &copy; ${new Date().getFullYear()} TestSahulat. All rights reserved.
+      </div>
     </div>
   </div>
 </body>
@@ -80,56 +139,56 @@ export const getApplicationRejectedTemplate = (labName, reason = "") => `
 <head>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Inter', Arial, sans-serif;
       line-height: 1.6;
-      color: #333;
+      color: #1e293b;
     }
     .container {
       max-width: 600px;
       margin: 0 auto;
-      padding: 20px;
+      padding: 40px 20px;
     }
-    .header {
-      background-color: #f44336;
-      color: white;
-      padding: 20px;
-      text-align: center;
-      border-radius: 5px 5px 0 0;
+    .card {
+      background-color: #ffffff;
+      border-radius: 24px;
+      padding: 40px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e2e8f0;
     }
-    .content {
-      padding: 20px;
-      background-color: #f9f9f9;
-      border-radius: 0 0 5px 5px;
+    .header h1 {
+      color: #e11d48;
+      font-size: 24px;
+      font-weight: 800;
     }
-    .reason {
-      background-color: #fff;
-      padding: 15px;
-      border-radius: 5px;
-      margin: 20px 0;
-      border-left: 4px solid #f44336;
+    .reason-box {
+      background-color: #fff1f2;
+      padding: 24px;
+      border-radius: 16px;
+      margin: 24px 0;
+      border: 1px solid #fecdd3;
+      color: #9f1239;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <h1>Lab Application Status Update</h1>
-    </div>
-    <div class="content">
+    <div class="card">
+      <div class="header">
+        <h1>Application Update</h1>
+      </div>
       <p>Dear Lab Owner,</p>
-      
-      <p>We regret to inform you that your application for <strong>${labName}</strong> has not been approved at this time.</p>
+      <p>Thank you for your interest in joining TestSahulat. After reviewing your application for <strong>${labName}</strong>, we regret to inform you that we cannot proceed at this time.</p>
       
       ${reason ? `
-      <div class="reason">
-        <p><strong>Reason for rejection:</strong></p>
-        <p>${reason}</p>
+      <div class="reason-box">
+        <strong>Reason for Decision:</strong><br/>
+        ${reason}
       </div>
       ` : ""}
       
-      <p>If you would like to reapply or have any questions about this decision, please contact our support team.</p>
+      <p>If you believe this is an error or would like to reapply after addressing the concerns above, please contact our support team.</p>
       
-      <p>Best regards,<br>LabCore Team</p>
+      <p>Best regards,<br/>TestSahulat Compliance Team</p>
     </div>
   </div>
 </body>
@@ -142,46 +201,42 @@ export const getApplicationSubmittedTemplate = (labName) => `
 <head>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Inter', Arial, sans-serif;
       line-height: 1.6;
-      color: #333;
+      color: #1e293b;
     }
     .container {
       max-width: 600px;
       margin: 0 auto;
-      padding: 20px;
+      padding: 40px 20px;
     }
-    .header {
-      background-color: #2196F3;
-      color: white;
-      padding: 20px;
-      text-align: center;
-      border-radius: 5px 5px 0 0;
+    .card {
+      background-color: #ffffff;
+      border-radius: 24px;
+      padding: 40px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e2e8f0;
     }
-    .content {
-      padding: 20px;
-      background-color: #f9f9f9;
-      border-radius: 0 0 5px 5px;
+    .header h1 {
+      color: #0ea5e9;
+      font-size: 24px;
+      font-weight: 800;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <h1>Lab Application Received</h1>
-    </div>
-    <div class="content">
+    <div class="card">
+      <div class="header">
+        <h1>Application Received</h1>
+      </div>
       <p>Dear Lab Owner,</p>
-      
-      <p>Thank you for submitting your application for <strong>${labName}</strong>. We have received your application and it is currently under review.</p>
-      
-      <p>Our team will review your application and get back to you within 2-3 business days. You will receive an email notification once the review is complete.</p>
-      
-      <p>If you have any questions in the meantime, please don't hesitate to contact our support team.</p>
-      
-      <p>Best regards,<br>LabCore Team</p>
+      <p>This is to confirm that we have received your application for <strong>${labName}</strong> to join the TestSahulat network.</p>
+      <p>Our verification team is currently reviewing your documents. This process typically takes 2-3 business days. We will notify you via email as soon as a decision is made.</p>
+      <p>Thank you for your patience.</p>
+      <p>Best regards,<br/>TestSahulat Onboarding Team</p>
     </div>
   </div>
 </body>
 </html>
-`; 
+`;
