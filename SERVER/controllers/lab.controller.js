@@ -438,8 +438,9 @@ export const updateLabApplicationStatus = async (req, res) => {
       const user = new User({
         email: application.ownerEmail,
         password: hashedPassword,
-        role: 'lab_admin',
-        name: application.ownerName
+        role: 'labadmin',
+        firstName: application.ownerName.split(' ')[0] || application.ownerName,
+        lastName: application.ownerName.split(' ').slice(1).join(' ') || 'Admin'
       });
       await user.save();
 
@@ -447,17 +448,17 @@ export const updateLabApplicationStatus = async (req, res) => {
       const lab = new Lab({
         name: application.labName,
         address: application.labAddress,
-        phone: application.labPhone,
-        city: application.cityProvince,
-        registrationNumber: application.labRegistrationNumber,
-        specialties: application.labSpecialties,
+        location: application.cityProvince,
+        contactNumber: application.labPhone,
+        labRegistrationNumber: application.labRegistrationNumber,
+        labSpecialties: application.labSpecialties,
         hasInternet: application.hasInternet,
         hasBookingSoftware: application.hasBookingSoftware,
         bookingSoftwareName: application.bookingSoftwareName,
         staffCount: application.staffCount,
         offersHomeCollection: application.offersHomeCollection,
-        license: application.labLicense,
-        admin: user._id
+        labLicense: application.labLicense,
+        labAdmin: user._id
       });
       await lab.save();
 
@@ -525,4 +526,41 @@ export const getLabReviews = async (req, res) => {
 
 
 
+export const updateMyLab = async (req, res) => {
+  try {
+    const labId = req.user.labId;
+    if (!labId) {
+      return res.status(400).json({ success: false, message: "No lab assigned to this admin" });
+    }
+
+    const { name, address, location, contactNumber, description, labSpecialties, offersHomeCollection } = req.body;
+    
+    const updateData = {
+      name,
+      address,
+      location,
+      contactNumber,
+      description,
+      offersHomeCollection
+    };
+
+    if (labSpecialties) {
+      updateData.labSpecialties = typeof labSpecialties === 'string' ? JSON.parse(labSpecialties) : labSpecialties;
+    }
+
+    if (req.file) {
+      updateData.image = req.file.path;
+    }
+
+    const updatedLab = await Lab.findByIdAndUpdate(labId, updateData, { new: true });
+
+    res.status(200).json({
+      success: true,
+      message: "Lab details updated successfully",
+      lab: updatedLab
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 
