@@ -76,7 +76,7 @@
 //           {/* Logo */}
 //           <Link to="/" onClick={scrollToTop} className="flex items-center">
 //             <span className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-//               LabCore
+//               TestSahulat
 //             </span>
 //           </Link>
 

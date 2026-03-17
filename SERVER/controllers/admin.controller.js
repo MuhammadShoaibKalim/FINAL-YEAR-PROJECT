@@ -1,9 +1,10 @@
 import User from "../models/user.model.js";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 import { generateToken } from "../utils/auth.util.js";
 import Lab from "../models/lab.model.js";
-import {Order} from "../models/order.model.js";
-import { Test, Package} from "../models/testpackage.model.js";
+import { Order } from "../models/order.model.js";
+import { Test, Package } from "../models/testpackage.model.js";
 import mongoose from "mongoose";
 import Query from "../models/query.model.js";
 import { sendEmail } from "../utils/sendEmail.util.js";
@@ -13,7 +14,7 @@ import { sendEmail } from "../utils/sendEmail.util.js";
 // Super admin controller functions
 export const createSuperAdmin = async (req, res) => {
   try {
-    const superAdminExists = await User.findOne({ role: "Super Admin" });
+    const superAdminExists = await User.findOne({ role: "superadmin" });
 
     if (superAdminExists) {
       return res.status(403).json({ message: "Super Admin already exists. Access denied." });
@@ -25,8 +26,9 @@ export const createSuperAdmin = async (req, res) => {
       firstName,
       lastName,
       email,
-      password, 
-      role: "Super Admin",
+      password,
+      role: "superadmin",
+      isVerified: true,
     });
 
     res.status(201).json({
@@ -42,31 +44,31 @@ export const loginSuperAdmin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if(!email || !password){
-      return res.status(400).json({ message:"Email and password are required." })
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required." })
     }
     // Check if the user exists
-    const user = await User.findOne({ email, role: "Super Admin" });
+    const user = await User.findOne({ email, role: "superadmin" });
     if (!user) {
       return res.status(404).json({ message: "Super Admin not found" });
     }
-   const auth = await bcrypt.compare(password, user.password)
+    const auth = await bcrypt.compare(password, user.password)
 
-   if(!auth){
+    if (!auth) {
       return res.json({
-        message:"Incorrect password and email"
+        message: "Incorrect password and email"
       })
-   }
-   const token = generateToken(user._id, user.email);
-   res.cookie("token", token, {
-    withCredentials:true,
-    httpOnly:true,
-   });
-   res.status(200).json({
-    message:"Super admin login Successfully",
-    success:true,
-    token,
-   });
+    }
+    const token = generateToken(user._id, user.email);
+    res.cookie("token", token, {
+      withCredentials: true,
+      httpOnly: true,
+    });
+    res.status(200).json({
+      message: "Super admin login Successfully",
+      success: true,
+      token,
+    });
   } catch (error) {
     res.status(500).json({ message: "Error logging in", error: error.message });
   }
@@ -217,6 +219,8 @@ export const superAdminOverview = async (req, res) => {
     res.status(500).json({ message: "Error fetching overview data", error: error.message });
   }
 };
+
+
 export const createUser = async (req, res) => {
   try {
     if (!req.user || req.user.role !== "superadmin") {
@@ -224,10 +228,19 @@ export const createUser = async (req, res) => {
     }
 
     const { firstName, lastName, email, password, role } = req.body;
-
+    console.log("BODY:", req.body);
+    console.log("FILE:", req.file);
     // Validation
     if (!firstName || !lastName || !email || !password || !role) {
-      return res.status(400).json({ message: "All fields are required." });
+      return res.status(400).json({
+        message: "Missing required fields",
+        received: {
+          firstName,
+          lastName,
+          email,
+          password
+        }
+      });
     }
 
     // Check if user already exists
@@ -254,17 +267,17 @@ export const createUser = async (req, res) => {
       password: hashedPassword,
       role,
       image,
-      isVerified: true,               
-      forcePasswordChange: true,     
+      isVerified: true,
+      forcePasswordChange: true,
     });
 
     // Send login email
     await sendEmail({
       to: email,
-      subject: "Lab Admin Account Created - Digital LabCore",
+      subject: "Lab Admin Account Created - Digital TestSahulat",
       html: `
         <h2>Hello ${firstName},</h2>
-        <p>You have been added as a <strong>${role}</strong> on Digital LabCore.</p>
+        <p>You have been added as a <strong>${role}</strong> on Digital TestSahulat.</p>
         <p>Use the following credentials to log in:</p>
         <ul>
           <li><strong>Email:</strong> ${email}</li>
@@ -305,7 +318,7 @@ export const updateUser = async (req, res) => {
     if (password && password.trim() !== "") {
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
-      user.password = hashedPassword;  
+      user.password = hashedPassword;
     }
 
     // Handle image upload
@@ -364,7 +377,7 @@ export const getLabAdmins = async (req, res) => {
     }
 
     const labAdmins = await User.find({ role: "labadmin" })
-      .select("firstName lastName email labId");  
+      .select("firstName lastName email labId");
 
     res.status(200).json({ success: true, labAdmins });
   } catch (error) {
@@ -380,7 +393,7 @@ export const getAllUsers = async (req, res) => {
   try {
     const allUsers = await User.find().select("firstName lastName email _id role createdAt labId");
     res.status(200).json({ users: allUsers });
-    
+
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch Users", error: error.message });
   }
@@ -411,7 +424,7 @@ export const respondToInbox = async (req, res) => {
 };
 export const respondToLabAdmin = async (req, res) => {
   try {
-    const labAdminId = req.user.id; 
+    const labAdminId = req.user.id;
     const messages = await Query.find({
       receiverType: 'labadmin',
       receiverId: labAdminId,
@@ -426,7 +439,7 @@ export const respondToLabAdmin = async (req, res) => {
 }
 export const getSettings = async (req, res) => {
   try {
-    const superAdmin = await User.findById(req.user.id).select("-password"); 
+    const superAdmin = await User.findById(req.user.id).select("-password");
     if (!superAdmin) return res.status(404).json({ message: "Super Admin not found" });
 
     res.status(200).json(superAdmin);
@@ -445,7 +458,7 @@ export const updateSettings = async (req, res) => {
     };
 
     if (req.file) {
-      updateData.image = req.file.path; 
+      updateData.image = req.file.path;
     }
 
     const updatedUser = await User.findByIdAndUpdate(
@@ -509,11 +522,16 @@ export const loginLabAdmin = async (req, res) => {
     }
 
     // 🛠 IMPORTANT: include lab in token payload
+    // const token = generateToken({
+    //   _id: user._id,
+    //   email: user.email,
+    //   role: user.role,
+    // });
     const token = generateToken({
       _id: labAdmin._id,
       email: labAdmin.email,
       role: labAdmin.role,
-      labId: labAdmin.labId,  
+      labId: labAdmin.labId,
     });
 
     res.status(200).json({
@@ -663,22 +681,22 @@ export const getLabDashboardOverview = async (req, res) => {
   }
 };
 export const getLabAdminProfile = async (req, res) => {
-try {
-  const labAdminId = req.user.id;
-  const labAdmin = await User.findById(labAdminId).select("-password"); 
+  try {
+    const labAdminId = req.user.id;
+    const labAdmin = await User.findById(labAdminId).select("-password");
 
-  if (!labAdmin) {
-    return res.status(404).json({ message: "Lab Admin not found" });
+    if (!labAdmin) {
+      return res.status(404).json({ message: "Lab Admin not found" });
+    }
+
+    res.status(200).json({ success: true, labAdmin });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching Lab Admin", error: error.message });
   }
-
-  res.status(200).json({ success: true, labAdmin });
-} catch (error) {
-  res.status(500).json({ message: "Error fetching Lab Admin", error: error.message });
-}
 };
 export const getLabForLabAdmin = async (req, res) => {
   try {
-    const labAdminId = req.user.id; 
+    const labAdminId = req.user.id;
 
     const lab = await Lab.findOne({ labAdmin: labAdminId }).populate("createdBy", "firstName lastName email");
 
@@ -702,7 +720,7 @@ export const updateLabAdminProfile = async (req, res) => {
     }
 
     if (req.file) {
-      updates.image = req.file.path;  
+      updates.image = req.file.path;
     }
 
     const updatedLabAdmin = await User.findByIdAndUpdate(labAdminId, updates, { new: true }).select("-password");
@@ -740,48 +758,48 @@ export const getLabAdminInbox = async (req, res) => {
   try {
     const labAdminId = req.user.id;
     if (!labAdminId) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         success: false,
-        message: "Unauthorized: No user ID found" 
+        message: "Unauthorized: No user ID found"
       });
     }
 
     if (!req.user.labId) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        message: "No lab associated with this admin" 
+        message: "No lab associated with this admin"
       });
     }
 
-    const inboxMessages = await Query.find({ 
-      receiverType: "labadmin", 
-      labId: req.user.labId 
+    const inboxMessages = await Query.find({
+      receiverType: "labadmin",
+      labId: req.user.labId
     })
-    .populate("userId", "firstName lastName email")
-    .sort({ createdAt: -1 })
-    .lean()
-    .catch(err => {
-      console.error("Database query error:", err);
-      throw new Error("Failed to fetch inbox messages");
-    });
+      .populate("userId", "firstName lastName email")
+      .sort({ createdAt: -1 })
+      .lean()
+      .catch(err => {
+        console.error("Database query error:", err);
+        throw new Error("Failed to fetch inbox messages");
+      });
 
     if (!inboxMessages) {
-      return res.status(200).json({ 
+      return res.status(200).json({
         success: true,
-        inboxMessages: [] 
+        inboxMessages: []
       });
     }
 
-    res.status(200).json({ 
-      success: true, 
-      inboxMessages 
+    res.status(200).json({
+      success: true,
+      inboxMessages
     });
   } catch (error) {
     console.error("Error in getLabAdminInbox:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      message: "Error fetching inbox messages", 
-      error: error.message 
+      message: "Error fetching inbox messages",
+      error: error.message
     });
   }
 };

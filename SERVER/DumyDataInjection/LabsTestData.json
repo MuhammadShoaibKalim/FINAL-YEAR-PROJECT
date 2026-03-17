@@ -1,0 +1,80 @@
+[
+  {
+    "name": "Complete Blood Count (CBC)",
+    "description": "Basic blood test to check overall health.",
+    "price": 500,
+    "type": "Test",
+    "lab": { "$oid": "64f000000000000000000001" },
+    "createdBy": { "$oid": "64f0000000000000000000a1" },
+    "isActive": true,
+    "discount": 0,
+    "rating": 4.5,
+    "bookedCount": 100,
+    "feedbacks": []
+  },
+  {
+    "name": "Liver Function Test (LFT)",
+    "description": "Check liver enzyme levels.",
+    "price": 800,
+    "type": "Test",
+    "lab": { "$oid": "64f000000000000000000002" },
+    "createdBy": { "$oid": "64f0000000000000000000a2" },
+    "isActive": true,
+    "discount": 0,
+    "rating": 4.6,
+    "bookedCount": 80,
+    "feedbacks": []
+  },
+  {
+    "name": "Urine Routine Test",
+    "description": "Routine urine analysis for general health checkup.",
+    "price": 300,
+    "type": "Test",
+    "lab": { "$oid": "64f000000000000000000003" },
+    "createdBy": { "$oid": "64f0000000000000000000a3" },
+    "isActive": true,
+    "discount": 0,
+    "rating": 4.2,
+    "bookedCount": 60,
+    "feedbacks": []
+  },
+  {
+    "name": "X-Ray Chest",
+    "description": "Radiology test to check chest and lungs.",
+    "price": 1000,
+    "type": "Radiology",
+    "lab": { "$oid": "64f000000000000000000004" },
+    "createdBy": { "$oid": "64f0000000000000000000a4" },
+    "isActive": true,
+    "discount": 0,
+    "rating": 4.7,
+    "bookedCount": 40,
+    "feedbacks": []
+  },
+  {
+    "name": "Thyroid Profile Test",
+    "description": "Blood test to check thyroid hormones.",
+    "price": 700,
+    "type": "Test",
+    "lab": { "$oid": "64f000000000000000000005" },
+    "createdBy": { "$oid": "64f0000000000000000000a5" },
+    "isActive": true,
+    "discount": 0,
+    "rating": 4.3,
+    "bookedCount": 55,
+    "feedbacks": []
+  },
+  {
+    "name": "COVID-19 PCR Test",
+    "description": "PCR test for COVID-19 detection.",
+    "price": 1500,
+    "type": "Pathology",
+    "lab": { "$oid": "64f000000000000000000006" },
+    "createdBy": { "$oid": "64f0000000000000000000a6" },
+    "isActive": true,
+    "discount": 0,
+    "rating": 4.8,
+    "bookedCount": 200,
+    "feedbacks": []
+  }
+]

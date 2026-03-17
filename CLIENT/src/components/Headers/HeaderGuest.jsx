@@ -25,7 +25,7 @@
 //         <Link to="/" onClick={scrollToTop} className="flex items-center">
 //         <img
 //   src={logo}
-//   alt="LabCore Logo"
+//   alt="TestSahulat Logo"
 //   className="h-12 sm:h-14 md:h-16 w-auto object-contain rounded-full"
 // />
 

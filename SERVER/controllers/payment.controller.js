@@ -1,4 +1,4 @@
-import stripe from '../config/stripeConfig.js';
+// import stripe from '../config/stripeConfig.js';
 import axios from 'axios';
 
 export const checkoutSession = async (req, res) => {

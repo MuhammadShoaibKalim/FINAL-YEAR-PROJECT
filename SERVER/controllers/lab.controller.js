@@ -2,7 +2,7 @@ import Lab from "../models/lab.model.js";
 import mongoose from "mongoose";
 import User from "../models/user.model.js";
 import { Test, Package } from "../models/testpackage.model.js";
-import {Order} from "../models/order.model.js"; 
+import { Order } from "../models/order.model.js";
 import { sendEmail } from "../utils/sendEmail.util.js";
 import LabApplication from "../models/labApplication.model.js";
 import {
@@ -27,13 +27,13 @@ import Review from "../models/review.model.js";
 
 //     const isActive = req.body.isActive === "true" || req.body.isActive === "on";
 //     const image = req.file ? req.file.path : "";
-   
-    
+
+
 //     const labAdmin = await User.findById(assignedAdmin);
 //     if (!labAdmin) {
 //       return res.status(404).json({ message: "Lab Admin not found" });
 //     }
-    
+
 //     const existingLab = await Lab.findOne({ labAdmin: assignedAdmin });
 //     if (existingLab) {
 //       return res.status(400).json({
@@ -41,8 +41,8 @@ import Review from "../models/review.model.js";
 //         message: "Lab admin is already assigned to another lab.",
 //       });
 //     }
-    
-  
+
+
 
 //     const newLab = await Lab.create({
 //       name,
@@ -61,7 +61,7 @@ import Review from "../models/review.model.js";
 //       message: "Lab created successfully",
 //       lab: newLab
 //     });
-        
+
 //   } catch (error) {
 //     res.status(500).json({ message: "Error creating lab", error: error.message });
 //   }
@@ -109,7 +109,7 @@ export const addLab = async (req, res) => {
     // Send lab assignment email
     await sendEmail({
       to: labAdmin.email,
-      subject: "You've Been Assigned a Lab - Digital LabCore",
+      subject: "You've Been Assigned a Lab - Digital TestSahulat",
       html: `
         <p>Hello ${labAdmin.firstName},</p>
         <p>You have been assigned as the admin of the lab: <strong>${name}</strong>.</p>
@@ -152,7 +152,7 @@ export const getLabById = async (req, res) => {
     }
 
     // console.log("User Info:", req.user);
-    
+
     if (!lab.createdBy || (req.user.role !== "superadmin" && req.user._id.toString() !== lab.createdBy._id.toString())) {
       return res.status(403).json({ message: "Access denied. Only the lab owner or Super Admin can view this lab." });
     }
@@ -175,11 +175,11 @@ export const getLab = async (req, res) => {
       return res.status(200).json({ success: true, labs });
     } else if (req.user.role === "Lab Admin") {
       const lab = await Lab.findOne({ createdBy: req.user._id }).populate("createdBy", "firstName lastName email");
-      
+
       if (!lab) {
         return res.status(404).json({ message: "Lab not found" });
       }
-      
+
       return res.status(200).json({ success: true, lab });
     } else {
       return res.status(403).json({ message: "Access denied" });
@@ -191,7 +191,7 @@ export const getLab = async (req, res) => {
 export const updateLab = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, location, assignedAdmin, image } = req.body; 
+    const { name, location, assignedAdmin, image } = req.body;
 
     const lab = await Lab.findById(id);
     if (!lab) return res.status(404).json({ message: "Lab not found" });
@@ -219,15 +219,15 @@ export const updateLab = async (req, res) => {
       lab.image = req.file.path;
     }
 
-lab.name = req.body.name || lab.name;
-lab.address = req.body.address || lab.address;
-lab.location = req.body.location || lab.location;
-lab.description = req.body.description || lab.description;
-lab.type = req.body.type || lab.type;
-lab.isActive = req.body.isActive === "true" || req.body.isActive === "on";
-lab.labAdmin = req.body.assignedAdmin || lab.labAdmin;
+    lab.name = req.body.name || lab.name;
+    lab.address = req.body.address || lab.address;
+    lab.location = req.body.location || lab.location;
+    lab.description = req.body.description || lab.description;
+    lab.type = req.body.type || lab.type;
+    lab.isActive = req.body.isActive === "true" || req.body.isActive === "on";
+    lab.labAdmin = req.body.assignedAdmin || lab.labAdmin;
 
-await lab.save();
+    await lab.save();
 
 
     // const updatedLab = await Lab.findByIdAndUpdate(
@@ -307,12 +307,12 @@ export const getPublicLabById = async (req, res) => {
 };
 export const getAllLabsPublic = async (req, res) => {
   try {
-      const labs = await Lab.find({ isActive: true })
-        .select("name address location description image rating _id")
-        .populate("labAdmin", "firstName lastName email");
-      res.status(200).json({ success: true, labs });
+    const labs = await Lab.find({ isActive: true })
+      .select("name address location description image rating _id")
+      .populate("labAdmin", "firstName lastName email");
+    res.status(200).json({ success: true, labs });
   } catch (error) {
-      res.status(500).json({ success: false, message: "Failed to fetch labs", error: error.message });
+    res.status(500).json({ success: false, message: "Failed to fetch labs", error: error.message });
   }
 };
 export const applyForLab = async (req, res) => {

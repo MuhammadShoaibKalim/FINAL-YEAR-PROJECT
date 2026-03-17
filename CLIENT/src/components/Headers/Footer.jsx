@@ -28,9 +28,9 @@ const Footer = () => {
           {/* Left: Brand & Newsletter */}
           <div className="flex-1 flex flex-col gap-8">
             <div className="flex items-center gap-4">
-              <img src={logo} alt="LabCore Logo" aria-label="LabCore Logo" className="w-14 h-14 rounded-2xl bg-white p-1 shadow" />
+              <img src={logo} alt="TestSahulat Logo" aria-label="TestSahulat Logo" className="w-14 h-14 rounded-2xl bg-white p-1 shadow" />
               <div>
-                <span className="text-3xl font-extrabold text-primary">LabCore</span>
+                <span className="text-3xl font-extrabold text-primary">TestSahulat</span>
                 <p className="text-base text-text-secondary mt-1">Your trusted digital healthcare partner</p>
               </div>
             </div>
@@ -91,7 +91,7 @@ const Footer = () => {
                     rel="noopener noreferrer"
                     className="hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary"
                   >
-                    University of Education, Lahore
+                    University of Education Lahore, Multan Campus
                   </a>
                 </div>
                 {/* <div className="flex items-center gap-3">
@@ -100,7 +100,7 @@ const Footer = () => {
                 </div> */}
                 <div className="flex items-center gap-3">
                   <FaEnvelope className="text-primary" />
-                  <a href="mailto:support@labcore.com" className="hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary">support@labcore.com</a>
+                  <a href="mailto:support@TestSahulat.com" className="hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary">support@TestSahulat.com</a>
                 </div>
                 <div className="flex items-center gap-3">
                   <FaWhatsapp className="text-primary" />
@@ -115,7 +115,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 py-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <p className="text-text-secondary text-sm">
-            © {new Date().getFullYear()} <span className="font-semibold text-primary">LabCore</span>. All Rights Reserved.
+            © {new Date().getFullYear()} <span className="font-semibold text-primary">TestSahulat</span>. All Rights Reserved.
           </p>
           <div className="flex space-x-6">
             <Link to="/privacy-policy" className="text-text-secondary hover:text-primary text-sm transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-primary">Privacy Policy</Link>

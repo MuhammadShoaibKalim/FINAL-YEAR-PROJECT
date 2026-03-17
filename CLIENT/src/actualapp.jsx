@@ -10,7 +10,7 @@ import UserLayout from "./components/Layouts/UserLayout";
 import SuperAdminLayout from "./components/SuperAdmin/SuperAdminLayout";
 import LabAdminLayout from "./components/LabAdmin/LabAdminLayout";
 import ScrollToTop from "./components/Layouts/ScrollToTop";
-// import ProtectedRoute from "./components/Layouts/ProtectedRoutes";
+import ProtectedRoute from "./components/Layouts/ProtectedRoutes";
 import Loader from "./components/Layouts/Loader";
 
 // Super Admin Components
@@ -115,65 +115,6 @@ const AppRoutes = () => {
   //   };
   //   checkUser();
   // }, [dispatch, navigate]);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 useEffect(() => {
   const checkUser = async () => {
     const publicRoutes = [
@@ -197,7 +138,7 @@ useEffect(() => {
       const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
       if (!token) {
         dispatch(logoutUser());
-        // navigate('/login');
+        navigate('/login');
         return;
       }
       const request = await get('/api/auth/getuser');
@@ -206,7 +147,7 @@ useEffect(() => {
       }
     } catch (error) {
       dispatch(logoutUser());
-      // navigate('/login');
+      navigate('/login');
     } finally {
       setLoading(false);
     }
@@ -227,15 +168,17 @@ useEffect(() => {
       <ScrollToTop />
       <Toaster position="top-right" />
       <Routes>
-        {/* User Login/register */}
-        <Route path="register" element={<Register />} />
+        {/* User Login/register 
+        /*<Route path="register" element={<Register />} />
         <Route path="login" element={<Login />} />
         <Route path="/verify-email" element={<EmailVerification />} />
         <Route path="/resend-verification" element={<ResendVerification />} />
         <Route path="/user/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/check-email" element={<CheckEmail />} />
-        <Route path="/reset-password-force/:id" element={<ResetPasswordForce />} />
+        <Route path="/reset-password-force/:id" element={<ResetPasswordForce />} /> 
+
+        */}
 
         {/* Public Routes */}
         <Route path="/" element={<UserLayout />}>
@@ -275,8 +218,7 @@ useEffect(() => {
         </Route>
 
         {/* Protected User Routes */}
-        {/* <Route path="/" element={<ProtectedRoute><UserLayout /></ProtectedRoute>}> */}
-        <Route path="/" element={<UserLayout />}>
+        <Route path="/" element={<ProtectedRoute><UserLayout /></ProtectedRoute>}>
           <Route path="ai-recommendations-test" element={<AIRecommendation />} />
           <Route path="labs" element={<Labes />} />
           <Route path="/labs/:id/details" element={<LabDetails />} />
@@ -291,7 +233,7 @@ useEffect(() => {
         </Route>
 
         {/* UserProfile Layout */}
-        {/* <Route path="/user" element={<ProtectedRoute roles={['user']}><UserProfileLayout /></ProtectedRoute>}> */}
+        <Route path="/user" element={<ProtectedRoute roles={['user']}><UserProfileLayout /></ProtectedRoute>}>
           <Route index element={<UserProfile />} />
           <Route path="profile" element={<UserProfile />} />
           <Route path="edit" element={<UserProfileEdit isEdit />} />
@@ -299,15 +241,15 @@ useEffect(() => {
           <Route path="orders" element={<UserOrder />} />
           <Route path="messages" element={<UserInbox />} />
           <Route path="reports" element={<UserReports />} />
-        {/* </Route> */}
+        </Route>
 
         {/* Super Admin Routes */}
         <Route
           path="/admin/super"
           element={
-            // <ProtectedRoute roles={['superadmin']}>
+            <ProtectedRoute roles={['superadmin']}>
               <SuperAdminLayout />
-            // </ProtectedRoute>
+            </ProtectedRoute>
           }
         >
           <Route index element={<Overview />} />
@@ -322,9 +264,9 @@ useEffect(() => {
         <Route
           path="/labadmin/lab"
           element={
-            // <ProtectedRoute roles={['labadmin']}>
+            <ProtectedRoute roles={['labadmin']}>
               <LabAdminLayout />
-            // </ProtectedRoute>
+            </ProtectedRoute>
           }
         >
           <Route index element={<LabOverview />} />
@@ -336,7 +278,6 @@ useEffect(() => {
           <Route path="tests" element={<OfferedTest />} />
           <Route path="messages" element={<Messages />} />
           <Route path="settings" element={<LabAdminProfileSettings />} />
-          
         </Route>
 
         {/* Add this route with the other routes */}

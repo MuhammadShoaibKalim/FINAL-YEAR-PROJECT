@@ -1,0 +1,53 @@
+[
+  {
+    "name": "Basic Health Package",
+    "description": "Includes CBC and Urine Routine Test for general health checkup.",
+    "price": 700,
+    "tests": [
+      { "$oid": "64f100000000000000000001" },
+      { "$oid": "64f100000000000000000003" }
+    ],
+    "type": "Package",
+    "lab": { "$oid": "64f000000000000000000001" },
+    "createdBy": { "$oid": "64f0000000000000000000a1" },
+    "isActive": true,
+    "discount": 0,
+    "rating": 4.5,
+    "bookedCount": 50,
+    "feedbacks": []
+  },
+  {
+    "name": "Advanced Liver Package",
+    "description": "Includes Liver Function Test and Thyroid Profile Test for detailed health analysis.",
+    "price": 1400,
+    "tests": [
+      { "$oid": "64f100000000000000000002" },
+      { "$oid": "64f100000000000000000005" }
+    ],
+    "type": "Package",
+    "lab": { "$oid": "64f000000000000000000002" },
+    "createdBy": { "$oid": "64f0000000000000000000a2" },
+    "isActive": true,
+    "discount": 0,
+    "rating": 4.6,
+    "bookedCount": 40,
+    "feedbacks": []
+  },
+  {
+    "name": "COVID Care Package",
+    "description": "Includes COVID-19 PCR Test and X-Ray Chest for infection and respiratory checkup.",
+    "price": 2400,
+    "tests": [
+      { "$oid": "64f100000000000000000006" },
+      { "$oid": "64f100000000000000000004" }
+    ],
+    "type": "Package",
+    "lab": { "$oid": "64f000000000000000000006" },
+    "createdBy": { "$oid": "64f0000000000000000000a6" },
+    "isActive": true,
+    "discount": 0,
+    "rating": 4.8,
+    "bookedCount": 80,
+    "feedbacks": []
+  }
+]

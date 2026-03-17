@@ -121,7 +121,7 @@ const Join = () => {
       <div className="max-w-6xl mx-auto space-y-16">
         {/* Heading */}
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-primary mb-4">Partner with LabCore</h1>
+          <h1 className="text-4xl font-bold text-primary mb-4">Partner with TestSahulat</h1>
           <p className="text-text-secondary text-lg max-w-2xl mx-auto">
             Join our growing network of diagnostic labs and reach more patients through our platform.
           </p>

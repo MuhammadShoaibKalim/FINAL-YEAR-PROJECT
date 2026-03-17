@@ -109,7 +109,7 @@ const Login = () => {
 
         {/* Right form */}
         <div className="w-full md:w-1/2 p-8 flex flex-col justify-center space-y-4">
-          <h2 className="text-4xl font-bold text-center text-text-primary">Welcome to LabCore</h2>
+          <h2 className="text-4xl font-bold text-center text-text-primary">Welcome to TestSahulat</h2>
           <p className="text-center text-text-secondary text-sm mt-2">
             Don't have an account?{' '}
             <Link to="/register" className="text-primary hover:underline">Sign up</Link>

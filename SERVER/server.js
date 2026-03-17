@@ -7,7 +7,7 @@ import orderRoutes from "./routes/order.route.js";
 import cartRoutes from "./routes/cart.route.js";
 import labAdminRoutes from "./routes/admin.route.js";
 import superAdminRoutes from "./routes/admin.route.js";
-import {protect} from './middlewares/auth.middleware.js';
+import { protect } from './middlewares/auth.middleware.js';
 import labRoutes from "./routes/lab.route.js";
 import userRoutes from "./routes/user.route.js";
 import queryRoutes from "./routes/query.route.js"
@@ -23,8 +23,8 @@ const app = express();
 
 // CORS Configuration
 const corsOptions = {
-    origin: process.env.NODE_ENV === 'production' 
-        ? process.env.FRONTEND_URL 
+    origin: process.env.NODE_ENV === 'production'
+        ? process.env.FRONTEND_URL
         : ['http://localhost:5173', 'http://127.0.0.1:5173'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -43,10 +43,10 @@ app.use('/uploads', express.static('uploads'));
 
 
 //Routes
-app.use("/api/auth", userRoutes);  
+app.use("/api/auth", userRoutes);
 app.use("/api/superadmin", superAdminRoutes);
 app.use("/api/labadmin", labAdminRoutes);
-app.use("/api/labs",  labRoutes);
+app.use("/api/labs", labRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/tests", testPackageRoutes);
 app.use("/api/packages", testPackageRoutes);
@@ -60,11 +60,11 @@ app.use("/api/search", searchRoutes);
 
 
 // Connect to MongoDB
-connectDB();      
+connectDB();
 
 //server
-const PORT = process.env.PORT || 7000;
-const server = app.listen(PORT, () =>{
+const PORT = process.env.PORT || 5000;
+const server = app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
 

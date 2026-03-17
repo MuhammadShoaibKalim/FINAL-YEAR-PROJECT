@@ -1,12 +1,13 @@
 import bcrypt from "bcrypt";
 import User from "../models/user.model.js";
 import { generateToken } from "../utils/auth.util.js";
-import { sendEmail } from "../utils/sendEmail.util.js"; 
+import { sendEmail } from "../utils/sendEmail.util.js";
 import crypto from "crypto";
 
 
 
 export const userRegister = async (req, res) => {
+  console.log("userRegister route hit");
   try {
     const { firstName, lastName, email, password, confirmPassword } = req.body;
 
@@ -63,7 +64,7 @@ export const userRegister = async (req, res) => {
 
     // Generate email verification token
     const verificationToken = crypto.randomBytes(32).toString("hex");
-    const verificationTokenExpires = Date.now() + 5 * 60 * 1000; // 5 minutes
+    const verificationTokenExpires = Date.now() + 60 * 60 * 1000; // 5 minutes
 
     const newUser = new User({
       firstName,
@@ -93,7 +94,7 @@ export const userRegister = async (req, res) => {
       }
       throw err;
     }
-    
+
 
     const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
     const message = `
@@ -104,7 +105,7 @@ export const userRegister = async (req, res) => {
 
     await sendEmail({
       to: email,
-      subject: "Verify your email - Digital LabCore",
+      subject: "Verify your email - Digital TestSahulat",
       html: message,
     });
 
@@ -167,7 +168,7 @@ export const userLogin = async (req, res) => {
         userId: user._id,
         data: user,
         token
-      });    
+      });
     }
 
 
@@ -219,11 +220,11 @@ export const forgotPassword = async (req, res) => {
     const hashedResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
 
     user.resetPasswordToken = hashedResetToken;
-    user.resetPasswordExpire = Date.now() + 30 * 60 * 1000; 
+    user.resetPasswordExpire = Date.now() + 30 * 60 * 1000;
     await user.save({ validateBeforeSave: false });
 
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
-    
+
 
     const message = `
       <h1>Password Reset Request</h1>
@@ -352,7 +353,7 @@ export const resendVerificationEmail = async (req, res) => {
 
     // ✅ Construct the verification link
     const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
-    
+
     const message = `
       <h2>Hello ${user.firstName || "there"},</h2>
       <p>Please click the link below to verify your email address:</p>
@@ -362,7 +363,7 @@ export const resendVerificationEmail = async (req, res) => {
 
     await sendEmail({
       to: user.email,
-      subject: "Verify Your Email - Digital LabCore",
+      subject: "Verify Your Email - TestSahulat",
       html: message,
     });
 
@@ -446,7 +447,7 @@ export const userLogout = (req, res) => {
 export const getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -494,11 +495,11 @@ export const updateUserProfile = async (req, res) => {
     //   updates.image = `uploads/${req.file.filename}`;
     //   console.log("Image URL:", updates.image);
     // }
-    if (req.file && req.file.path) {    
-      updates.image = req.file.path; 
+    if (req.file && req.file.path) {
+      updates.image = req.file.path;
     }
-    
-    
+
+
 
 
 
@@ -533,7 +534,7 @@ export const updateUserProfile = async (req, res) => {
 export const deleteUserAccount = async (req, res) => {
   try {
     const user = await User.findByIdAndDelete(req.user.id);
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -544,7 +545,7 @@ export const deleteUserAccount = async (req, res) => {
 
     res.clearCookie("token", {
       httpOnly: true,
-      secure:true,
+      secure: true,
       sameSite: "strict"
     });
 
@@ -582,59 +583,59 @@ export const checkUser = async (req, res) => {
 
 
 // user
-  // controllers/Users/superAdmin.controller.js
-  export const getUsers = async (req, res) => {
-    try {
-      const users = await User.find({ role: "labadmin" }).select("-password");
-      res.status(200).json({ users });
-    } catch (error) {
-      res.status(500).json({ message: "Error fetching Lab Admins", error: error.message });
+// controllers/Users/superAdmin.controller.js
+export const getUsers = async (req, res) => {
+  try {
+    const users = await User.find({ role: "labadmin" }).select("-password");
+    res.status(200).json({ users });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching Lab Admins", error: error.message });
+  }
+};
+export const updateUser = async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+    const userId = req.params.id;
+    const requestingUser = req.user;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
-  };
-  export const updateUser = async (req, res) => {
-    try {
-      const { name, email, password } = req.body;
-      const userId = req.params.id;
-      const requestingUser = req.user; 
-  
-      const user = await User.findById(userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-  
-      // Super Admin can update anyone, Lab Admin can only update their own profile
-      if (requestingUser.role !== "Super Admin" && requestingUser._id.toString() !== userId) {
-        return res.status(403).json({ message: "Unauthorized to update this profile" });
-      }
-  
-      // Update only provided fields
-      if (name) user.name = name;
-      if (email) user.email = email;
-      if (password) {
-        user.password = await bcrypt.hash(password, 10);
-      }
-  
-      await user.save();
-      res.status(200).json({ message: "User updated successfully", user });
-    } catch (error) {
-      res.status(500).json({ message: "Error updating user", error: error.message });
+
+    // Super Admin can update anyone, Lab Admin can only update their own profile
+    if (requestingUser.role !== "Super Admin" && requestingUser._id.toString() !== userId) {
+      return res.status(403).json({ message: "Unauthorized to update this profile" });
     }
-  };
-  export const deleteUser = async (req, res) => {
-    try {
-      const userId = req.params.id;
-  
-      const user = await User.findById(userId);
-      if (!user) {
-        return res.status(404).json({ message: "Lab Admin not found" });
-      }
-  
-      await User.findByIdAndDelete(userId);
-      res.status(200).json({ message: "Lab Admin deleted successfully" });
-    } catch (error) {
-      res.status(500).json({ message: "Error deleting Lab Admin", error: error.message });
+
+    // Update only provided fields
+    if (name) user.name = name;
+    if (email) user.email = email;
+    if (password) {
+      user.password = await bcrypt.hash(password, 10);
     }
-  };
+
+    await user.save();
+    res.status(200).json({ message: "User updated successfully", user });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating user", error: error.message });
+  }
+};
+export const deleteUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "Lab Admin not found" });
+    }
+
+    await User.findByIdAndDelete(userId);
+    res.status(200).json({ message: "Lab Admin deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting Lab Admin", error: error.message });
+  }
+};
 
 
 

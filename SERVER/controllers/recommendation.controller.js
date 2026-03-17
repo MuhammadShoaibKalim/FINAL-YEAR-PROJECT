@@ -1,4 +1,4 @@
-import getTestRecommendations from "../labgchain/langchain.js";
+import getTestRecommendations from "../langchain/langchain.js";
 
 export const getTestRecommendation = async (req, res) => {
   const { description, symptoms } = req.body;

@@ -9,10 +9,10 @@ const About = () => {
     {/* About Us Section */}
       <div className="w-full text-center mb-10">
         <p className="text-center mb-5 text-primary font-bold text-4xl">INTRODUCING</p>
-        <h4 className="text-center mb-5 text-3xl font-bold italic text-text-primary">LabCore: Empowering Healthcare with Technology</h4>
+        <h4 className="text-center mb-5 text-3xl font-bold italic text-text-primary">TestSahulat: Empowering Healthcare with Technology</h4>
         <p className="text-text-primary text-justify text-2xl">
-          LabCore is an innovative healthcare platform designed to provide patients with an efficient, transparent, and user-friendly system to manage laboratory tests. 
-          From symptom analysis to personalized test recommendations, LabCore enhances the healthcare journey by centralizing medical test information, facilitating comparisons, 
+          TestSahulat is an innovative healthcare platform designed to provide patients with an efficient, transparent, and user-friendly system to manage laboratory tests. 
+          From symptom analysis to personalized test recommendations, TestSahulat enhances the healthcare journey by centralizing medical test information, facilitating comparisons, 
           and streamlining appointment bookings—all in one place.
         </p>
        

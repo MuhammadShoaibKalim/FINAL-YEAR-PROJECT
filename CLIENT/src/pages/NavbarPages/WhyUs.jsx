@@ -11,7 +11,7 @@ const WhyUs = () => {
     {
       icon: FaHeartbeat,
       title: "Patient-Centric Care",
-      description: "At LabCore, we prioritize your well-being by delivering personalized and transparent healthcare solutions.",
+      description: "At TestSahulat, we prioritize your well-being by delivering personalized and transparent healthcare solutions.",
       color: "primary",
       animation: "fade-right"
     },
@@ -54,7 +54,7 @@ const WhyUs = () => {
           </div>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-text-primary mb-6 relative inline-block">
             Why Choose <span className="text-primary relative">
-              LabCore
+              TestSahulat
               <svg className="absolute -bottom-2 left-0 w-full" height="6" viewBox="0 0 124 6" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M3 3C46.4 3 81.6667 3 121 3" stroke="#09acb4" strokeWidth="5" strokeLinecap="round"/>
               </svg>
@@ -106,7 +106,7 @@ const WhyUs = () => {
             href="/labs" 
             className="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-primary hover:bg-primary-hover text-white font-medium transition-all duration-300 transform hover:scale-105 shadow-primary hover:shadow-lg"
           >
-            Get Started With LabCore
+            Get Started With TestSahulat
             <svg className="ml-2 w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
               <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd"></path>
             </svg>

@@ -5,7 +5,7 @@ const Privacy = () => {
     <div className="bg-gray-50 shadow py-10 px-4 md:px-20 lg:px-40 mt-24">
       <h1 className="text-3xl font-bold text-teal-600 mb-6">Privacy Policy</h1>
       <p className="text-gray-600 leading-relaxed mb-8">
-        Welcome to LabCore. Your privacy is our utmost priority. This privacy policy outlines how we collect, use, and safeguard your personal data when you use our platform.
+        Welcome to TestSahulat. Your privacy is our utmost priority. This privacy policy outlines how we collect, use, and safeguard your personal data when you use our platform.
       </p>
 
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
@@ -67,7 +67,7 @@ const Privacy = () => {
         <div className="bg-white shadow-md p-6 rounded-lg">
           <h2 className="text-xl font-bold text-black mb-3">5. Your Rights</h2>
           <p className="text-gray-600">
-            As a LabCore user, you have the following rights:
+            As a TestSahulat user, you have the following rights:
           </p>
           <ul className="list-disc list-inside text-gray-600 mt-2 space-y-1">
             <li>Access your personal data and request corrections.</li>
@@ -76,8 +76,8 @@ const Privacy = () => {
           </ul>
           <p className="text-gray-600 mt-2">
             To exercise your rights, contact us at{' '}
-            <a href="mailto:support@labcore.com" className="text-teal-600 underline">
-              support@labcore.com
+            <a href="mailto:support@TestSahulat.com" className="text-teal-600 underline">
+              support@TestSahulat.com
             </a>.
           </p>
         </div>
