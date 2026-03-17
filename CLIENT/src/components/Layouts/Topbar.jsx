@@ -1,19 +1,28 @@
+import React from 'react';
+import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt } from 'react-icons/fa';
+
 const Topbar = () => {
   return (
-    <div className="bg-gradient-to-r from-primary to-primary-dark text-white text-xs md:text-sm relative overflow-hidden z-50">
-      <div className="absolute inset-0">
-        <div className="absolute top-0 left-0 w-[300px] h-[300px] bg-white/5 rounded-full blur-[50px] animate-pulse" />
-        <div className="absolute bottom-0 right-0 w-[300px] h-[300px] bg-white/5 rounded-full blur-[50px] animate-pulse" />
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        <div className="flex items-center justify-end h-12 space-x-2">
-          <div className="flex items-center space-x-1 border-l border-white/20 pl-2">
-            <a href="/about" className="hover:text-white/80 font-medium transition-colors">About Us</a>
-            <span className="text-white/30">|</span>
-            <a href="/contact" className="hover:text-white/80 font-medium transition-colors">Support</a>
-            <span className="text-white/30">|</span>
-            <a href="/join" target="_blank" className="hover:text-white/80 font-medium transition-colors">Join Us</a>
+    <div className="bg-slate-900 text-white/80 text-[10px] uppercase font-black tracking-widest relative overflow-hidden z-[60] border-b border-white/5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-10">
+          <div className="hidden md:flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <FaPhoneAlt className="text-primary text-[8px]" />
+              <span>+92 300 1234567</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <FaEnvelope className="text-primary text-[8px]" />
+              <span className="lowercase">support@testsahulat.com</span>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-6 ml-auto md:ml-0">
+            <div className="flex items-center gap-4 border-l border-white/10 pl-6">
+              <a href="/about" className="hover:text-primary transition-colors">About</a>
+              <a href="/contact" className="hover:text-primary transition-colors">Support</a>
+              <a href="/join" className="px-3 py-1 bg-primary/10 text-primary rounded-lg border border-primary/20 hover:bg-primary hover:text-white transition-all">Lab Join</a>
+            </div>
           </div>
         </div>
       </div>
