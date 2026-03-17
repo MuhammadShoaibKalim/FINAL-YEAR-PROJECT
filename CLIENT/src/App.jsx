@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from 'react-hot-toast';
 import { CartProvider } from "react-use-cart";
@@ -10,7 +10,6 @@ import { get } from "./Services/ApiEndpoints";
 import UserLayout from "./components/Layouts/UserLayout";
 import SuperAdminLayout from "./components/SuperAdmin/SuperAdminLayout";
 import LabAdminLayout from "./components/LabAdmin/LabAdminLayout";
-import ScrollToTop from "./components/Layouts/ScrollToTop";
 // import ProtectedRoute from "./components/Layouts/ProtectedRoutes";
 import Loader from "./components/Layouts/Loader";
 
@@ -96,6 +95,11 @@ const AppRoutes = () => {
   const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
 
   // useEffect(() => {
   //   const checkUser = async () => {
@@ -168,7 +172,6 @@ const AppRoutes = () => {
 
   return (
     <CartProvider>
-      <ScrollToTop />
       <Toaster position="top-right" />
       <Routes>
         {/* User Login/register */}
