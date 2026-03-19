@@ -101,27 +101,6 @@ const AppRoutes = () => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
-  // useEffect(() => {
-  //   const checkUser = async () => {
-  //     try {
-  //       const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-  //       if (!token) {
-  //         dispatch(logoutUser());
-  //         navigate('/login');
-  //         return;
-  //       }
-  //       const request = await get('/api/auth/getuser');
-  //       if (request.status === 200) {
-  //         dispatch(SetUser(request.data.user));
-  //       }
-  //     } catch (error) {
-  //       dispatch(logoutUser());
-  //       navigate('/login');
-  //     }
-  //   };
-  //   checkUser();
-  // }, [dispatch, navigate]);
-
   useEffect(() => {
     const checkUser = async () => {
       const publicRoutes = [
@@ -145,7 +124,6 @@ const AppRoutes = () => {
         const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
         if (!token) {
           dispatch(logoutUser());
-          // navigate('/login');
           return;
         }
         const request = await get('/api/auth/getuser');
@@ -154,17 +132,16 @@ const AppRoutes = () => {
         }
       } catch (error) {
         dispatch(logoutUser());
-        // navigate('/login');
       } finally {
         setLoading(false);
       }
     };
 
     checkUser();
-  }, [dispatch, navigate]);
+  }, [dispatch, pathname]); // Added pathname here to re-check on nav if needed
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1500);
+    const timer = setTimeout(() => setLoading(false), 800); // Reduced delay for smoother feel
     return () => clearTimeout(timer);
   }, []);
 
@@ -174,9 +151,9 @@ const AppRoutes = () => {
     <CartProvider>
       <Toaster position="top-right" />
       <Routes>
-        {/* User Login/register */}
-        <Route path="register" element={<Register />} />
-        <Route path="login" element={<Login />} />
+        {/* Auth Routes */}
+        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/verify-email" element={<EmailVerification />} />
         <Route path="/resend-verification" element={<ResendVerification />} />
         <Route path="/user/forgot-password" element={<ForgotPassword />} />
@@ -184,7 +161,7 @@ const AppRoutes = () => {
         <Route path="/check-email" element={<CheckEmail />} />
         <Route path="/reset-password-force/:id" element={<ResetPasswordForce />} />
 
-        {/* Public Routes */}
+        {/* Home & Public Content Layout */}
         <Route path="/" element={<UserLayout />}>
           <Route index element={<Home />} />
           <Route path="about" element={<About />} />
@@ -200,9 +177,20 @@ const AppRoutes = () => {
           <Route path="symptoms/:symptomId" element={<SymptomDetails />} />
           <Route path="partners" element={<Partners />} />
           <Route path="services" element={<Hero />} />
+          <Route path="ai-recommendations-test" element={<AIRecommendation />} />
+          <Route path="labs" element={<Labes />} />
+          <Route path="/labs/:id/details" element={<LabDetails />} />
+          <Route path="/labs/:id/testpackage" element={<TestPackages />} />
+          <Route path="place-order" element={<PlaceOrder />} />
+          <Route path="confirm-booking" element={<ConfirmBookingDetails />} />
+          <Route path="payment" element={<Payment />} />
+          <Route path="payment/success" element={<Success />} />
+          <Route path="payment/failure" element={<Failure />} />
+          <Route path="all-tests-packages" element={<AllTests />} />
+          <Route path="search" element={<SearchResults />} />
         </Route>
 
-        {/* Public routes (Test by Health Concern) */}
+        {/* Test by Health Concern Layout */}
         <Route path="/" element={<HealthLayout />}>
           <Route path="tests-by-concern" element={<TestHealthConcern />} />
           <Route path="men's-health" element={<MenHealthPage />} />
@@ -213,7 +201,7 @@ const AppRoutes = () => {
           <Route path="child-health" element={<ChildHealthPage />} />
         </Route>
 
-        {/* Public routes (Most Used Test) */}
+        {/* Most Used Test Layout */}
         <Route path="tests" element={<MostUsed />} />
         <Route path="/most-used" element={<MostUsedLayout />}>
           <Route path="cbc" element={<CBC />} />
@@ -222,42 +210,19 @@ const AppRoutes = () => {
           <Route path="lipid-profile" element={<LipidProfile />} />
         </Route>
 
-        {/* Protected User Routes */}
-        {/* <Route path="/" element={<ProtectedRoute><UserLayout /></ProtectedRoute>}> */}
-        <Route path="/" element={<UserLayout />}>
-          <Route path="ai-recommendations-test" element={<AIRecommendation />} />
-          <Route path="labs" element={<Labes />} />
-          <Route path="/labs/:id/details" element={<LabDetails />} />
-          <Route path="/labs/:id/testpackage" element={<TestPackages />} />
-          <Route path="place-order" element={<PlaceOrder />} />
-          <Route path="confirm-booking" element={<ConfirmBookingDetails />} />
-          <Route path="payment" element={<Payment />} />
-          <Route path="payment/success" element={<Success />} />
-          <Route path="payment/failure" element={<Failure />} />
-          <Route path="/user/inbox" element={<UserInbox />} />
-          <Route path="all-tests-packages" element={<AllTests />} />
+        {/* Dashboard/Patient Profile Layout */}
+        <Route path="/user" element={<UserProfileLayout />}>
+          <Route index element={<UserProfile />} />
+          <Route path="profile" element={<UserProfile />} />
+          <Route path="edit" element={<UserProfileEdit isEdit />} />
+          <Route path="cart" element={<UserCart />} />
+          <Route path="orders" element={<UserOrder />} />
+          <Route path="messages" element={<UserInbox />} />
+          <Route path="reports" element={<UserReports />} />
         </Route>
 
-        {/* UserProfile Layout */}
-        {/* <Route path="/user" element={<ProtectedRoute roles={['user']}><UserProfileLayout /></ProtectedRoute>}> */}
-        <Route index element={<UserProfile />} />
-        <Route path="profile" element={<UserProfile />} />
-        <Route path="edit" element={<UserProfileEdit isEdit />} />
-        <Route path="cart" element={<UserCart />} />
-        <Route path="orders" element={<UserOrder />} />
-        <Route path="messages" element={<UserInbox />} />
-        <Route path="reports" element={<UserReports />} />
-        {/* </Route> */}
-
         {/* Super Admin Routes */}
-        <Route
-          path="/admin/super"
-          element={
-            // <ProtectedRoute roles={['superadmin']}>
-            <SuperAdminLayout />
-            // </ProtectedRoute>
-          }
-        >
+        <Route path="/admin/super" element={<SuperAdminLayout />}>
           <Route index element={<Overview />} />
           <Route path="overview" element={<Overview />} />
           <Route path="users" element={<Users />} />
@@ -267,14 +232,7 @@ const AppRoutes = () => {
         </Route>
 
         {/* Lab Admin Routes */}
-        <Route
-          path="/labadmin/lab"
-          element={
-            // <ProtectedRoute roles={['labadmin']}>
-            <LabAdminLayout />
-            // </ProtectedRoute>
-          }
-        >
+        <Route path="/labadmin/lab" element={<LabAdminLayout />}>
           <Route index element={<LabOverview />} />
           <Route path="overview" element={<LabOverview />} />
           <Route path="labdashboard" element={<LabOverview />} />
@@ -284,13 +242,9 @@ const AppRoutes = () => {
           <Route path="tests" element={<OfferedTest />} />
           <Route path="messages" element={<Messages />} />
           <Route path="settings" element={<LabAdminProfileSettings />} />
-
         </Route>
 
-        {/* Add this route with the other routes */}
-        <Route path="/search" element={<SearchResults />} />
-
-        {/* 404 Not Found */}
+        {/* Fallback Routes */}
         <Route path="*" element={<NotFound />} />
         <Route path="unauthorized" element={<Unauthorized />} />
       </Routes>
