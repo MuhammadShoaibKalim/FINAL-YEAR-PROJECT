@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Eraser, ClipboardList, TestTube2, ChevronRight, Clock, FlaskConical, CalendarDays, CheckCircle } from 'lucide-react';
+import { X, Eraser, ClipboardList, TestTube2, ChevronRight, Clock, FlaskConical, CalendarDays, CheckCircle, Info, Sparkles, MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const suggestedSymptoms = [
   'Fever', 'Fatigue', 'Weight Loss', 'Weight Gain', 'Night Sweats', 'Chills', 'Weakness',
@@ -17,44 +18,14 @@ const symptomRows = [
   suggestedSymptoms.slice(30)
 ].filter(row => row.length > 0);
 
-const medicalTermsPattern = /^[a-zA-Z\s,.-]+$/;
-const irrelevantPatterns = [
-  /\b(boy|girl|man|woman|school|run|play|game|food|water|drink|hello|hi)\b/i,
-  /\d/,
-  /[^\w\s,.-]/,
-];
-
 const AIRecommendation = () => {
   const [symptomInput, setSymptomInput] = useState('');
   const [selectedSymptoms, setSelectedSymptoms] = useState([]);
   const [details, setDetails] = useState('');
   const [showResults, setShowResults] = useState(false);
   const [recommendations, setRecommendations] = useState([]);
-  const [animationDirections, setAnimationDirections] = useState(symptomRows.map(() => Math.random() > 0.5 ? 'left' : 'right'));
   const [loading, setLoading] = useState(false);
-  const [analysisText, setAnalysisText] = useState('');
   const [error, setError] = useState('');
-  const suggestionsRefs = useRef([]);
-
-  const isMedicalContext = (text) => {
-    if (!medicalTermsPattern.test(text)) return false;
-    return !irrelevantPatterns.some(pattern => pattern.test(text));
-  };
-
-  const validateInputs = () => {
-    if (selectedSymptoms.length === 0 && !details.trim()) {
-      setError('Please enter at least one symptom or description');
-      return false;
-    }
-
-    if (details.trim() && !isMedicalContext(details)) {
-      setError('Please enter medically relevant information only. Avoid numbers, symbols, or unrelated text.');
-      return false;
-    }
-
-    setError('');
-    return true;
-  };
 
   const handleSymptomClick = (symptom) => {
     if (!selectedSymptoms.includes(symptom)) {
@@ -77,17 +48,18 @@ const AIRecommendation = () => {
     setShowResults(false);
     setRecommendations([]);
     setLoading(false);
-    setAnalysisText('');
     setError('');
   };
 
   const getRecommendations = async () => {
-    if (!validateInputs()) return;
+    if (selectedSymptoms.length === 0 && !details.trim()) {
+      setError('Please select at least one symptom or provide details.');
+      return;
+    }
 
     setLoading(true);
-    setAnalysisText('Analyzing your symptoms...');
+    setError('');
     setShowResults(false);
-    setRecommendations([]);
 
     try {
       const response = await axios.post('/api/get-recommendation/recommend-tests', {
@@ -98,317 +70,268 @@ const AIRecommendation = () => {
       const data = response.data;
       
       if (data.recommendedTests?.length > 0 || data.recommendations?.length > 0) {
-        // Enhance the test data with default values if not provided
         const enhancedTests = (data.recommendedTests || data.recommendations).map(test => ({
           ...test,
           accuracy: test.accuracy || 'High (90-95%)',
           turnaround: test.turnaround || '1-3 business days',
-          preparation: test.preparation || 'Fasting for 8-12 hours required',
+          preparation: test.preparation || 'Standard preparation',
           sample: test.sample || 'Blood sample'
         }));
         
         setRecommendations(enhancedTests);
         setShowResults(true);
-        setTimeout(() => {
-          document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
       } else {
-        setError('No specific tests recommended based on your symptoms. Please consult a healthcare provider.');
+        setError('No specific tests recommended. Please consult a doctor.');
       }
     } catch (error) {
-      console.error('Error fetching recommendations:', error);
-      setError(error.response?.data?.message || 'Failed to get recommendations. Please try again.');
+      setError('Analysis failed. Please try again.');
     } finally {
       setLoading(false);
-      setAnalysisText('');
     }
   };
 
-  useEffect(() => {
-    const containers = suggestionsRefs.current;
-    if (!containers || containers.length === 0) return;
-
-    const scrollSpeeds = containers.map(() => 0.3 + Math.random() * 0.7);
-    const scrollIntervals = [];
-    const animationFrameIds = [];
-
-    const startScrolling = (container, speed, direction, index) => {
-      const interval = setInterval(() => {
-        const frameId = requestAnimationFrame(() => {
-          if (direction === 'left') {
-            container.scrollLeft += speed;
-            if (container.scrollLeft >= container.scrollWidth - container.clientWidth) {
-              setAnimationDirections(prev => {
-                const newDirs = [...prev];
-                newDirs[index] = 'right';
-                return newDirs;
-              });
-            }
-          } else {
-            container.scrollLeft -= speed;
-            if (container.scrollLeft <= 0) {
-              setAnimationDirections(prev => {
-                const newDirs = [...prev];
-                newDirs[index] = 'left';
-                return newDirs;
-              });
-            }
-          }
-        });
-        animationFrameIds.push(frameId);
-      }, 16);
-      scrollIntervals.push(interval);
-    };
-
-    containers.forEach((container, index) => {
-      if (container) {
-        startScrolling(container, scrollSpeeds[index], animationDirections[index], index);
-      }
-    });
-
-    const pauseEvents = containers.map((container, index) => {
-      const pause = () => {
-        clearInterval(scrollIntervals[index]);
-        animationFrameIds.forEach(id => cancelAnimationFrame(id));
-      };
-      const resume = () => {
-        if (container) {
-          startScrolling(container, scrollSpeeds[index], animationDirections[index], index);
-        }
-      };
-      container.addEventListener('mouseenter', pause);
-      container.addEventListener('mouseleave', resume);
-      return { pause, resume };
-    });
-
-    return () => {
-      scrollIntervals.forEach(interval => clearInterval(interval));
-      animationFrameIds.forEach(id => cancelAnimationFrame(id));
-      containers.forEach((container, index) => {
-        if (pauseEvents[index]) {
-          container.removeEventListener('mouseenter', pauseEvents[index].pause);
-          container.removeEventListener('mouseleave', pauseEvents[index].resume);
-        }
-      });
-    };
-  }, [animationDirections]);
-
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 font-sans">
-      <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold text-gray-800 mb-3">Describe Your Symptoms</h1>
-        <p className="text-gray-600 max-w-4xl mx-auto">
-          Select your symptoms from the options below or describe them manually. Our AI will analyze and recommend the most appropriate medical tests.
-        </p>
-      </div>
+    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans relative overflow-hidden pb-20">
+      {/* Ambient Decor */}
+      <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[120px] -mr-80 -mt-80 opacity-60"></div>
+      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-secondary/5 rounded-full blur-[100px] -ml-64 -mb-64 opacity-40"></div>
 
-      <div className="bg-white rounded-xl shadow-md p-6 mb-8 border border-gray-200">
-        <div className="relative">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Selected Symptoms</label>
-          <textarea
-            value={symptomInput}
-            onChange={(e) => setSymptomInput(e.target.value)}
-            placeholder="Your symptoms will appear here as you select them..."
-            className="w-full h-32 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-secondary outline-none resize-none text-gray-800 bg-gray-50"
-            readOnly
-            disabled={loading}
-          />
-          {selectedSymptoms.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-3">
-              {selectedSymptoms.map((symptom, index) => (
-                <div key={index} className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary text-white text-sm font-medium">
-                  {symptom}
-                  <button 
-                    onClick={() => removeSymptom(symptom)} 
-                    className="hover:text-blue-600"
-                    disabled={loading}
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+      <div className="max-w-6xl mx-auto px-6 pt-16 relative z-10">
+        <div className="text-center mb-12 space-y-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-full shadow-sm"
+          >
+            <Sparkles size={14} className="text-primary" />
+            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary italic leading-none">Diagnostic Analysis Agent</p>
+          </motion.div>
+          <motion.h1 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-5xl font-black tracking-tighter italic leading-none text-slate-900"
+          >
+            Smart Test <span className="text-primary NOT-italic tracking-normal">Selection.</span>
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-slate-500 text-sm font-bold tracking-tight"
+          >
+            Describe your condition below for an AI-powered diagnostic recommendation.
+          </motion.p>
+        </div>
+
+        {/* Vertical Layout: Chat-like Input on Top */}
+        <div className="space-y-10">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white border border-slate-200 rounded-[3rem] shadow-2xl shadow-slate-200/50 p-8 md:p-12 space-y-8 overflow-hidden relative"
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16"></div>
+            
+            <div className="flex items-center gap-4 border-b border-slate-100 pb-6 relative z-10">
+              <div className="w-10 h-10 bg-slate-900 rounded-2xl flex items-center justify-center text-primary text-xl">
+                <MessageSquare size={18} />
+              </div>
+              <h3 className="text-lg font-black italic tracking-tighter text-slate-900 uppercase">Describe Symptoms</h3>
+            </div>
+
+            <div className="space-y-6 relative z-10">
+              <div className="space-y-3">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.4em] pl-1">Symptom Summary</label>
+                <textarea
+                  value={symptomInput}
+                  onChange={(e) => setSymptomInput(e.target.value)}
+                  placeholder="Selected symptoms will be logged here..."
+                  className="w-full h-24 bg-slate-50 border border-slate-200 p-6 rounded-[2rem] text-[11px] font-black uppercase tracking-widest text-slate-700 placeholder:text-slate-300 focus:outline-none focus:border-primary/30 transition-all resize-none shadow-inner"
+                  readOnly
+                />
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.4em] pl-1">Detailed Analysis Context</label>
+                <textarea
+                  value={details}
+                  onChange={(e) => setDetails(e.target.value)}
+                  placeholder="Share details about duration, severity, and any other relevant observations..."
+                  className="w-full h-44 bg-slate-50 border border-slate-200 p-8 rounded-[2.5rem] text-[12px] font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-primary/50 focus:bg-white transition-all resize-none shadow-inner leading-relaxed"
+                />
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Suggestions Below */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="space-y-6"
+          >
+            <div className="flex items-center justify-between px-2">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Fast-Select Parameters</p>
+              {selectedSymptoms.length > 0 && (
+                <button 
+                  onClick={() => setSelectedSymptoms([])}
+                  className="text-[9px] font-black text-rose-500 uppercase tracking-widest hover:underline"
+                >
+                  Clear All
+                </button>
+              )}
+            </div>
+
+            {/* Selected Chips */}
+            <AnimatePresence>
+              {selectedSymptoms.length > 0 && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="flex flex-wrap gap-2 px-2"
+                >
+                  {selectedSymptoms.map(symptom => (
+                    <motion.div 
+                      key={symptom}
+                      initial={{ scale: 0.8 }}
+                      animate={{ scale: 1 }}
+                      className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-primary rounded-xl text-[9px] font-black uppercase tracking-widest"
+                    >
+                      {symptom}
+                      <X size={12} className="cursor-pointer hover:text-white" onClick={() => removeSymptom(symptom)} />
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Rows of Suggestions */}
+            <div className="space-y-3">
+              {symptomRows.map((row, idx) => (
+                <div key={idx} className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide no-scrollbar">
+                  {row.map(symptom => (
+                    <button
+                      key={symptom}
+                      onClick={() => handleSymptomClick(symptom)}
+                      className={`px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all ${
+                        selectedSymptoms.includes(symptom)
+                          ? 'bg-primary text-white border-primary shadow-xl shadow-primary/20 scale-105'
+                          : 'bg-white text-slate-500 border-slate-200 hover:border-primary/50 hover:text-primary'
+                      }`}
+                    >
+                      {symptom}
+                    </button>
+                  ))}
                 </div>
               ))}
             </div>
-          )}
+          </motion.div>
+
+          {/* Action Area */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="flex flex-col gap-6 items-center"
+          >
+            {error && (
+              <p className="text-rose-500 text-[10px] font-black uppercase tracking-widest italic flex items-center gap-2">
+                <Info size={14} /> {error}
+              </p>
+            )}
+
+            <div className="flex flex-col md:flex-row gap-4 w-full">
+              <button
+                onClick={getRecommendations}
+                disabled={loading}
+                className="flex-1 bg-slate-900 hover:bg-primary text-white py-6 rounded-[2rem] text-[12px] font-black uppercase tracking-[0.4em] transition-all shadow-2xl flex items-center justify-center gap-4 group disabled:opacity-50"
+              >
+                {loading ? "PROCESSING..." : "Run Diagnostic Analysis"}
+                <ChevronRight className="group-hover:translate-x-2 transition-transform" />
+              </button>
+              { (selectedSymptoms.length > 0 || details) && (
+                <button
+                  onClick={clearAll}
+                  className="px-10 py-6 rounded-[2rem] border border-slate-200 text-slate-400 hover:text-rose-500 hover:border-rose-100 transition-all text-[11px] font-black uppercase tracking-[0.2em]"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+          </motion.div>
         </div>
 
-        <div className="mt-6 space-y-3">
-          <h3 className="text-sm font-medium text-gray-700 mb-2">Common Symptoms</h3>
-          {symptomRows.map((row, rowIndex) => (
-            <div key={rowIndex}>
-              <div
-                ref={el => suggestionsRefs.current[rowIndex] = el}
-                className="flex overflow-x-auto gap-3 pb-3 scrollbar-hide"
-                style={{ scrollBehavior: 'smooth' }}
-              >
-                {[...row, ...row].map((symptom, symptomIndex) => (
-                  <button
-                    key={`${rowIndex}-${symptomIndex}`}
-                    onClick={() => handleSymptomClick(symptom)}
-                    className={`px-4 py-2 rounded-lg text-sm whitespace-nowrap transition-all ${
-                      selectedSymptoms.includes(symptom)
-                        ? 'bg-primary text-white shadow-md'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900'
-                    }`}
-                    disabled={loading}
+        {/* Results Section Below Everything */}
+        <AnimatePresence>
+          {showResults && (
+            <motion.div 
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-20 space-y-10"
+            >
+              <div className="flex items-center gap-6 px-4">
+                <h2 className="text-3xl font-black italic tracking-tighter">Recommended <span className="text-primary NOT-italic tracking-normal">Tests.</span></h2>
+                <div className="h-[1px] flex-1 bg-slate-200"></div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {recommendations.map((test, index) => (
+                  <motion.div 
+                    key={index}
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="p-10 bg-white border border-slate-100 rounded-[3rem] shadow-xl hover:shadow-2xl hover:border-primary/20 transition-all group relative overflow-hidden"
                   >
-                    {symptom}
-                  </button>
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl"></div>
+                    <div className="space-y-6 relative z-10">
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-1">
+                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">CODE: {test.code || 'DIAG-AUTO'}</p>
+                          <h3 className="text-2xl font-black text-slate-900 tracking-tight italic group-hover:text-primary transition-colors">{test.name || test.test}</h3>
+                        </div>
+                        <CheckCircle className="text-emerald-500" size={24} />
+                      </div>
+                      
+                      <p className="text-slate-500 text-[11px] font-bold leading-relaxed opacity-80 italic">
+                        {test.description || test.reason}
+                      </p>
+
+                      <div className="grid grid-cols-2 gap-y-6 pt-4">
+                        {[
+                          { icon: <Clock className="text-primary" />, label: 'Wait Time', value: test.turnaround },
+                          { icon: <FlaskConical className="text-secondary" />, label: 'Specimen', value: test.sample }
+                        ].map((item, i) => (
+                          <div key={i} className="flex gap-3 items-center">
+                            <div className="text-sm">{item.icon}</div>
+                            <div>
+                              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5 leading-none">{item.label}</p>
+                              <p className="text-[10px] font-black text-slate-900 uppercase tracking-tighter">{item.value}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="pt-8 border-t border-slate-50 mt-4">
+                         <Link to="/labs" className="inline-flex items-center gap-2 text-[9px] font-black text-primary uppercase tracking-[0.3em] hover:text-slate-900 transition-all">
+                            Find Available Labs <ChevronRight size={14} />
+                         </Link>
+                      </div>
+                    </div>
+                  </motion.div>
                 ))}
               </div>
-            </div>
-          ))}
-        </div>
-      </div>
 
-      <div className="bg-white rounded-xl shadow-md p-6 mb-8 border border-gray-200">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Additional Details (Optional but Recommended)
-        </label>
-        <textarea
-          value={details}
-          onChange={(e) => setDetails(e.target.value)}
-          placeholder="Provide more details about your condition, duration, severity, etc..."
-          className="w-full h-40 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none resize-none text-gray-800 bg-gray-50"
-          disabled={loading}
-        />
-      </div>
-
-      {error && (
-        <div className="mb-4 p-4 bg-red-50 text-red-600 rounded-lg border border-red-200 flex items-start">
-          <svg className="w-5 h-5 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-          </svg>
-          {error}
-        </div>
-      )}
-
-      <div className="flex justify-between items-center mb-10">
-        <button
-          onClick={clearAll}
-          className="flex items-center gap-2 text-red-600 hover:text-red-800 font-medium px-4 py-2 rounded-lg hover:bg-red-50 transition-colors"
-          disabled={loading}
-        >
-          <Eraser className="w-5 h-5" /> Clear All
-        </button>
-        <button
-          onClick={getRecommendations}
-          className={`flex items-center gap-2 px-6 py-3 rounded-lg transition ${
-            loading
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-primary text-white hover:bg-secondary shadow-md'
-          }`}
-          disabled={loading}
-        >
-          {loading ? (
-            <>
-              <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Analyzing...
-            </>
-          ) : (
-            <>
-              <ClipboardList className="w-5 h-5" /> Get Recommendations
-            </>
-          )}
-        </button>
-      </div>
-
-      {analysisText && (
-        <div className="text-center text-gray-500 mb-6">
-          <div className="inline-flex items-center gap-2">
-            <svg className="animate-spin h-5 w-5 text-secondary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            {analysisText}
-          </div>
-        </div>
-      )}
-
-      {showResults && (
-        <div id="results-section" className="bg-white border border-gray-200 rounded-xl shadow-md p-6 animate-fade-in">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <TestTube2 className="w-5 h-5 text-primary" />
-            Recommended Medical Tests
-          </h2>
-          
-          <div className="grid gap-4 md:grid-cols-2">
-            {recommendations.map((test, index) => (
-              <div key={index} className="p-5 border border-gray-200 rounded-lg bg-white hover:shadow-lg transition-shadow">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800">
-                      {test.name || test.test} 
-                      {test.code && <span className="text-sm text-gray-500 ml-2">({test.code})</span>}
-                    </h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {test.description || test.reason}
-                    </p>
-                  </div>
-                  <div className=" text-white bg-primary text-xs font-medium px-2 py-1 rounded-full">
-                    Test
-                  </div>
-                </div>
-                
-                <div className="mt-4 grid grid-cols-2 gap-3">
-                  <div className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500 mt-0.5" />
-                    <div>
-                      <p className="text-xs text-gray-500">Accuracy</p>
-                      <p className="text-sm font-medium text-gray-700">{test.accuracy}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-2">
-                    <Clock className="w-4 h-4 text-blue-500 mt-0.5" />
-                    <div>
-                      <p className="text-xs text-gray-500">Turnaround</p>
-                      <p className="text-sm font-medium text-gray-700">{test.turnaround}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-2">
-                    <CalendarDays className="w-4 h-4 text-purple-500 mt-0.5" />
-                    <div>
-                      <p className="text-xs text-gray-500">Preparation</p>
-                      <p className="text-sm font-medium text-gray-700">{test.preparation}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-2">
-                    <FlaskConical className="w-4 h-4 text-orange-500 mt-0.5" />
-                    <div>
-                      <p className="text-xs text-gray-500">Sample Required</p>
-                      <p className="text-sm font-medium text-gray-700">{test.sample}</p>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* 
-                <div className="mt-4 pt-3 border-t border-gray-100">
-                  <Link
-                    to="/labs"
-                    className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 font-medium"
-                  >
-                    Find labs offering this test <ChevronRight className="w-4 h-4 ml-1" />
-                  </Link>
-                </div> */}
+              <div className="bg-slate-900 p-10 rounded-[3rem] text-center space-y-6">
+                 <p className="text-[10px] font-black text-primary uppercase tracking-[0.5em]">Inventory Access</p>
+                 <h4 className="text-2xl font-black text-white italic tracking-tighter">View all clinical tests and screening packages</h4>
+                 <Link to="/all-tests-packages" className="inline-flex items-center gap-3 bg-white text-slate-900 px-10 py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] hover:bg-primary hover:text-white transition-all shadow-2xl">
+                    Open Lab Catalog <ChevronRight />
+                 </Link>
               </div>
-            ))}
-          </div>
-          
-          <div className="mt-8 text-center">
-            <Link
-              to="/all-tests-package"
-              className="inline-flex items-center gap-2 bg-primary hover:bg-secondary/90 text-white font-medium px-6 py-3 rounded-lg transition-all shadow-md hover:shadow-lg"
-            >
-              view all test and package <ChevronRight className="w-4 h-4" />
-            </Link>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 };
