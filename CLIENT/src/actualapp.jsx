@@ -115,46 +115,46 @@ const AppRoutes = () => {
   //   };
   //   checkUser();
   // }, [dispatch, navigate]);
-useEffect(() => {
-  const checkUser = async () => {
-    const publicRoutes = [
-      '/login',
-      '/register',
-      '/verify-email',
-      '/resend-verification',
-      '/check-email',
-      '/user/forgot-password',
-      '/reset-password',
-      '/reset-password-force'
-    ];
+  useEffect(() => {
+    const checkUser = async () => {
+      const publicRoutes = [
+        '/login',
+        '/register',
+        '/verify-email',
+        '/resend-verification',
+        '/check-email',
+        '/user/forgot-password',
+        '/reset-password',
+        '/reset-password-force'
+      ];
 
-    const isPublic = publicRoutes.some(route => window.location.pathname.startsWith(route));
-    if (isPublic) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-      if (!token) {
-        dispatch(logoutUser());
-        navigate('/login');
+      const isPublic = publicRoutes.some(route => window.location.pathname.startsWith(route));
+      if (isPublic) {
+        setLoading(false);
         return;
       }
-      const request = await get('/api/auth/getuser');
-      if (request.status === 200) {
-        dispatch(SetUser(request.data.user));
-      }
-    } catch (error) {
-      dispatch(logoutUser());
-      navigate('/login');
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  checkUser();
-}, [dispatch, navigate]);
+      try {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        if (!token) {
+          dispatch(logoutUser());
+          navigate('/login');
+          return;
+        }
+        const request = await get('/api/auth/getuser');
+        if (request.status === 200) {
+          dispatch(SetUser(request.data.user));
+        }
+      } catch (error) {
+        dispatch(logoutUser());
+        navigate('/login');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkUser();
+  }, [dispatch, navigate]);
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1500);
