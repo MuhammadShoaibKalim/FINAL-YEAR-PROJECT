@@ -12,7 +12,7 @@ const UserSidebar = () => {
   const handleLogout = async () => {
     try {
       await dispatch(logoutUser()).unwrap();
-      toast.success('Session Terminated Successfully');
+      toast.success('Logged out successfully');
       navigate('/login');
     } catch (err) {
       toast.error('Logout failed');
@@ -27,12 +27,12 @@ const UserSidebar = () => {
     }`;
 
   const navItems = [
-    { to: "profile", icon: FaUser, label: "Patient Profile" },
-    { to: "edit", icon: FaEdit, label: "Security & Edit" },
-    { to: "cart", icon: FaShoppingCart, label: "Digital Cart" },
-    { to: "orders", icon: FaBoxOpen, label: "Clinical Orders" },
-    { to: "messages", icon: FaEnvelope, label: "Communication" },
-    { to: "reports", icon: FaFileAlt, label: "Medical Reports" },
+    { to: "profile", icon: FaUser, label: "My Profile" },
+    { to: "edit", icon: FaEdit, label: "Edit Profile" },
+    { to: "cart", icon: FaShoppingCart, label: "My Cart" },
+    { to: "orders", icon: FaBoxOpen, label: "Order History" },
+    { to: "messages", icon: FaEnvelope, label: "Messages" },
+    { to: "reports", icon: FaFileAlt, label: "Test Reports" },
   ];
 
   return (
@@ -45,8 +45,8 @@ const UserSidebar = () => {
               <FaShieldAlt />
            </div>
            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/50">Account Status</p>
-              <p className="text-xl font-black tracking-tighter italic">Verified Patient</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/50">Status</p>
+              <p className="text-xl font-black tracking-tighter italic">Verified Profile</p>
            </div>
         </div>
       </div>
@@ -54,7 +54,7 @@ const UserSidebar = () => {
       {/* Navigation Menu */}
       <div className="bg-white rounded-[2.5rem] border border-slate-100 p-4 shadow-xl shadow-slate-100/50">
         <div className="px-6 py-4 mb-2">
-           <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300">Management Index</p>
+           <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300">Dashboard Menu</p>
         </div>
         <nav className="space-y-1">
           {navItems.map((item) => (
@@ -71,15 +71,15 @@ const UserSidebar = () => {
              className="w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-rose-500 font-black uppercase text-[10px] tracking-[0.2em] hover:bg-rose-50 transition-all group"
            >
               <FaSignOutAlt className="group-hover:-translate-x-1 transition-transform" />
-              <span>Secure Logout</span>
+              <span>Logout</span>
            </button>
         </div>
       </div>
 
       {/* Support Card */}
       <div className="bg-slate-50 rounded-[2rem] p-6 border border-slate-100 hidden md:block">
-         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Technical Assistance</p>
-         <p className="text-[11px] font-bold text-slate-600 leading-relaxed mb-4">Facing issues with reports or orders? Contact our 24/7 help desk.</p>
+         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Support & Help</p>
+         <p className="text-[11px] font-bold text-slate-600 leading-relaxed mb-4">Facing issues with reports or orders? Contact our support team.</p>
          <button className="text-primary text-[10px] font-black uppercase tracking-widest hover:underline">Help Center</button>
       </div>
     </div>
