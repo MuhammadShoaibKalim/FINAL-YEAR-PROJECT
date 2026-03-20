@@ -52,7 +52,7 @@ const Hero = () => {
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary italic">Redefined.</span>
               </h1>
               <p className="text-xl text-slate-500 leading-relaxed font-medium">
-                Experience Pakistan's first AI-powered diagnostic platform. Instant recommendations, verified lab testing, and secure digital records—all in one place.
+                Experience Pakistan's first AI-powered diagnostic platform. Instant recommendations, verified lab testing, and secure digital records all in one place.
               </p>
             </div>
 
