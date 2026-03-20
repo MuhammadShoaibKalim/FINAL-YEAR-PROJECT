@@ -7,7 +7,7 @@ const Profile = () => {
   if (!user) return (
     <div className="flex flex-col gap-6 justify-center items-center min-h-[400px]">
       <div className="w-12 h-12 border-4 border-slate-100 border-t-primary rounded-full animate-spin" />
-      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Loading Patient Profile</p>
+      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Loading Profile...</p>
     </div>
   );
 
@@ -21,7 +21,7 @@ const Profile = () => {
             {user?.image ? (
               <img
                 src={user.image}
-                alt="Patient Avatar"
+                alt="Profile Avatar"
                 className="w-full h-full object-cover rounded-[2rem]"
               />
             ) : (
@@ -43,7 +43,7 @@ const Profile = () => {
           <h2 className="text-5xl font-black text-slate-800 tracking-tighter italic">
             {user.firstName} <span className="text-slate-400 font-medium not-italic">{user.lastName}</span>
           </h2>
-          <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.4em]">Clinical Identifier: #{user._id.slice(-8).toUpperCase()}</p>
+          <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.4em]">Patient ID: #{user._id.slice(-8).toUpperCase()}</p>
         </div>
       </div>
 
@@ -53,7 +53,7 @@ const Profile = () => {
               <FaEnvelope />
            </div>
            <div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Registered Email</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Email Address</p>
               <p className="text-base font-black text-slate-700 tracking-tight">{user.email}</p>
            </div>
         </div>
@@ -63,8 +63,8 @@ const Profile = () => {
               <FaPhone />
            </div>
            <div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Access Channel</p>
-              <p className="text-base font-black text-slate-700 tracking-tight">{user.phoneNo || "Not Validated"}</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Phone Number</p>
+              <p className="text-base font-black text-slate-700 tracking-tight">{user.phoneNo || "Not Provided"}</p>
            </div>
         </div>
 
@@ -73,9 +73,9 @@ const Profile = () => {
               <FaCalendarCheck />
            </div>
            <div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">System Privilege</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Account Role</p>
               <span className="text-[10px] font-black text-primary uppercase bg-primary/10 px-3 py-1 rounded-lg">
-                {user.role} Privilege
+                {user.role}
               </span>
            </div>
         </div>
@@ -85,8 +85,8 @@ const Profile = () => {
               <FaShieldAlt />
            </div>
            <div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Encrypted Access</p>
-              <p className="text-base font-black text-slate-700 tracking-tight italic">Biometric Ready</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Security Status</p>
+              <p className="text-base font-black text-slate-700 tracking-tight italic">Verified Profile</p>
            </div>
         </div>
       </div>
