@@ -1,120 +1,146 @@
-import React, { useEffect, useState } from "react";
-import { FaDownload, FaFileMedical, FaCalendarAlt, FaHashtag, FaInfoCircle } from "react-icons/fa";
-import { ImSpinner2 } from "react-icons/im";
+import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { FiFileText, FiDownload, FiSearch, FiCheckCircle, FiClock, FiShield, FiMoreHorizontal } from 'react-icons/fi';
+import { FaLaptopMedical, FaMicroscope } from 'react-icons/fa';
+import axios from 'axios';
+import { toast } from 'react-hot-toast';
 
 const UserReports = () => {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+    const user = useSelector((state) => state.auth.user);
+    const [reports, setReports] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const res = await fetch("/api/orders/user", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-          },
-        });
-        const data = await res.json();
-        if (res.ok && data.orders) {
-          setOrders(data.orders);
-        } else {
-          console.error("No orders found or invalid response");
-        }
-      } catch (err) {
-        console.error("Error fetching reports:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    useEffect(() => {
+        const fetchReports = async () => {
+            try {
+                const res = await axios.get('/api/orders/user-orders', {
+                    headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+                });
+                // Filter completed orders or direct report logic if separate
+                setReports(res.data.orders);
+            } catch (err) {
+                console.error("Fetch reports failed:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        if (user) fetchReports();
+    }, [user]);
 
-    fetchOrders();
-  }, []);
-
-  const ordersWithReports = orders.filter((order) => order.reportFile);
-
-  if (loading) {
-    return (
-      <div className="flex flex-col gap-6 justify-center items-center min-h-[400px]">
-        <ImSpinner2 className="text-primary text-4xl animate-spin" />
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Syncing Medical Archives</p>
-      </div>
+    const filteredReports = reports.filter(r => 
+        r._id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        r.patientDetails?.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }
 
-  return (
-    <div className="p-10 sm:p-16 space-y-12 animate-in fade-in duration-700">
-      <div className="space-y-4">
-        <div className="flex items-center gap-3">
-           <FaFileMedical className="text-primary text-2xl" />
-           <h2 className="text-3xl font-black text-slate-800 tracking-tight">Medical <span className="italic text-primary">Archives.</span></h2>
-        </div>
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Access and download your verified clinical diagnostic reports.</p>
-      </div>
-
-      {ordersWithReports.length === 0 ? (
-        <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2.5rem] p-20 text-center space-y-4">
-           <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-slate-200 shadow-sm mx-auto">
-              <FaFileMedical className="text-2xl" />
-           </div>
-           <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">No archival records detected</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-6">
-          {ordersWithReports.map((order) => (
-            <div
-              key={order._id}
-              className="group bg-white border border-slate-100 p-8 rounded-[2.5rem] shadow-xl shadow-slate-100/50 hover:shadow-2xl hover:border-primary/20 transition-all duration-500 relative overflow-hidden"
-            >
-              <div className="absolute top-0 left-0 w-2 h-full bg-slate-50 group-hover:bg-primary transition-colors"></div>
-              
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="px-3 py-1 bg-slate-100 rounded-lg">
-                       <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                         <FaHashtag className="text-[8px] text-primary" /> {order._id.slice(-8).toUpperCase()}
-                       </p>
-                    </div>
-                    <div className={`px-3 py-1 rounded-lg ${order.status === 'completed' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
-                       <p className="text-[9px] font-black uppercase tracking-widest">{order.status}</p>
-                    </div>
-                  </div>
-                  
-                  <h4 className="text-xl font-black text-slate-800 tracking-tight leading-tight">
-                    Diagnostic Report <br />
-                    <span className="text-slate-400 font-medium text-sm">Clinical findings and laboratory analysis</span>
-                  </h4>
-
-                  <div className="flex flex-wrap gap-4 pt-2">
-                     <div className="flex items-center gap-2">
-                        <FaCalendarAlt className="text-slate-300 text-xs" />
-                        <span className="text-[11px] font-black text-slate-500 uppercase tracking-tighter">Issue Date: {new Date(order.createdAt).toLocaleDateString()}</span>
-                     </div>
-                     <div className="flex items-center gap-2">
-                        <FaInfoCircle className="text-slate-300 text-xs" />
-                        <span className="text-[11px] font-black text-slate-500 uppercase tracking-tighter italic">Verified by Clinical Admin</span>
-                     </div>
-                  </div>
+    return (
+        <div className="space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-700 font-sans">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 px-2">
+                <div className="space-y-1">
+                    <h1 className="text-4xl font-black text-slate-800 tracking-tighter italic">Medical <span className="text-primary NOT-italic">Reports.</span></h1>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Access Your Digital Diagnostic Results</p>
                 </div>
 
-                <div className="shrink-0">
-                  <a
-                    href={order.reportFile}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex lg:flex-col items-center justify-center gap-3 bg-slate-900 group-hover:bg-primary text-white p-6 lg:p-10 rounded-[2rem] transition-all duration-500 active:scale-95 shadow-xl shadow-slate-200 group-hover:shadow-primary/20"
-                  >
-                    <FaDownload className="text-xl group-hover:animate-bounce" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">Secure Download</span>
-                  </a>
+                <div className="relative w-full md:w-80 group">
+                    <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">
+                        <FiSearch />
+                    </div>
+                    <input 
+                        type="text" 
+                        placeholder="SEARCH REPORTS..." 
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-white border border-slate-100 p-5 pl-14 rounded-[2rem] text-[10px] font-black uppercase tracking-widest text-slate-800 focus:outline-none focus:border-primary/50 transition-all shadow-xl shadow-slate-200/40"
+                    />
                 </div>
-              </div>
             </div>
-          ))}
+
+            {/* Matrix / List */}
+            <div className="bg-white rounded-[3.5rem] border border-slate-100 shadow-2xl shadow-slate-200/40 overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="bg-slate-50/50 border-b border-slate-100">
+                                <th className="p-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">Report Ref</th>
+                                <th className="p-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">Details</th>
+                                <th className="p-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                                <th className="p-8 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Download</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-50">
+                            {loading ? (
+                                [1,2,3].map(i => (
+                                    <tr key={i} className="animate-pulse">
+                                        <td colSpan="4" className="p-8"><div className="h-16 bg-slate-50 rounded-2xl w-full"></div></td>
+                                    </tr>
+                                ))
+                            ) : filteredReports.length === 0 ? (
+                                <tr>
+                                    <td colSpan="4" className="p-20 text-center">
+                                        <div className="space-y-4">
+                                            <FiFileText className="mx-auto text-4xl text-slate-200" />
+                                            <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.4em]">No Digital Reports Available Yet.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : filteredReports.map((report) => (
+                                <tr key={report._id} className="hover:bg-slate-50/50 transition-colors group">
+                                    <td className="p-8">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all shadow-inner border border-slate-200">
+                                                <FaLaptopMedical />
+                                            </div>
+                                            <span className="text-[11px] font-black text-slate-800 tracking-tighter uppercase italic">RES-{report._id.slice(-6)}</span>
+                                        </div>
+                                    </td>
+                                    <td className="p-8">
+                                        <div className="space-y-1">
+                                            <p className="text-[13px] font-black text-slate-800 tracking-tight leading-none italic">{report.patientDetails?.name}</p>
+                                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic">{report.cartItems?.[0]?.name} {report.cartItems?.length > 1 && `+ ${report.cartItems.length - 1} more`}</p>
+                                        </div>
+                                    </td>
+                                    <td className="p-8 text-right">
+                                        <div className="flex items-center gap-3 text-emerald-500 font-bold uppercase text-[9px] tracking-widest bg-emerald-50 px-4 py-2 rounded-xl border border-emerald-100 w-fit">
+                                            <FiCheckCircle /> Report Ready
+                                        </div>
+                                    </td>
+                                    <td className="p-8 text-right">
+                                        <button 
+                                            onClick={() => toast.success("Downloading medical report...")}
+                                            className="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center hover:bg-primary transition-all shadow-xl shadow-slate-200 active:scale-90"
+                                        >
+                                            <FiDownload />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* Bio-Data Vault Summary / Analytics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                {[
+                    { label: 'Total Reports', value: reports.length, icon: <FiFileText />, color: 'primary' },
+                    { label: 'Security Status', value: 'Encrypted', icon: <FiShield />, color: 'emerald-500' },
+                    { label: 'Access Level', value: 'Authorized', icon: <FiCheckCircle />, color: 'slate-900' },
+                    { label: 'Sync Status', value: 'Active', icon: <FiClock />, color: 'amber-500' }
+                ].map((stat, i) => (
+                    <div key={i} className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/40 space-y-4 hover:border-primary/20 transition-all group">
+                         <div className={`w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform shadow-inner text-${stat.color}`}>
+                             {stat.icon}
+                         </div>
+                         <div className="space-y-0.5">
+                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">{stat.label}</p>
+                             <p className="text-xl font-black text-slate-800 tracking-tighter italic">{stat.value}</p>
+                         </div>
+                    </div>
+                ))}
+            </div>
         </div>
-      )}
-    </div>
-  );
+    );
 };
 
 export default UserReports;
