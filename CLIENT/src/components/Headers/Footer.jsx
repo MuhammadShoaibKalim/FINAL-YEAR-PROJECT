@@ -133,21 +133,12 @@ const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex items-center gap-3 bg-slate-800/50 px-6 py-3 rounded-2xl border border-white/5 shadow-inner">
-             <FaShieldAlt className="text-secondary text-xl" />
-             <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Verified Secure</p>
-                <p className="text-[9px] font-bold text-slate-500 uppercase italic">NABL & ISO Lab Certifications Validated</p>
-             </div>
-          </div>
+        <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-center items-center gap-8">
+        
           <p className="text-slate-500 text-[11px] font-bold uppercase tracking-widest text-center">
             © {new Date().getFullYear()} <span className="text-primary">TestSahulat</span> Industries Pakistan. All Rights Reserved.
           </p>
-          <div className="flex items-center gap-2">
-             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
-             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">System Status: Optimal</span>
-          </div>
+        
         </div>
       </div>
 
