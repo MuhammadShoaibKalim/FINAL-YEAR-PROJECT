@@ -11,11 +11,11 @@ const UserProfileLayout = () => {
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Breadcrumb / Page Header Area */}
-        <div className="mb-12 space-y-2">
+        <div className="mb-12 space-y-2 px-2">
            <div className="inline-block px-4 py-1 bg-slate-900 rounded-full">
-              <p className="text-[9px] font-black text-primary uppercase tracking-[0.3em] leading-none">Security Environment</p>
+              <p className="text-[9px] font-black text-primary uppercase tracking-[0.3em] leading-none">Account Dashboard</p>
            </div>
-           <h1 className="text-4xl font-black text-slate-800 tracking-tighter">Patient <span className="italic text-primary">Dashboard.</span></h1>
+           <h1 className="text-4xl font-black text-slate-800 tracking-tighter italic">Patient <span className="text-primary NOT-italic">Dashboard.</span></h1>
         </div>
 
         <div className="flex flex-col md:flex-row gap-10 items-start">
